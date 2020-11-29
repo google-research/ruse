@@ -1,0 +1,33 @@
+{
+"model_name_or_path": "t5-small",
+"learning_rate": 3e-5,
+"output_dir": "outputs/test_man2",
+"max_source_length": 512,
+"max_target_length": 56 ,
+"do_train": true,
+"num_train_epochs": 2,
+"save_steps": 500,
+"eval_steps": 500,
+"overwrite_output_dir": true,
+"task": ["wmt16-en-cs", "wmt16-en-fi"],
+"n_train": 10,
+"sampling": true,
+"fixed_length_emb": true,
+"encoder_pooling": "attentive",
+"n_val": 10,
+"gcs_bucket": "gs://ruse-xcloud-bucket/",
+"per_device_eval_batch_size":128,
+"logging_first_step":true,
+"logging_steps": 200,
+"prediction_loss_only": true, 
+"only_projection_bottleneck": true
+}
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,21 @@
+{
+"model_name_or_path": "t5-small",
+"learning_rate": 3e-5,
+"output_dir": "outputs/",
+"max_source_length": 512,
+"max_target_length": 56 ,
+"do_train": true,
+"do_eval": true,
+"num_train_epochs": 6,
+"save_steps": 500,
+"eval_steps": 500,
+"overwrite_output_dir": true,
+"task": ["scitail", "boolq"],
+"n_train": 10,
+"sampling": 1,
+"fixed_length_emb": true,
+"encoder_pooling": "attentive",
+"n_val": 10, 
+"tpu_num_cores": 8,
+"prediction_loss_only": true
+}

@@ -480,7 +480,6 @@ class TaskDataLoader:
     def __iter__(self):
         for batch in self.data_loader:
             batch["task"] = self.task
-            print("batch info ", batch.keys(), batch["task"])
             yield batch
 
 

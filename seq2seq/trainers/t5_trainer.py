@@ -395,7 +395,6 @@ class T5Trainer(Trainer):
             #else self.config.max_length,
             "num_beams": self.config.num_beams #self.data_args.eval_beams if self.data_args is not None else self.config.num_beams,
         }
-        print("### task inside prediction step ", inputs["task"])
         if self.args.predict_with_generate and not self.args.prediction_loss_only:
             generated_tokens = self.model.generate(
                 inputs["input_ids"],

@@ -5,6 +5,8 @@ from dataclasses import dataclass
 import datasets
 import abc
 from transformers import T5Tokenizer
+from torch.utils.data.dataloader import DataLoader
+import numpy as np 
 
 def compute_task_max_decoding_length(word_list):
     tokenizer = T5Tokenizer.from_pretrained('t5-base')
@@ -328,6 +330,14 @@ class QNLITaskDataset(AbstractTaskDataset):
                 "tgt_texts": str(example['label'])}
 
 
+# Note not to use itertools.cycle since it is 
+# doing some caching under the hood, resulting
+# in issues in the dataloading pipeline.
+# see https://docs.python.org/3.7/library/itertools.html?highlight=cycle#itertools.cycle
+def cycle(iterable):
+    while True:
+        for x in iterable:
+            yield x
 
 class RTETaskDataset(AbstractTaskDataset):
     task = Task(name="rte", category="classification")
@@ -456,3 +466,74 @@ class TaskCollator:
         if self.return_targets:
             batch_encoding["targets"] = torch.tensor([self.label_to_id[x["tgt_texts"]] for x in batch])
         return batch_encoding.data
+
+
+class TaskDataLoader:
+    """Wrapper around dataloader to keep the task names."""
+    def __init__(self, task_name, dataset, batch_size=8,
+                 collate_fn=None, drop_last=False, num_workers=0, sampler=None):
+        self.dataset = dataset
+        self.task_name = task_name
+        self.data_loader = DataLoader(self.dataset,
+                                      batch_size=batch_size,
+                                      sampler=sampler,
+                                      collate_fn=collate_fn,
+                                      drop_last=drop_last,
+                                      num_workers=num_workers)
+    def __len__(self):
+        return len(self.data_loader)
+
+    def __iter__(self):
+        for batch in self.data_loader:
+            yield batch
+
+
+
+class MultiTaskDataLoader:
+    """Given a dictionary of task: dataset, returns a multi-task dataloader
+    which uses temperature sampling to sample different datasets."""
+
+    def __init__(self,  max_steps, tasks_to_datasets, batch_size=8, collate_fn=None,
+                 drop_last=False, num_workers=0, temperature=100.0):
+        # Computes a mapping from task to dataloaders.
+        self.task_to_dataloaders = {}
+        for task, dataset in tasks_to_datasets.items():
+            dataloader = TaskDataLoader(task, dataset, batch_size,
+                collate_fn=collate_fn, drop_last=drop_last, num_workers=num_workers)
+            self.task_to_dataloaders.update({task: dataloader})
+        self.tasknames = list(self.task_to_dataloaders.keys())
+
+        # Computes the temperature sampling weights.
+        self.sampling_weights = self.temperature_sampling(self.dataloader_sizes.values(), temperature)
+        self.dataiters = {k: cycle(v) for k, v in self.task_to_dataloaders.items()}
+        self.max_steps = max_steps
+
+    def temperature_sampling(self, dataset_sizes, temp):
+        total_size = sum(dataset_sizes)
+        weights = np.array([(size / total_size) ** (1.0 / temp) for size in dataset_sizes])
+        return weights/np.sum(weights)
+
+    @property
+    def dataloader_sizes(self):
+
+        if not hasattr(self, '_dataloader_sizes'):
+            self._dataloader_sizes = {k: len(v) for k, v in self.task_to_dataloaders.items()}
+        return self._dataloader_sizes
+
+    def __len__(self):
+        return sum(v for k, v in self.dataloader_sizes.items())
+
+    def num_examples(self):
+        return sum(len(dataloader.dataset) for dataloader in self.task_to_dataloaders.values())
+
+    def __iter__(self):
+        #outputs = {}
+        for i in range(self.max_steps):
+            taskname = np.random.choice(self.tasknames, p=self.sampling_weights)
+            dataiter = self.dataiters[taskname]
+            #outputs["batch"] = next(dataiter)
+            #outputs["task"] = taskname
+            #outputs = next(dataiter)
+            #outputs["task"] = taskname
+            outputs = next(dataiter)
+            yield outputs

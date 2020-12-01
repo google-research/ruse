@@ -25,7 +25,7 @@ import shutil
 import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-
+from torch.utils.data.dataloader import DataLoader
 
 # Integrations must be imported before ML frameworks:
 from transformers.integrations import (  # isort: split
@@ -524,7 +524,11 @@ class Trainer:
 
         Will raise an exception if the underlying dataset dese not implement method :obj:`__len__`
         """
-        return len(dataloader.dataset)
+        try:
+            return len(dataloader.dataset)
+        except AttributeError:
+            return dataloader.num_examples()
+            
 
     def _hp_search_setup(self, trial: Union["optuna.Trial", Dict[str, Any]]):
         """ HP search setup code """
@@ -614,8 +618,10 @@ class Trainer:
             # Reinitializes optimizer and scheduler
             self.optimizer, self.lr_scheduler = None, None
 
+        # TODO(rabeeh): I made this to hack multiple-datasets.
         # Keeping track whether we can can len() on the dataset or not
-        train_dataset_is_sized = isinstance(self.train_dataset, collections.abc.Sized)
+        train_dataset_is_sized = isinstance(self.train_dataset, collections.abc.Sized) and \
+            not isinstance(self.train_dataset, dict)
 
         # Data loader and number of training steps
         train_dataloader = self.get_train_dataloader()

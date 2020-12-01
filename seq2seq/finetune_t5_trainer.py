@@ -132,8 +132,8 @@ def main():
         train_dataset = {task: dataset_class.get(task).get_dataset(
             split="train", n_obs=data_args.n_train) for task in data_args.task}
         # TODO: can be reordered later on.
-        data_groups = compute_data_groups(list(train_dataset.values()))
-        train_dataset = datasets.concatenate_datasets(list(train_dataset.values()))
+        #data_groups = compute_data_groups(list(train_dataset.values()))
+        #train_dataset = datasets.concatenate_datasets(list(train_dataset.values()))
     else:
         # TODO; for now lets concat the datasets.
         train_dataset = None
@@ -172,7 +172,7 @@ def main():
         data_collator=TaskCollator(tokenizer, data_args, training_args.tpu_num_cores),
         compute_metrics=compute_metrics_fn,
         data_args=data_args,
-        data_groups=data_groups if data_args.sampling and training_args.do_train else None
+        data_groups=None #data_groups if data_args.sampling and training_args.do_train else None
     )
 
     # Training

@@ -10,6 +10,8 @@ from transformers import PreTrainedModel, logging
 from .trainer import Trainer
 from transformers.configuration_fsmt import FSMTConfig
 from transformers.file_utils import is_torch_tpu_available
+from torch.utils.data.dataloader import DataLoader
+
 from transformers.optimization import (
     Adafactor,
     AdamW,
@@ -24,6 +26,7 @@ from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
 
 from transformers.trainer_pt_utils import reissue_pt_warnings
 
+from seq2seq.tasks import MultiTaskDataLoader, TaskDataLoader  
 from seq2seq.samplers import get_tpu_sampler
 from seq2seq.utils import use_task_specific_params, reset_config
 
@@ -59,7 +62,7 @@ class T5Trainer(Trainer):
         else:
             self.config = config
 
-        self.data_groups = data_groups
+        #self.data_groups = data_groups
         self.data_args = data_args
         self.vocab_size = self.config.tgt_vocab_size if isinstance(self.config, FSMTConfig) else self.config.vocab_size
         self.gcs_bucket=self.args.gcs_bucket
@@ -279,6 +282,45 @@ class T5Trainer(Trainer):
             #gcs_bucket="ruse-xcloud-bucket"
             upload(self.args.output_dir, self.args.gcs_bucket)
 
+    def get_sharded_data(self, num_replicas, rank):
+        """Returns the sharded data belonging to the given rank."""
+        sharded_dataset_names_to_datasets = {}
+        for dataset_name, dataset in self.train_dataset:
+            sharded_data = dataset.shard(num_replicas, rank)
+            sharded_dataset_names_to_datasets.update({dataset_name: sharded_data})
+        return sharded_dataset_names_to_datasets
+
+
+    def get_train_dataset_shards(self):
+        """In case of multiprocessing, returns the sharded data for the given rank."""
+        if is_torch_tpu_available():
+            if xm.xrt_world_size() > 1:
+                return self.get_sharded_data(num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
+            else:
+                return self.train_dataset
+        elif self.args.local_rank != -1:
+                return self.get_sharded_data(num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
+        else:
+            return self.train_dataset
+
+
+    def get_train_dataloader(self) -> DataLoader:
+        """
+        Returns the training :class:`~torch.utils.data.DataLoader`.
+
+        Will use no sampler if :obj:`self.train_dataset` does not implement :obj:`__len__`, a random sampler (adapted
+        to distributed training if necessary) otherwise.
+
+        Subclass and override this method if you want to inject some custom behavior.
+        """
+        train_dataset = self.get_train_dataset_shards()
+        return MultiTaskDataLoader(
+            max_steps=self.args.max_steps,
+            tasks_to_datasets=train_dataset,
+            batch_size=self.args.train_batch_size,
+            collate_fn=self.data_collator,
+            drop_last=self.args.dataloader_drop_last,
+            num_workers=self.args.dataloader_num_workers)
 
     def compute_loss(self, model, inputs):
         labels = inputs.pop("labels")

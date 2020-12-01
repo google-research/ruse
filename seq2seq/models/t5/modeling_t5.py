@@ -22,12 +22,7 @@ import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss
 
-from transformers.modeling_outputs import (
-    BaseModelOutput,
-    BaseModelOutputWithPastAndCrossAttentions,
-    Seq2SeqLMOutput,
-    Seq2SeqModelOutput,
-)
+from transformers.modeling_outputs import BaseModelOutput
 from transformers.utils import logging
 from transformers.modeling_t5 import (T5PreTrainedModel, T5LayerNorm, T5Block,
                                       T5DenseReluDense, T5Attention, T5LayerCrossAttention)
@@ -40,9 +35,6 @@ from .modeling_outputs import RuseBaseModelOutputWithPastAndCrossAttentions, Rus
 
 logger = logging.get_logger(__name__)
 
-# TODO(rabeeh): for now consider the simple case of one adapter for 1 task,
-#  and later we extend extend it to multiple adapters for multiple tasks.
-
 
 class T5LayerFF(nn.Module):
     def __init__(self, config):
@@ -52,10 +44,8 @@ class T5LayerFF(nn.Module):
         self.dropout = nn.Dropout(config.dropout_rate)
         self.train_adapters = config.train_adapters
         if self.train_adapters:
-            # TODO: adapter config should be a part of model config then. or do we want a separate config?
             adapter_config = AdapterConfig()
-            self.adapter = Adapter(config.d_model, adapter_config, eps=config.layer_norm_epsilon)
-            #self.adapter_layer_norm = self.adapter.adapter_norm_after
+            self.adapter = Adapter(config, adapter_config)
 
     def forward(self, hidden_states):
         #if self.train_adapters:
@@ -83,11 +73,8 @@ class T5LayerSelfAttention(nn.Module):
 
         self.train_adapters = config.train_adapters
         if self.train_adapters:
-            # TODO(rabeeh): think on how to pass config file.
-            adapter_config = AdapterConfig #()
-            self.adapter= Adapter(config.d_model, adapter_config, eps=config.layer_norm_epsilon)
-            #self.adapter_layer_norm = self.adapter.adapter_norm_after
-            #,  self.adapter_layer_norm
+            adapter_config = AdapterConfig()
+            self.adapter= Adapter(config, adapter_config)
 
     def forward(
         self,
@@ -101,7 +88,6 @@ class T5LayerSelfAttention(nn.Module):
     ):
         #if self.train_adapters:
         #    hidden_states = self.adapter(hidden_states)
-
         norm_x = self.layer_norm(hidden_states)
         attention_output = self.SelfAttention(
             norm_x,
@@ -116,7 +102,6 @@ class T5LayerSelfAttention(nn.Module):
         if self.train_adapters:
             y = self.adapter(y)
         layer_output = hidden_states + self.dropout(y)
-
 
         #if self.train_adapters:
         #    layer_output = self.adapter_layer_norm(layer_output)
@@ -444,8 +429,6 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
         self.decoder = T5Stack(decoder_config, self.shared)
 
         self.lm_head = nn.Linear(config.d_model, config.vocab_size, bias=False)
-      
-
 
         self.fixed_length_emb = config.fixed_length_emb
         self.only_projection_bottleneck = config.only_projection_bottleneck
@@ -480,6 +463,7 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
         head_mask=None,
         inputs_embeds=None,
         decoder_inputs_embeds=None,
+
         labels=None,
         use_cache=None,
         output_attentions=None,

@@ -16,9 +16,8 @@ class AdapterConfig:
     add_layer_norm_before: bool = False
     add_layer_norm_after: bool = True # changed for now was False
     output_adapter: bool = True
-    non_linearity: str = "swish" #"gelu" #"relu" #"gelu" #"swish"
+    non_linearity: str = "swish"
     reduction_factor: int = 16
-    init_bert_weights: bool = False #True
     adapter_initializer_range = 1e-2
 
 

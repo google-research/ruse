@@ -3,7 +3,7 @@ import os
 import sys
 
 import datasets
-from seq2seq.t5_trainer import T5Trainer
+from seq2seq.trainers import T5Trainer
 from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, HfArgumentParser, MBartTokenizer, set_seed
 from transformers.trainer_utils import EvaluationStrategy

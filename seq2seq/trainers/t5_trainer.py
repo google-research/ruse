@@ -6,7 +6,8 @@ import os
 import torch
 from torch import nn
 from torch.utils.data import DistributedSampler, RandomSampler
-from transformers import PreTrainedModel, logging, Trainer
+from transformers import PreTrainedModel, logging
+from .trainer import Trainer
 from transformers.configuration_fsmt import FSMTConfig
 from transformers.file_utils import is_torch_tpu_available
 from transformers.optimization import (

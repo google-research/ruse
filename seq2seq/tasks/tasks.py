@@ -462,10 +462,12 @@ class TaskCollator:
 
 class TaskDataLoader:
     """Wrapper around dataloader to keep the task names."""
-    def __init__(self, task_name, dataset, batch_size=8,
-                 collate_fn=None, drop_last=False, num_workers=0, sampler=None):
+    def __init__(self, task, dataset, batch_size=8,
+                 collate_fn=None, drop_last=False,
+                 num_workers=0, sampler=None):
         self.dataset = dataset
-        self.task_name = task_name
+        self.task = task
+        self.batch_size = batch_size 
         self.data_loader = DataLoader(self.dataset,
                                       batch_size=batch_size,
                                       sampler=sampler,
@@ -477,6 +479,8 @@ class TaskDataLoader:
 
     def __iter__(self):
         for batch in self.data_loader:
+            batch["task"] = self.task
+            print("batch info ", batch.keys(), batch["task"])
             yield batch
 
 
@@ -516,7 +520,6 @@ class MultiTaskDataLoader:
 
     @property
     def dataloader_sizes(self):
-
         if not hasattr(self, '_dataloader_sizes'):
             self._dataloader_sizes = {k: len(v) for k, v in self.task_to_dataloaders.items()}
         return self._dataloader_sizes
@@ -532,5 +535,4 @@ class MultiTaskDataLoader:
             taskname = np.random.choice(self.tasknames, p=self.sampling_weights)
             dataiter = self.dataiters[taskname]
             outputs = next(dataiter)
-            outputs["task"] = taskname
             yield outputs

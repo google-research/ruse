@@ -173,7 +173,6 @@ def main():
         data_collator=TaskCollator(tokenizer, data_args, training_args.tpu_num_cores),
         compute_metrics=compute_metrics_fn,
         data_args=data_args,
-        data_groups=None #data_groups if data_args.sampling and training_args.do_train else None
     )
 
     # Training
@@ -202,6 +201,7 @@ def main():
             from_tf=".ckpt" in training_args.output_dir,
             config=config,
             cache_dir=model_args.cache_dir,
+            tasks=data_args.task
         )
         trainer.model = model.to(training_args.device)
 

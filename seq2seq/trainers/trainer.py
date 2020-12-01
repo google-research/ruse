@@ -100,13 +100,13 @@ DEFAULT_CALLBACKS = [DefaultFlowCallback]
 DEFAULT_PROGRESS_CALLBACK = ProgressCallback
 
 if is_in_notebook():
-    from .utils.notebook import NotebookProgressCallback
+    from transformers.utils.notebook import NotebookProgressCallback
 
     DEFAULT_PROGRESS_CALLBACK = NotebookProgressCallback
 
 # Check if Pytorch version >= 1.6 to switch between Native AMP and Apex
 if version.parse(torch.__version__) < version.parse("1.6"):
-    from .file_utils import is_apex_available
+    from transformers.file_utils import is_apex_available
 
     if is_apex_available():
         from apex import amp
@@ -135,17 +135,17 @@ if is_tensorboard_available():
 
 
 if is_wandb_available():
-    from .integrations import WandbCallback
+    from transformers.integrations import WandbCallback
 
     DEFAULT_CALLBACKS.append(WandbCallback)
 
 if is_comet_available():
-    from .integrations import CometCallback
+    from transformers.integrations import CometCallback
 
     DEFAULT_CALLBACKS.append(CometCallback)
 
 if is_mlflow_available():
-    from .integrations import MLflowCallback
+    from transformers.integrations import MLflowCallback
 
     DEFAULT_CALLBACKS.append(MLflowCallback)
 
@@ -156,7 +156,7 @@ if is_ray_available():
     from ray import tune
 
 if is_azureml_available():
-    from .integrations import AzureMLCallback
+    from transformers.integrations import AzureMLCallback
 
     DEFAULT_CALLBACKS.append(AzureMLCallback)
 

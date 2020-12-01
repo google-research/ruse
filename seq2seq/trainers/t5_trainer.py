@@ -1,10 +1,12 @@
 """Implements a T5 trainer class doing training and evaluation."""
 
+import collections
 from typing import Any, Dict, Optional, Tuple, Union
 import warnings
 import os
 import torch
 from torch import nn
+from torch.utils.data.dataset import Dataset
 from torch.utils.data import DistributedSampler, RandomSampler
 from transformers import PreTrainedModel, logging
 from .trainer import Trainer
@@ -51,7 +53,7 @@ from seq2seq.utils import upload
 
 
 class T5Trainer(Trainer):
-    def __init__(self, config=None, data_args=None, data_groups=None, *args, **kwargs):
+    def __init__(self, config=None, data_args=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if config is None:
@@ -62,7 +64,6 @@ class T5Trainer(Trainer):
         else:
             self.config = config
 
-        #self.data_groups = data_groups
         self.data_args = data_args
         self.vocab_size = self.config.tgt_vocab_size if isinstance(self.config, FSMTConfig) else self.config.vocab_size
         self.gcs_bucket=self.args.gcs_bucket
@@ -136,6 +137,7 @@ class T5Trainer(Trainer):
             )
         return scheduler
 
+    """
     def _get_train_sampler(self) -> Optional[torch.utils.data.sampler.Sampler]:
         if isinstance(self.train_dataset, torch.utils.data.IterableDataset):
             return None
@@ -153,6 +155,35 @@ class T5Trainer(Trainer):
                 if self.args.local_rank == -1
                 else DistributedSampler(self.train_dataset)
             )
+    """
+
+    def get_eval_dataloader(self, eval_dataset: Dataset, task:str) -> DataLoader:
+        """
+        Returns the evaluation :class:`~torch.utils.data.DataLoader`.
+
+        Subclass and override this method if you want to inject some custom behavior.
+
+        Args:
+            eval_dataset (:obj:`torch.utils.data.dataset.Dataset`, `optional`):
+                If provided, will override :obj:`self.eval_dataset`. If it is
+                an :obj:`datasets.Dataset`, columns not accepted by the ``model.forward()``
+                method are automatically removed. It must implement :obj:`__len__`.
+        """
+        if eval_dataset is None:
+            raise ValueError("Trainer: evaluation requires an eval_dataset.")
+        elif eval_dataset is not None and not isinstance(eval_dataset, collections.abc.Sized):
+            raise ValueError("eval_dataset must implement __len__")
+        eval_sampler = self._get_eval_sampler(eval_dataset)
+
+        return TaskDataLoader(
+            dataset=eval_dataset,
+            task=task,
+            sampler=eval_sampler,
+            batch_size=self.args.eval_batch_size,
+            collate_fn=self.data_collator,
+            drop_last=self.args.dataloader_drop_last,
+            num_workers=self.args.dataloader_num_workers,
+        )
 
     # : Optional[Dataset] = None
     def evaluate(self, eval_datasets, task_to_compute_metrics) -> Dict[str, float]:
@@ -181,7 +212,7 @@ class T5Trainer(Trainer):
         model_config = self.model.config
         for eval_task, eval_dataset in eval_datasets.items():
             use_task_specific_params(self.model, eval_task)
-            eval_dataloader = self.get_eval_dataloader(eval_dataset)
+            eval_dataloader = self.get_eval_dataloader(eval_dataset, eval_task)
             self.compute_metrics = task_to_compute_metrics[eval_task]
             output = self.prediction_loop(
                 eval_dataloader,
@@ -363,11 +394,12 @@ class T5Trainer(Trainer):
             #else self.config.max_length,
             "num_beams": self.config.num_beams #self.data_args.eval_beams if self.data_args is not None else self.config.num_beams,
         }
-
+        print("### task inside prediction step ", inputs["task"])
         if self.args.predict_with_generate and not self.args.prediction_loss_only:
             generated_tokens = self.model.generate(
                 inputs["input_ids"],
                 attention_mask=inputs["attention_mask"],
+                task = inputs["task"],
                 **gen_kwargs,
             )
             # in case the batch is shorter than max length, the output should be padded

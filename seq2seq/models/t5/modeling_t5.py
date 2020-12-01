@@ -512,7 +512,7 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
             a dog is good for you ", return_tensors="pt").input_ids# Batch size 1
             >>> outputs = model.generate(input_ids)
         """
-
+        print("#### task ", task)
         if "lm_labels" in kwargs:
             warnings.warn(
                 "The `lm_labels` argument is deprecated and will be removed in a future version, use `labels` instead.",

@@ -316,10 +316,11 @@ class T5Trainer(Trainer):
     def get_sharded_data(self, num_replicas, rank):
         """Returns the sharded data belonging to the given rank."""
         sharded_dataset_names_to_datasets = {}
-        for dataset_name, dataset in self.train_dataset:
+        for dataset_name, dataset in self.train_dataset.items():
             sharded_data = dataset.shard(num_replicas, rank)
             sharded_dataset_names_to_datasets.update({dataset_name: sharded_data})
-        return sharded_dataset_names_to_datasets
+        self.train_dataset = sharded_dataset_names_to_datasets
+        return self.train_dataset
 
 
     def get_train_dataset_shards(self):

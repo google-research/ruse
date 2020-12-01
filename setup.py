@@ -32,6 +32,7 @@ def setup_package():
       packages=setuptools.find_packages(
           exclude=['docs', 'tests', 'scripts', 'examples']),
       install_requires=[
+        'sentencepiece == 0.1.91',
         'transformers==3.5.1',
         'tensorboard',
         'scikit-learn',
@@ -52,11 +53,9 @@ def setup_package():
         'fire',
         'pytest',
         'conllu',
-        'sentencepiece == 0.1.91',
         'tf-nightly',
         'google-cloud-storage',
       ],
-      # TODO(rabeeh): add install_requires of t5 after they fixed they repo.
       classifiers=[
           'Intended Audience :: Developers',
           'Intended Audience :: Science/Research',
@@ -65,10 +64,6 @@ def setup_package():
           'Programming Language :: Python :: 3',
           'Programming Language :: Python :: 3.7',
       ],
-      #extras_require={
-      #  "cpu": ["torch"],
-      #  "gpu": ["torch"],
-      #},
       keywords='text nlp machinelearning',
   )
 

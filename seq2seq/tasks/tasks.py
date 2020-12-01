@@ -330,14 +330,6 @@ class QNLITaskDataset(AbstractTaskDataset):
                 "tgt_texts": str(example['label'])}
 
 
-# Note not to use itertools.cycle since it is 
-# doing some caching under the hood, resulting
-# in issues in the dataloading pipeline.
-# see https://docs.python.org/3.7/library/itertools.html?highlight=cycle#itertools.cycle
-def cycle(iterable):
-    while True:
-        for x in iterable:
-            yield x
 
 class RTETaskDataset(AbstractTaskDataset):
     task = Task(name="rte", category="classification")
@@ -487,6 +479,15 @@ class TaskDataLoader:
         for batch in self.data_loader:
             yield batch
 
+
+# Note not to use itertools.cycle since it is
+# doing some caching under the hood, resulting
+# in issues in the dataloading pipeline.
+# see https://docs.python.org/3.7/library/itertools.html?highlight=cycle#itertools.cycle
+def cycle(iterable):
+    while True:
+        for x in iterable:
+            yield x
 
 
 class MultiTaskDataLoader:

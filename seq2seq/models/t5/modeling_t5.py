@@ -485,6 +485,7 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
         output_attentions=None,
         output_hidden_states=None,
         return_dict=None,
+        task=None,
         **kwargs,
     ):
         r"""

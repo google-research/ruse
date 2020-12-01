@@ -527,13 +527,10 @@ class MultiTaskDataLoader:
         return sum(len(dataloader.dataset) for dataloader in self.task_to_dataloaders.values())
 
     def __iter__(self):
-        #outputs = {}
         for i in range(self.max_steps):
             taskname = np.random.choice(self.tasknames, p=self.sampling_weights)
             dataiter = self.dataiters[taskname]
-            #outputs["batch"] = next(dataiter)
-            #outputs["task"] = taskname
-            #outputs = next(dataiter)
-            #outputs["task"] = taskname
+            outputs = next(dataiter)
+            outputs["task"] = taskname
             outputs = next(dataiter)
             yield outputs

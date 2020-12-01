@@ -77,7 +77,5 @@ class AdapterController(nn.Module):
         # Disable other adapters.
         other_tasks = [x for x in self.tasks if x != task]
         self.disable_adapters(other_tasks)
-        for name, a in self.named_parameters():
-            print(name, a.requires_grad)
         adapter = self.get_adapter(task)
         return adapter(inputs)

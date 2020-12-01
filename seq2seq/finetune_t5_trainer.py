@@ -94,13 +94,14 @@ def main():
     )
 
     if model_args.not_load_t5_checkpoint:
-        model = T5ForConditionalGeneration(config=config)
+        model = T5ForConditionalGeneration(config=config, tasks=data_args.task)
     else:
         model = T5ForConditionalGeneration.from_pretrained(
             model_args.model_name_or_path,
             from_tf=".ckpt" in model_args.model_name_or_path,
             config=config,
             cache_dir=model_args.cache_dir,
+            tasks=data_args.task
         )
 
     # set num_beams for evaluation

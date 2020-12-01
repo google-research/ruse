@@ -8,7 +8,6 @@ from transformers.modeling_outputs import BaseModelOutput
 
 # TODO(rabeeh): complete the documentation.
 
-
 @dataclass
 class RuseBaseModelOutputWithPastAndCrossAttentions(BaseModelOutput):
     """

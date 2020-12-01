@@ -533,5 +533,4 @@ class MultiTaskDataLoader:
             dataiter = self.dataiters[taskname]
             outputs = next(dataiter)
             outputs["task"] = taskname
-            outputs = next(dataiter)
             yield outputs

@@ -27,6 +27,7 @@ from transformers.utils import logging
 from transformers.modeling_t5 import (T5PreTrainedModel, T5LayerNorm, T5Block,
                                       T5DenseReluDense, T5Attention, T5LayerCrossAttention)
 from seq2seq.adapters import Adapter, AdapterConfig
+from seq2seq.adapters import AdapterController
 
 from .poolings import AutoPooling
 from .projections import AutoProjection
@@ -44,21 +45,21 @@ class T5LayerFF(nn.Module):
         self.dropout = nn.Dropout(config.dropout_rate)
         self.train_adapters = config.train_adapters
         if self.train_adapters:
-            adapter_config = AdapterConfig()
-            self.adapter = Adapter(config, adapter_config)
+            self.adapter_controller = AdapterController(config.tasks, config)
+            #self.adapter = self.adapter_controller().get_adapter("mrpc")
+            #adapter_config = AdapterConfig()
+            #self.adapter = Adapter(config, adapter_config)
 
-    def forward(self, hidden_states):
+    def forward(self, hidden_states, task=None):
         #if self.train_adapters:
         #    hidden_states = self.adapter(hidden_states)
         norm_x = self.layer_norm(hidden_states)
         y = self.DenseReluDense(norm_x)
         if self.train_adapters:
-            y = self.adapter(y)
+            y = self.adapter_controller(task, y)
         layer_output = hidden_states + self.dropout(y)
-
         #if self.train_adapters:
         #    layer_output = self.adapter_layer_norm(layer_output)
-
         return layer_output
 
 
@@ -73,8 +74,10 @@ class T5LayerSelfAttention(nn.Module):
 
         self.train_adapters = config.train_adapters
         if self.train_adapters:
-            adapter_config = AdapterConfig()
-            self.adapter= Adapter(config, adapter_config)
+            if self.train_adapters:
+                self.adapter_controller = AdapterController(config.tasks, config)
+            #adapter_config = AdapterConfig()
+            #self.adapter= Adapter(config, adapter_config)
 
     def forward(
         self,
@@ -85,6 +88,7 @@ class T5LayerSelfAttention(nn.Module):
         past_key_value=None,
         use_cache=False,
         output_attentions=False,
+        task=None,
     ):
         #if self.train_adapters:
         #    hidden_states = self.adapter(hidden_states)
@@ -100,7 +104,8 @@ class T5LayerSelfAttention(nn.Module):
         )
         y = attention_output[0]
         if self.train_adapters:
-            y = self.adapter(y)
+            y = self.adapter_controller(task, y)
+            #y = self.adapter(y)
         layer_output = hidden_states + self.dropout(y)
 
         #if self.train_adapters:
@@ -135,8 +140,8 @@ class T5Block(nn.Module):
         use_cache=False,
         output_attentions=False,
         return_dict=False,
+        task=None
     ):
-
         if past_key_value is not None:
             assert self.is_decoder, "Only decoder can use `past_key_values`"
             expected_num_past_key_values = 2 if encoder_hidden_states is None else 4
@@ -163,6 +168,7 @@ class T5Block(nn.Module):
             past_key_value=self_attn_past_key_value,
             use_cache=use_cache,
             output_attentions=output_attentions,
+            task=task
         )
         hidden_states, present_key_value_state = self_attention_outputs[:2]
         # Keep self-attention outputs and relative position weights
@@ -177,6 +183,8 @@ class T5Block(nn.Module):
             else:
                 query_length = None
 
+            # TODO(rabeeh): We do not for now add adapters to cross-attention
+            #   layers, might to at some point.
             cross_attention_outputs = self.layer[1](
                 hidden_states,
                 kv=encoder_hidden_states,
@@ -198,7 +206,7 @@ class T5Block(nn.Module):
             attention_outputs = attention_outputs + cross_attention_outputs[2:]
 
         # Apply Feed Forward layer
-        hidden_states = self.layer[-1](hidden_states)
+        hidden_states = self.layer[-1](hidden_states, task=task)
         outputs = (hidden_states,)
 
         outputs = outputs + (present_key_value_state,) + attention_outputs
@@ -254,8 +262,8 @@ class T5Stack(T5PreTrainedModel):
         output_attentions=None,
         output_hidden_states=None,
         return_dict=None,
+        task=None,
     ):
-
         use_cache = use_cache if use_cache is not None else self.config.use_cache
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
@@ -336,6 +344,7 @@ class T5Stack(T5PreTrainedModel):
                 past_key_value=past_key_value,
                 use_cache=use_cache,
                 output_attentions=output_attentions,
+                task=task
             )
             # layer_outputs is a tuple with:
             # hidden-states, key-value-states, (self-attention weights),
@@ -345,7 +354,8 @@ class T5Stack(T5PreTrainedModel):
 
             if i == 0:
                 # We share the position biases between the layers - the first layer store them
-                # layer_outputs = hidden-states, key-value-states (self-attention weights), (self-attention position bias), (cross-attention weights), (cross-attention position bias)
+                # layer_outputs = hidden-states, key-value-states (self-attention weights),
+                # (self-attention position bias), (cross-attention weights), (cross-attention position bias)
                 position_bias = layer_outputs[3 if output_attentions else 2]
                 if self.is_decoder and encoder_hidden_states is not None:
                     encoder_decoder_position_bias = layer_outputs[5 if output_attentions else 3]
@@ -406,28 +416,26 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
     authorized_missing_keys = [r"encoder\.embed_tokens\.weight",
       r"decoder\.embed_tokens\.weight", r"lm_head\.weight"]
 
-    def __init__(self, config):
+    def __init__(self, config, tasks=None):
         super().__init__(config)
         self.model_dim = config.d_model
-
         self.shared = nn.Embedding(config.vocab_size, config.d_model)
-
         encoder_config = copy.deepcopy(config)
         encoder_config.use_cache = False
         encoder_config.is_encoder_decoder = False
         if config.train_adapters:
-          encoder_config.train_adapters = True
+            encoder_config.train_adapters = True
+            encoder_config.tasks = tasks
         self.encoder = T5Stack(encoder_config, self.shared)
 
         decoder_config = copy.deepcopy(config)
         decoder_config.is_decoder = True
         decoder_config.is_encoder_decoder = False
         decoder_config.num_layers = config.num_decoder_layers
-
         if config.train_adapters:
-          decoder_config.train_adapters = True
+            decoder_config.train_adapters = True
+            decoder_config.tasks = tasks
         self.decoder = T5Stack(decoder_config, self.shared)
-
         self.lm_head = nn.Linear(config.d_model, config.vocab_size, bias=False)
 
         self.fixed_length_emb = config.fixed_length_emb
@@ -463,7 +471,6 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
         head_mask=None,
         inputs_embeds=None,
         decoder_inputs_embeds=None,
-
         labels=None,
         use_cache=None,
         output_attentions=None,
@@ -541,6 +548,7 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
                 output_attentions=output_attentions,
                 output_hidden_states=output_hidden_states,
                 return_dict=return_dict,
+                task=task
             )
         elif return_dict and not isinstance(encoder_outputs, BaseModelOutput):
             # TODO(rabeeh): from what I see it does not go here.
@@ -591,6 +599,7 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
+            task=task
         )
 
         sequence_output = decoder_outputs[0]

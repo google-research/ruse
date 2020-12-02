@@ -90,6 +90,8 @@ class Seq2SeqTrainingArguments(TrainingArguments):
     )
     train_adapters: bool = field(default=False, metadata={"help":
         "Train an adapter instead of the full model."})
+    temperature: int = field(default=1, metadata={"help": "Defines the temperature"
+        "value for sampling across the multiple datasets."})
 
 
 @dataclass

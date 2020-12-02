@@ -7,9 +7,10 @@ import os
 import torch
 from torch import nn
 from torch.utils.data.dataset import Dataset
+from seq2seq.samplers import MultiTaskBatchSampler
 from torch.utils.data import DistributedSampler, RandomSampler
 from transformers import PreTrainedModel, logging
-from .trainer import Trainer
+from transformers import Trainer
 from transformers.configuration_fsmt import FSMTConfig
 from transformers.file_utils import is_torch_tpu_available
 from torch.utils.data.dataloader import DataLoader
@@ -53,7 +54,7 @@ from seq2seq.utils import upload
 
 
 class T5Trainer(Trainer):
-    def __init__(self, config=None, data_args=None, *args, **kwargs):
+    def __init__(self, config=None, data_args=None, dataset_sizes=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if config is None:
@@ -64,6 +65,7 @@ class T5Trainer(Trainer):
         else:
             self.config = config
 
+        self.dataset_sizes = dataset_sizes
         self.data_args = data_args
         self.vocab_size = self.config.tgt_vocab_size if isinstance(self.config, FSMTConfig) else self.config.vocab_size
         self.gcs_bucket=self.args.gcs_bucket
@@ -156,6 +158,7 @@ class T5Trainer(Trainer):
                 else DistributedSampler(self.train_dataset)
             )
     """
+
 
     def get_eval_dataloader(self, eval_dataset: Dataset, task:str) -> DataLoader:
         """
@@ -322,9 +325,9 @@ class T5Trainer(Trainer):
         self.train_dataset = sharded_dataset_names_to_datasets
         return self.train_dataset
 
-
+    """
     def get_train_dataset_shards(self):
-        """In case of multiprocessing, returns the sharded data for the given rank."""
+        #In case of multiprocessing, returns the sharded data for the given rank.
         if is_torch_tpu_available():
             if xm.xrt_world_size() > 1:
                 return self.get_sharded_data(num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
@@ -334,7 +337,7 @@ class T5Trainer(Trainer):
                 return self.get_sharded_data(num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
         else:
             return self.train_dataset
-
+    """
 
     def get_train_dataloader(self) -> DataLoader:
         """
@@ -345,8 +348,8 @@ class T5Trainer(Trainer):
 
         Subclass and override this method if you want to inject some custom behavior.
         """
-        train_dataset = self.get_train_dataset_shards()
-
+        #train_dataset = self.get_train_dataset_shards()
+        """
         return MultiTaskDataLoader(
             max_steps=self.args.max_steps,
             tasks_to_datasets=train_dataset,
@@ -354,6 +357,15 @@ class T5Trainer(Trainer):
             collate_fn=self.data_collator,
             drop_last=self.args.dataloader_drop_last,
             num_workers=self.args.dataloader_num_workers)
+        """
+
+        # TODO: we need to make sure that the number of batches are correctly computed
+        #   and this is consistent across the cores.
+        multitask_sampler = MultiTaskBatchSampler(self.dataset_sizes, self.args.train_batch_size,
+                self.args.temperature)
+        return DataLoader(self.train_dataset, batch_sampler=multitask_sampler,
+                                collate_fn=self.data_collator)
+
 
     def compute_loss(self, model, inputs):
         labels = inputs.pop("labels")

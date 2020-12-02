@@ -3,9 +3,10 @@ import os
 import sys
 
 import datasets
+from transformers.file_utils import is_torch_tpu_available
 from seq2seq.trainers import T5Trainer
 from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, HfArgumentParser, MBartTokenizer, set_seed
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, HfArgumentParser, set_seed
 from transformers.trainer_utils import EvaluationStrategy
 from seq2seq.utils import (
     assert_all_frozen,
@@ -30,6 +31,17 @@ from transformers.modeling_t5  import T5LayerNorm
 
 logger = logging.getLogger(__name__)
 
+if is_torch_tpu_available():
+    import torch_xla.core.xla_model as xm
+
+
+
+def shard_data(datasets, num_replicas, rank):
+    """Returns the sharded data belonging to the given rank."""
+    for i, dataset in enumerate(datasets):
+        sharded_dataset = dataset.shard(num_replicas, rank)
+        datasets[i] = sharded_dataset
+    return datasets
 
 def main():
     # See all possible arguments in src/transformers/training_args.py
@@ -43,9 +55,7 @@ def main():
         # let's parse it to get our arguments.
         model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
-
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
-    print("### data_args ", data_args)
     check_output_dir(training_args)
 
     # Setup logging
@@ -130,8 +140,17 @@ def main():
 
     dataset_class = AutoTask
     if training_args.do_train:
-        train_dataset = {task: dataset_class.get(task).get_dataset(
-            split="train", n_obs=data_args.n_train) for task in data_args.task}
+        train_datasets = [dataset_class.get(task).get_dataset(
+            split="train", n_obs=data_args.n_train) for task in data_args.task]
+        # Shard the data if needed.
+        # TODO: also add for distribued GPU training.
+        if is_torch_tpu_available() and xm.xrt_world_size() > 1:
+            train_dataset = shard_data(train_datasets, num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
+        dataset_sizes = [len(train_dataset) for train_dataset in train_datasets]
+        train_dataset = datasets.concatenate_datasets(train_datasets)
+
+        #train_dataset = {task: dataset_class.get(task).get_dataset(
+        #    split="train", n_obs=data_args.n_train) for task in data_args.task}
         # TODO: can be reordered later on.
         #data_groups = compute_data_groups(list(train_dataset.values()))
         #train_dataset = datasets.concatenate_datasets(list(train_dataset.values()))
@@ -173,6 +192,7 @@ def main():
         data_collator=TaskCollator(tokenizer, data_args, training_args.tpu_num_cores),
         compute_metrics=compute_metrics_fn,
         data_args=data_args,
+        dataset_sizes=dataset_sizes
     )
 
     # Training

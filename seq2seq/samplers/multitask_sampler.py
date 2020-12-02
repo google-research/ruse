@@ -39,8 +39,8 @@ class MultiTaskBatchSampler(Sampler[T_co]):
             num_task_samples = self.dataset_sizes[batch_task]
             # TODO: this is always with replacement, we can also think to do it without
             #   replacement
-            yield self.dataset_offsets[batch_task] + torch.randint(low=0, high=num_task_samples,
-                size=(self.batch_size, ), generator=generator).tolist()
+            yield (self.dataset_offsets[batch_task] + torch.randint(low=0, high=num_task_samples,
+                size=(self.batch_size, ), generator=generator)).tolist()
 
     def __len__(self):
         return self.num_batches_per_epoch

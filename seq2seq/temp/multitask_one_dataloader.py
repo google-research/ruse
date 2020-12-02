@@ -9,9 +9,8 @@ from transformers import AutoTokenizer
 from seq2seq.training_args import  DataTrainingArguments
 
 T_co = TypeVar('T_co', covariant=True)
-from torch.utils.data.distributed import DistributedSampler
 
-class MultiTaskBatchSampler(DistributedSampler): #Sampler[T_co]):
+class MultiTaskBatchSampler(Sampler[T_co]):
     def __init__(self, dataset_sizes, batch_size: int, temperature, seed: int = 0) -> None:
         self.batch_size = batch_size
         self.dataset_sizes = dataset_sizes
@@ -29,7 +28,6 @@ class MultiTaskBatchSampler(DistributedSampler): #Sampler[T_co]):
 
     def __iter__(self):
         # TODO: we need to have shuffle here?
-
         # We have to ensure that:
         #    - each process gets the same task.
         #    - indices are per process.
@@ -67,25 +65,24 @@ if __name__ == "__main__":
     num_replicas = 4
     dataset1 = AutoTask.get("rte").get_dataset(split="train", n_obs="16")
     dataset2 = AutoTask.get("cola").get_dataset(split="train", n_obs="32")
-    print(dataset1)
-    print(dataset2)
-
     train_datasets = [dataset1, dataset2]
     train_datasets = shard_data(train_datasets, num_replicas=num_replicas, rank=rank)
     multitask_dataset = datasets.concatenate_datasets(train_datasets)
     dataset_sizes = [len(train_dataset) for train_dataset in train_datasets]
     batch_size = 2
     temperature = 10
-    print(dataset_sizes)
-    print(multitask_dataset)
     multitask_sampler = MultiTaskBatchSampler(dataset_sizes, batch_size, temperature)
+
+    # Defining datacollator.
+    """
     tokenizer = AutoTokenizer.from_pretrained("t5-small")
     data_args= DataTrainingArguments(sampling=True, task=['mrpc'],
     max_source_length=128, max_target_length=128, val_max_target_length=128,
     test_max_target_length=128, n_train=10, n_val=-1, n_test=-1, eval_beams=None,
     ignore_pad_token_for_loss=True)
     collator = TaskCollator(tokenizer, data_args, 0)
-    dataloader = DataLoader(multitask_dataset, batch_sampler=multitask_sampler, collate_fn=collator)
+    """
+
+    dataloader = DataLoader(multitask_dataset, batch_sampler=multitask_sampler)#, collate_fn=collator)
     for i, batch in enumerate(dataloader):
         print(i, batch)
-        print("######################")

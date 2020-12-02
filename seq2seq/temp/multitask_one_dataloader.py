@@ -67,11 +67,14 @@ if __name__ == "__main__":
     num_replicas = 4
     dataset1 = AutoTask.get("rte").get_dataset(split="train", n_obs="16")
     dataset2 = AutoTask.get("cola").get_dataset(split="train", n_obs="32")
+    print(dataset1)
+    print(dataset2)
+
     train_datasets = [dataset1, dataset2]
     train_datasets = shard_data(train_datasets, num_replicas=num_replicas, rank=rank)
     multitask_dataset = datasets.concatenate_datasets(train_datasets)
     dataset_sizes = [len(train_dataset) for train_dataset in train_datasets]
-    batch_size = 4
+    batch_size = 2
     temperature = 10
     print(dataset_sizes)
     print(multitask_dataset)
@@ -83,9 +86,6 @@ if __name__ == "__main__":
     ignore_pad_token_for_loss=True)
     collator = TaskCollator(tokenizer, data_args, 0)
     dataloader = DataLoader(multitask_dataset, batch_sampler=multitask_sampler, collate_fn=collator)
-    for batch in dataloader:
-        print(batch)
-
-    print(dataloader.batch_sampler)
-    if (isinstance(dataloader.sampler, DistributedSampler)):
-        print("### yes")
+    for i, batch in enumerate(dataloader):
+        print(i, batch)
+        print("######################")

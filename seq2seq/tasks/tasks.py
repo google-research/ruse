@@ -246,7 +246,7 @@ class MRPCTaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "MRPC sentence1 : {} sentence2: {}".format(example['sentence1'], example['sentence2']),
-                "tgt_texts": str(example['label'])}
+                "tgt_texts": str(example['label']), "task": self.task.name}
 
 
 class COLATaskDataset(AbstractTaskDataset):
@@ -259,7 +259,7 @@ class COLATaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "COLA sentence : {}".format(example['sentence']),
-                "tgt_texts": str(example['label'])}
+                "tgt_texts": str(example['label']), "task": self.task.name}
 
 
 class SST2TaskDataset(AbstractTaskDataset):
@@ -342,7 +342,7 @@ class RTETaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "RTE sentence1 : {} sentence2 : {}".format(example['sentence1'], example['sentence2']),
-                "tgt_texts": str(example['label'])}
+                "tgt_texts": str(example['label']), "task": self.task.name}
 
 
 
@@ -438,9 +438,7 @@ class TaskCollator:
         }
         if self.return_targets:
             output_batch["targets"] = batch["targets"]
-
-        # TODO: remove this.
-        output_batch["task"] = "mrpc" 
+        output_batch["task"] = batch["task"]
         return output_batch
 
     def _shift_right_t5(self, input_ids):
@@ -461,6 +459,10 @@ class TaskCollator:
         )
         if self.return_targets:
             batch_encoding["targets"] = torch.tensor([self.label_to_id[x["tgt_texts"]] for x in batch])
+        tasks = [x["task"] for x in batch]
+        # There should be only one task per batch.
+        assert (len(set(tasks)) == 1)
+        batch_encoding["task"] = tasks[0]
         return batch_encoding.data
 
 

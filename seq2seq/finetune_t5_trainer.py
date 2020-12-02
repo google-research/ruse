@@ -110,11 +110,11 @@ def main():
 
     if training_args.train_adapters:
         # TODO: check this is working.
-        partly_freeze_params(model, 'adapter')
+        #partly_freeze_params(model, 'adapter')
         # Sets the last layer of decoder to be trained.
+        freeze_params(model)
         for param in model.lm_head.parameters():
           param.require_grad = True
-
         # TODO(rabeeh): to be checked if needed.
         #for name, sub_module in model.named_modules():
         #    if isinstance(sub_module, (Adapter, T5LayerNorm, nn.LayerNorm)):

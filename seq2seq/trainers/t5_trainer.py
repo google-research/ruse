@@ -346,6 +346,7 @@ class T5Trainer(Trainer):
         Subclass and override this method if you want to inject some custom behavior.
         """
         train_dataset = self.get_train_dataset_shards()
+
         return MultiTaskDataLoader(
             max_steps=self.args.max_steps,
             tasks_to_datasets=train_dataset,
@@ -385,7 +386,6 @@ class T5Trainer(Trainer):
             A tuple with the loss, logits and labels (each being optional).
         """
         inputs = self._prepare_inputs(inputs)
-
         # TODO: we set these in evalute function, does this function is called alone too?
         # TODO: the arguments needs to be handled per task.
         gen_kwargs = {
@@ -395,11 +395,11 @@ class T5Trainer(Trainer):
             #else self.config.max_length,
             "num_beams": self.config.num_beams #self.data_args.eval_beams if self.data_args is not None else self.config.num_beams,
         }
+        gen_kwargs["task"] = inputs["task"]
         if self.args.predict_with_generate and not self.args.prediction_loss_only:
             generated_tokens = self.model.generate(
                 inputs["input_ids"],
                 attention_mask=inputs["attention_mask"],
-                task = inputs["task"],
                 **gen_kwargs,
             )
             # in case the batch is shorter than max length, the output should be padded

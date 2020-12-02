@@ -1,3 +1,4 @@
+import numpy as np
 from collections import OrderedDict
 from typing import Callable, Dict, Mapping, List
 import torch
@@ -6,7 +7,7 @@ import datasets
 import abc
 from transformers import T5Tokenizer
 from torch.utils.data.dataloader import DataLoader
-import numpy as np 
+
 
 def compute_task_max_decoding_length(word_list):
     tokenizer = T5Tokenizer.from_pretrained('t5-base')
@@ -467,7 +468,7 @@ class TaskDataLoader:
                  num_workers=0, sampler=None):
         self.dataset = dataset
         self.task = task
-        self.batch_size = batch_size 
+        self.batch_size = batch_size
         self.data_loader = DataLoader(self.dataset,
                                       batch_size=batch_size,
                                       sampler=sampler,

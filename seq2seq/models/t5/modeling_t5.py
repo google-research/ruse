@@ -512,7 +512,6 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
             a dog is good for you ", return_tensors="pt").input_ids# Batch size 1
             >>> outputs = model.generate(input_ids)
         """
-        print("#### task ", task)
         if "lm_labels" in kwargs:
             warnings.warn(
                 "The `lm_labels` argument is deprecated and will be removed in a future version, use `labels` instead.",
@@ -634,17 +633,16 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
     def prepare_inputs_for_generation(
         self, input_ids, past=None, attention_mask=None, use_cache=None, encoder_outputs=None, **kwargs
     ):
-
         # cut decoder_input_ids if past is used
         if past is not None:
             input_ids = input_ids[:, -1:]
-
         return {
             "decoder_input_ids": input_ids,
             "past_key_values": past,
             "encoder_outputs": encoder_outputs,
             "attention_mask": attention_mask,
             "use_cache": use_cache,
+            "task": kwargs["task"]
         }
 
     def _reorder_cache(self, past, beam_idx):

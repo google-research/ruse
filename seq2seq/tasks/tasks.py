@@ -63,7 +63,7 @@ class SquadTaskDataset(AbstractTaskDataset):
     def preprocessor(self, example):
         return {"src_texts": "question: {0} context: {1} ".format(
             example["question"], example["context"]),
-            "tgt_texts": example["answers"]["text"][0]}
+            "tgt_texts": example["answers"]["text"][0], "task": self.task.name}
 
 
 class IMDBTaskDataset(AbstractTaskDataset):
@@ -74,7 +74,7 @@ class IMDBTaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "imdb: " + example["text"],
-                "tgt_texts": str(example["label"])}
+                "tgt_texts": str(example["label"]), "task": self.task.name}
 
 
 class BoolQTaskDataset(AbstractTaskDataset):
@@ -85,7 +85,7 @@ class BoolQTaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "Boolq question: {} passage: {}: ".format(example["question"], example["passage"]),
-                "tgt_texts": str(example["answer"])}
+                "tgt_texts": str(example["answer"]), "task": self.task.name}
 
 
 class SNLITaskDataset(AbstractTaskDataset):
@@ -97,7 +97,7 @@ class SNLITaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "SNLI premise {} hypothesis {}: ".format(example["premise"], example["hypothesis"]),
-                "tgt_texts": str(example["label"])}
+                "tgt_texts": str(example["label"]), "task": self.task.name}
 
 
 # TODO: the class should get the name of pairs as a argument.
@@ -112,7 +112,7 @@ class IWSLT2017RONL(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "Translate Romanian to Dutch:  {}".format(example['translation']["ro"]),
-                "tgt_texts": str(example['translation']["nl"])}
+                "tgt_texts": str(example['translation']["nl"]), "task": self.task.name}
 
 
 
@@ -126,7 +126,7 @@ class IWSLT2017ENNL(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "Translate English to Dutch:  {}".format(example['translation']["en"]),
-                "tgt_texts": str(example['translation']["nl"])}
+                "tgt_texts": str(example['translation']["nl"]), "task": self.task.name}
 
 
 
@@ -140,7 +140,7 @@ class WMT16ENROTaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "Translate English to Romanian:  {}".format(example['translation']["en"]),
-                "tgt_texts": str(example['translation']["ro"])}
+                "tgt_texts": str(example['translation']["ro"]), "task": self.task.name}
 
 
 class WMT16ROENTaskDataset(AbstractTaskDataset):
@@ -153,7 +153,7 @@ class WMT16ROENTaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "Translate Romanian to English:  {}".format(example['translation']["ro"]),
-                "tgt_texts": str(example['translation']["en"])}
+                "tgt_texts": str(example['translation']["en"]), "task": self.task.name}
 
 
 class WMT16ENCSTaskDataset(AbstractTaskDataset):
@@ -166,7 +166,7 @@ class WMT16ENCSTaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "Translate English to Czech:  {}".format(example['translation']["en"]),
-                "tgt_texts": str(example['translation']["cs"])}
+                "tgt_texts": str(example['translation']["cs"]), "task": self.task.name}
 
 
 class WMT16ENFITaskDataset(AbstractTaskDataset):
@@ -179,7 +179,7 @@ class WMT16ENFITaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "Translate English to Finnish:  {}".format(example['translation']["en"]),
-                "tgt_texts": str(example['translation']["fi"])}
+                "tgt_texts": str(example['translation']["fi"]), "task": self.task.name}
 
 
 class WMT14HIENTaskDataset(AbstractTaskDataset):
@@ -192,7 +192,7 @@ class WMT14HIENTaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "Translate English to Romanian:  {}".format(example['translation']["hi"]),
-                "tgt_texts": str(example['translation']["en"])}
+                "tgt_texts": str(example['translation']["en"]), "task": self.task.name}
 
 
 class TRECTaskDataset(AbstractTaskDataset):
@@ -205,7 +205,7 @@ class TRECTaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "Trec sentence :  {}".format(example['text']),
-                "tgt_texts": str(example['label-coarse'])}
+                "tgt_texts": str(example['label-coarse']), "task": self.task.name}
 
 
 class YelpPolarityTaskDataset(AbstractTaskDataset):
@@ -219,7 +219,7 @@ class YelpPolarityTaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "Yelp Polarity sentence :  {}".format(example['text']),
-                "tgt_texts": str(example['label'])}
+                "tgt_texts": str(example['label']), "task": self.task.name}
 
 
 class ScitailTaskDataset(AbstractTaskDataset):
@@ -233,7 +233,7 @@ class ScitailTaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "Scitail sentence1 : {} sentence2: {}".format(example['sentence1'], example['sentence2']),
-                "tgt_texts": str(example['gold_label'])}
+                "tgt_texts": str(example['gold_label']), "task": self.task.name}
 
 
 class MRPCTaskDataset(AbstractTaskDataset):
@@ -272,7 +272,7 @@ class SST2TaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "SST2 sentence : {}".format(example['sentence']),
-                "tgt_texts": str(example['label'])}
+                "tgt_texts": str(example['label']), "task": self.task.name}
 
 
 
@@ -286,22 +286,7 @@ class QQPTaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "QQP question1 : {} question2: {}".format(example['question1'], example['question2']),
-                "tgt_texts": str(example['label'])}
-
-
-"""
-class STSBTaskDataset(AbstractTaskDataset):
-    task = Task(name="stsb", category="classification")
-    label_list = ["0", "1"]
-    task_specific_config = {'max_length': 3}
-
-    def load_dataset(self, split):
-        return datasets.load_dataset('glue', 'stsb', split=split)
-
-    def preprocessor(self, example):
-        return {"src_texts": "STSB sentence1 : {} sentence2: {}".format(example['sentence1'], example['sentence2']),
-                "tgt_texts": str(example['label'])}
-"""
+                "tgt_texts": str(example['label']), "task": self.task.name}
 
 
 class MNLITaskDataset(AbstractTaskDataset):
@@ -315,7 +300,7 @@ class MNLITaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "MNLI premise : {} hypothesis : {}".format(example['premise'], example['hypothesis']),
-                "tgt_texts": str(example['label'])}
+                "tgt_texts": str(example['label']), "task": self.task.name}
 
 
 class QNLITaskDataset(AbstractTaskDataset):
@@ -328,7 +313,7 @@ class QNLITaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "QNLI question : {} sentence : {}".format(example['question'], example['sentence']),
-                "tgt_texts": str(example['label'])}
+                "tgt_texts": str(example['label']), "task": self.task.name}
 
 
 
@@ -356,7 +341,7 @@ class WNLITaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example):
         return {"src_texts": "WNLI sentence1 : {} sentence2 : {}".format(example['sentence1'], example['sentence2']),
-                "tgt_texts": str(example['label'])}
+                "tgt_texts": str(example['label']), "task": self.task.name}
 
 
 TASK_MAPPING = OrderedDict([

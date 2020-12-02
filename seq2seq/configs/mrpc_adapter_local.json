@@ -27,9 +27,9 @@
 "train_adapters": true,
 "do_eval": true,
 "predict_with_generate": true,
-"max_steps": 100,
-"n_train": 10
+"do_train":true
 }
+
 
 
 

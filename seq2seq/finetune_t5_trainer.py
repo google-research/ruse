@@ -154,9 +154,6 @@ def main():
         # TODO: can be reordered later on.
         #data_groups = compute_data_groups(list(train_dataset.values()))
         #train_dataset = datasets.concatenate_datasets(list(train_dataset.values()))
-    else:
-        # TODO; for now lets concat the datasets.
-        train_dataset = None
 
 
     # TODO: you should not do this, introduces bug.
@@ -187,12 +184,12 @@ def main():
         model=model,
         config=config,
         args=training_args,
-        train_dataset=train_dataset,
+        train_dataset=train_dataset if training_args.do_train else None,
         eval_dataset=None,  # Since prototype does not match we feed this in later. #eval_dataset,
         data_collator=TaskCollator(tokenizer, data_args, training_args.tpu_num_cores),
         compute_metrics=compute_metrics_fn,
         data_args=data_args,
-        dataset_sizes=dataset_sizes
+        dataset_sizes=dataset_sizes if training_args.do_train else None 
     )
 
     # Training

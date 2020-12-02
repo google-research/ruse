@@ -45,7 +45,7 @@ def main():
     else:
 
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
-
+    print("### data_args ", data_args)
     check_output_dir(training_args)
 
     # Setup logging

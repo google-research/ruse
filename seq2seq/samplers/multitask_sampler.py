@@ -4,10 +4,10 @@ from torch.utils.data import Sampler
 from typing import TypeVar
 from torch.utils.data.distributed import DistributedSampler
 
-#T_co = TypeVar('T_co', covariant=True)
+T_co = TypeVar('T_co', covariant=True)
 
 # this needs to be of type DistribuedSampler for huggingFace codes.
-class MultiTaskBatchSampler(DistributedSampler): #[T_co]):
+class MultiTaskBatchSampler(Sampler[T_co]):
     def __init__(self, dataset_sizes, batch_size: int, temperature, seed: int = 0) -> None:
         self.batch_size = batch_size
         self.dataset_sizes = dataset_sizes
@@ -48,4 +48,5 @@ class MultiTaskBatchSampler(DistributedSampler): #[T_co]):
 
     def set_epoch(self, epoch):
         self.epoch = epoch
+
 

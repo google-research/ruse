@@ -9,8 +9,9 @@ from transformers import AutoTokenizer
 from seq2seq.training_args import  DataTrainingArguments
 
 T_co = TypeVar('T_co', covariant=True)
+from torch.utils.data.distributed import DistributedSampler
 
-class MultiTaskBatchSampler(Sampler[T_co]):
+class MultiTaskBatchSampler(DistributedSampler): #Sampler[T_co]):
     def __init__(self, dataset_sizes, batch_size: int, temperature, seed: int = 0) -> None:
         self.batch_size = batch_size
         self.dataset_sizes = dataset_sizes
@@ -84,3 +85,7 @@ if __name__ == "__main__":
     dataloader = DataLoader(multitask_dataset, batch_sampler=multitask_sampler, collate_fn=collator)
     for batch in dataloader:
         print(batch)
+
+    print(dataloader.batch_sampler)
+    if (isinstance(dataloader.sampler, DistributedSampler)):
+        print("### yes")

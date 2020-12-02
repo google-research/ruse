@@ -10,7 +10,7 @@ from torch.utils.data.dataset import Dataset
 from seq2seq.samplers import MultiTaskBatchSampler
 from torch.utils.data import DistributedSampler, RandomSampler
 from transformers import PreTrainedModel, logging
-from transformers import Trainer
+from .trainer  import Trainer
 from transformers.configuration_fsmt import FSMTConfig
 from transformers.file_utils import is_torch_tpu_available
 from torch.utils.data.dataloader import DataLoader
@@ -449,4 +449,6 @@ class T5Trainer(Trainer):
         )
         padded_tensor[:, : tensor.shape[-1]] = tensor
         return padded_tensor
+
+
 

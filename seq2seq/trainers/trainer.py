@@ -741,8 +741,10 @@ class Trainer:
             if isinstance(train_dataloader, DataLoader) and (
                     isinstance(train_dataloader.sampler, DistributedSampler)
                     or isinstance(train_dataloader.batch_sampler, MultiTaskBatchSampler)):
-                print("@#### this is inside.")
-                train_dataloader.sampler.set_epoch(epoch)
+                if isinstance(train_dataloader.sampler, DistributedSampler):
+                    train_dataloader.sampler.set_epoch(epoch)
+                else:
+                    train_dataloader.batch_sampler.set_epoch(epoch)
 
             if is_torch_tpu_available():
                 parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(

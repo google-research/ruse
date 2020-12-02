@@ -25,6 +25,8 @@ class MultiTaskBatchSampler(Sampler[T_co]):
         return torch.as_tensor(weights, dtype=torch.double)
 
     def __iter__(self):
+        # TODO: we need to have shuffle here?
+
         # We have to ensure that:
         #    - each process gets the same task.
         #    - indices are per process.
@@ -38,6 +40,8 @@ class MultiTaskBatchSampler(Sampler[T_co]):
                 self.num_batches_per_epoch, replacement=True, generator=generator)
         for batch_task in batch_task_assignments:
             num_task_samples = self.dataset_sizes[batch_task]
+            # TODO: this is always with replacement, we can also think to do it without
+            #   replacement
             yield self.dataset_offsets[batch_task] + torch.randint(low=0, high=num_task_samples,
                 size=(self.batch_size, ), generator=generator).tolist()
 

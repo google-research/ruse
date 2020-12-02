@@ -23,7 +23,6 @@ class MultiTaskBatchSampler(Sampler[T_co]):
 
     def __iter__(self):
         # TODO: we need to have shuffle here?
-
         # We have to ensure that:
         #    - each process gets the same task.
         #    - indices are per process.

@@ -438,6 +438,9 @@ class TaskCollator:
         }
         if self.return_targets:
             output_batch["targets"] = batch["targets"]
+
+        # TODO: remove this.
+        output_batch["task"] = "mrpc" 
         return output_batch
 
     def _shift_right_t5(self, input_ids):

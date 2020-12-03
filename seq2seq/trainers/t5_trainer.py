@@ -29,7 +29,6 @@ from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
 
 from transformers.trainer_pt_utils import reissue_pt_warnings
 
-from seq2seq.samplers import get_tpu_sampler
 from seq2seq.utils import use_task_specific_params, reset_config
 
 logger = logging.get_logger(__name__)

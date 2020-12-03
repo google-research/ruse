@@ -97,14 +97,14 @@ def main():
     )
 
     if model_args.not_load_t5_checkpoint:
-        model = T5ForConditionalGeneration(config=config, tasks=data_args.task)
+        model = T5ForConditionalGeneration(config=config, tasks=data_args.tasks)
     else:
         model = T5ForConditionalGeneration.from_pretrained(
             model_args.model_name_or_path,
             from_tf=".ckpt" in model_args.model_name_or_path,
             config=config,
             cache_dir=model_args.cache_dir,
-            tasks=data_args.task
+            tasks=data_args.tasks
         )
 
     # set num_beams for evaluation
@@ -127,7 +127,7 @@ def main():
     if training_args.do_train:
         train_datasets = [dataset_class.get(task).get_dataset(
             split="train", n_obs=data_args.n_train, add_prefix=False if training_args.train_adapters else True)
-            for task in data_args.task]
+            for task in data_args.tasks]
         # Shard the data if needed.
         # TODO: also add for distribued GPU training.
         # TODO: here we need to make sure shards are the same length across the cores.
@@ -142,7 +142,7 @@ def main():
     # TODO: split varies.
     eval_datasets = ({task: dataset_class.get(task).get_dataset(
         split="validation", n_obs=data_args.n_val, add_prefix=False if training_args.train_adapters else True)
-        for task in data_args.task}
+        for task in data_args.eval_tasks}
         if training_args.do_eval or training_args.evaluation_strategy != EvaluationStrategy.NO
         else None
     )
@@ -157,7 +157,7 @@ def main():
     # TODO: this needs to get fixed, for now we do not need it.
     # Initialize our Trainer
     compute_metrics_fn = (
-        build_compute_metrics_fn(data_args.task, tokenizer) if training_args.predict_with_generate else None
+        build_compute_metrics_fn(data_args.eval_tasks, tokenizer) if training_args.predict_with_generate else None
     )
 
     # TODO: how does it get between different max_lengths?
@@ -167,7 +167,7 @@ def main():
         args=training_args,
         train_dataset=train_dataset if training_args.do_train else None,
         eval_dataset=None,  # Since prototype does not match we feed this in later. #eval_dataset,
-        data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores, tasks=data_args.task),
+        data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores), #, tasks=data_args.tasks),
         compute_metrics=compute_metrics_fn,
         data_args=data_args,
         dataset_sizes=dataset_sizes if training_args.do_train else None 
@@ -198,7 +198,7 @@ def main():
             from_tf=".ckpt" in training_args.output_dir,
             config=config,
             cache_dir=model_args.cache_dir,
-            tasks=data_args.task
+            tasks=data_args.tasks
         )
         trainer.model = model.to(training_args.device)
 

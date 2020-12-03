@@ -123,9 +123,13 @@ class DataTrainingArguments:
     Arguments pertaining to what data we are going to input our model for training and eval.
     """
     sampling: bool = field(default=False, metadata={"help": "Whether to sample training datasets."})
-    task: Optional[List[str]] = field(
-        default="summarization",
-        metadata={"help": "Task name, summarization (or summarization_{dataset} for pegasus) or translation"},
+    tasks: Optional[List[str]] = field(
+        default="MRPC",
+        metadata={"help": "Task name from the list of registered tasks."},
+    )
+    eval_tasks: Optional[List[str]] = field(
+        default="MRPC",
+        metadata={"help": "Evaluation task name from the list of registered tasks."},
     )
     max_source_length: Optional[int] = field(
         default=1024,

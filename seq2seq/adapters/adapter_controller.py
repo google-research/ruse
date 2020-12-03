@@ -15,10 +15,10 @@ class AdapterController(nn.Module):
         # We convert the tasks to a list the same way this is done in collator.
         self.tasks = tasks
         self.adapters = self.construct_adapters(tasks)
-        self.index_to_tasks = {i: v for i, v in enumerate(tasks)}
+        # self.index_to_tasks = {i: v for i, v in enumerate(tasks)}
 
     def get_task(self, task):
-        return self.index_to_tasks[task]
+        return task #self.index_to_tasks[task]
 
     def construct_adapters(self, tasks):
         """

@@ -145,7 +145,7 @@ def main():
         # Shard the data if needed.
         # TODO: also add for distribued GPU training.
         if is_torch_tpu_available() and xm.xrt_world_size() > 1:
-            train_dataset = shard_data(train_datasets, num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
+            train_datasets = shard_data(train_datasets, num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
         dataset_sizes = [len(train_dataset) for train_dataset in train_datasets]
         train_dataset = datasets.concatenate_datasets(train_datasets)
 

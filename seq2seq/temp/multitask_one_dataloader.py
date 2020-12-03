@@ -63,7 +63,10 @@ def shard_data(datasets, num_replicas, rank):
 if __name__ == "__main__":
     rank = 0
     num_replicas = 4
-    dataset1 = AutoTask.get("rte").get_dataset(split="train", n_obs="16")
+    dataset1 = AutoTask.get("squad").get_dataset(split="train", n_obs="16", add_prefix=False)
+    for d in dataset1:
+        print(d)
+
     dataset2 = AutoTask.get("cola").get_dataset(split="train", n_obs="32")
     train_datasets = [dataset1, dataset2]
     train_datasets = shard_data(train_datasets, num_replicas=num_replicas, rank=rank)

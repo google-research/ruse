@@ -6,14 +6,13 @@ import datasets
 from transformers.file_utils import is_torch_tpu_available
 from seq2seq.trainers import T5Trainer
 from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, HfArgumentParser, set_seed
+from transformers import  AutoTokenizer, HfArgumentParser, set_seed
 from transformers.trainer_utils import EvaluationStrategy
 from seq2seq.utils import (
     assert_all_frozen,
     check_output_dir,
     freeze_embeds,
     freeze_params,
-    partly_freeze_params,
     lmap,
     save_json,
     write_txt_file,
@@ -21,13 +20,7 @@ from seq2seq.utils import (
 from seq2seq.models import T5Config
 from seq2seq.tasks import AutoTask, TaskCollator
 from seq2seq.metrics import build_compute_metrics_fn
-from seq2seq.samplers import compute_data_groups
 from seq2seq.models import T5ForConditionalGeneration
-
-import torch.nn as nn
-
-from seq2seq.adapters import Adapter
-from transformers.modeling_t5  import T5LayerNorm
 
 logger = logging.getLogger(__name__)
 
@@ -119,16 +112,10 @@ def main():
         data_args.eval_beams = model.config.num_beams
 
     if training_args.train_adapters:
-        #partly_freeze_params(model, 'adapter')
         # Sets the last layer of decoder to be trained.
         freeze_params(model)
         for param in model.lm_head.parameters():
           param.require_grad = True
-        #for name, sub_module in model.named_modules():
-        #    if isinstance(sub_module, (Adapter, T5LayerNorm, nn.LayerNorm)):
-        #        print("#### sub_module ", sub_module)
-        #        for param_name, param in sub_module.named_parameters():
-        #            param.requires_grad = True
     else:
         if model_args.freeze_embeds:
             freeze_embeds(model)
@@ -147,14 +134,6 @@ def main():
             train_datasets = shard_data(train_datasets, num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
         dataset_sizes = [len(train_dataset) for train_dataset in train_datasets]
         train_dataset = datasets.concatenate_datasets(train_datasets)
-
-        #train_dataset = {task: dataset_class.get(task).get_dataset(
-        #    split="train", n_obs=data_args.n_train) for task in data_args.task}
-        # TODO: can be reordered later on.
-        #data_groups = compute_data_groups(list(train_dataset.values()))
-        #train_dataset = datasets.concatenate_datasets(list(train_dataset.values()))
-
-
     # TODO: you should not do this, introduces bug.
     #train_dataset.set_format(type="torch", columns=['src_texts', 'tgt_texts'])
     training_args.remove_unused_columns = False
@@ -204,7 +183,6 @@ def main():
         if trainer.is_world_process_zero():
             trainer.state.save_to_json(os.path.join(training_args.output_dir, "trainer_state.json"))
             tokenizer.save_pretrained(training_args.output_dir)
-
 
     # Evaluation
     eval_results = {}

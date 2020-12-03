@@ -16,9 +16,13 @@ class AdapterController(nn.Module):
         self.tasks = tasks
         self.adapters = self.construct_adapters(tasks)
         # self.index_to_tasks = {i: v for i, v in enumerate(tasks)}
+        self.task_to_adapter = {task: task for task in self.task}
+
+    def set_task_to_adapter_map(self, mapping):
+        self.task_to_adapter = mapping
 
     def get_task(self, task):
-        return task #self.index_to_tasks[task]
+        return self.task_to_adapter[task] #self.index_to_tasks[task]
 
     def construct_adapters(self, tasks):
         """

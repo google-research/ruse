@@ -131,6 +131,10 @@ class DataTrainingArguments:
         default="MRPC",
         metadata={"help": "Evaluation task name from the list of registered tasks."},
     )
+    adapters: Optional[List[str]] = field(
+        default=None,
+        metadata={"help": "Defines a dictionary from adapters to the tasks."}
+    )
     max_source_length: Optional[int] = field(
         default=1024,
         metadata={

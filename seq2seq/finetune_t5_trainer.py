@@ -202,6 +202,14 @@ def main():
         )
         trainer.model = model.to(training_args.device)
 
+        if training_args.train_adapters:
+            # define adapter mappings.
+            if data_args.adapters is not None:
+                task_to_adapter = {eval_task: adapter for eval_task, adapter in
+                                   zip(data_args.eval_tasks, data_args.adapters)}
+
+                
+
         logger.info(eval_datasets)
         logger.info("*** Evaluate ***")
 

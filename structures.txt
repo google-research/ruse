@@ -1,0 +1,21 @@
+# Build the docker file.
+docker build . -f Dockerfile -t internship
+
+# Tag the built image
+docker tag internship:latest  eu.gcr.io/ruse-xgcp/internship:latest
+
+# Push the image
+docker push eu.gcr.io/ruse-xgcp/internship:latest
+
+# get a TPU instance and set.
+TPU_IP_ADDRESS=$TPU_IP_ADDRESS
+
+# use the docker file interactively
+docker run -it --shm-size 100G -e XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"   --volume /home/rabeeh/ruse/:/home/rabeeh/ruse  eu.gcr.io/ruse-xgcp/internship:latest
+
+cd home/rabeeh/internship/
+python setup.py develop
+
+cd seq2seq/
+python finetune_t5_trainer.py configs/test.json
+

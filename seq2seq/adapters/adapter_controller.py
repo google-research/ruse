@@ -41,7 +41,6 @@ class AdapterController(nn.Module):
         """
         tasks = self.convert_to_list(tasks)
         for task in tasks:
-            task = self.get_adapter(task)
             adapter = self.get_adapter(task)
             for param in adapter.parameters():
                 param.requires_grad = False

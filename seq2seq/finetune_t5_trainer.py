@@ -119,13 +119,11 @@ def main():
         data_args.eval_beams = model.config.num_beams
 
     if training_args.train_adapters:
-        # TODO: check this is working.
         #partly_freeze_params(model, 'adapter')
         # Sets the last layer of decoder to be trained.
         freeze_params(model)
         for param in model.lm_head.parameters():
           param.require_grad = True
-        # TODO(rabeeh): to be checked if needed.
         #for name, sub_module in model.named_modules():
         #    if isinstance(sub_module, (Adapter, T5LayerNorm, nn.LayerNorm)):
         #        print("#### sub_module ", sub_module)
@@ -141,7 +139,8 @@ def main():
     dataset_class = AutoTask
     if training_args.do_train:
         train_datasets = [dataset_class.get(task).get_dataset(
-            split="train", n_obs=data_args.n_train) for task in data_args.task]
+            split="train", n_obs=data_args.n_train, add_prefix=False if training_args.train_adapters else True)
+            for task in data_args.task]
         # Shard the data if needed.
         # TODO: also add for distribued GPU training.
         if is_torch_tpu_available() and xm.xrt_world_size() > 1:
@@ -162,13 +161,15 @@ def main():
 
     # TODO: split varies.
     eval_datasets = ({task: dataset_class.get(task).get_dataset(
-        split="validation", n_obs=data_args.n_val) for task in data_args.task}
+        split="validation", n_obs=data_args.n_val, add_prefix=False if training_args.train_adapters else True)
+        for task in data_args.task}
         if training_args.do_eval or training_args.evaluation_strategy != EvaluationStrategy.NO
         else None
     )
     test_dataset = (
         {task: dataset_class.get(task).get_dataset(
-            split="test", n_obs=data_args.n_test) for task in data_args.task}
+            split="test", n_obs=data_args.n_test, add_prefix=False if training_args.train_adapters else True)
+            for task in data_args.task}
         if training_args.do_predict
         else None
     )

@@ -4,9 +4,7 @@ import sys
 
 import datasets
 from transformers.file_utils import is_torch_tpu_available
-from seq2seq.trainers import T5Trainer
-from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments
-from transformers import  AutoTokenizer, HfArgumentParser, set_seed
+from transformers import AutoTokenizer, HfArgumentParser, set_seed
 from transformers.trainer_utils import EvaluationStrategy
 from seq2seq.utils import (
     assert_all_frozen,
@@ -17,6 +15,9 @@ from seq2seq.utils import (
     save_json,
     write_txt_file,
 )
+
+from seq2seq.trainers import T5Trainer
+from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments
 from seq2seq.models import T5Config
 from seq2seq.tasks import AutoTask, TaskCollator
 from seq2seq.metrics import build_compute_metrics_fn
@@ -28,7 +29,6 @@ if is_torch_tpu_available():
     import torch_xla.core.xla_model as xm
 
 
-
 def shard_data(datasets, num_replicas, rank):
     """Returns the sharded data belonging to the given rank."""
     for i, dataset in enumerate(datasets):
@@ -37,16 +37,16 @@ def shard_data(datasets, num_replicas, rank):
     return datasets
 
 def main():
-    # See all possible arguments in src/transformers/training_args.py
-    # or by passing the --help flag to this script.
-    # We now keep distinct sets of args, for a cleaner separation of concerns.
-
+    # See all possible arguments in src/transformers/training_args.py or by passing
+    # the --help flag to this script. We now keep distinct sets of args, for a cleaner
+    # separation of concerns.
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments))
 
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
-        model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
+        model_args, data_args, training_args = parser.parse_json_file(
+            json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
     check_output_dir(training_args)
@@ -130,6 +130,7 @@ def main():
             for task in data_args.task]
         # Shard the data if needed.
         # TODO: also add for distribued GPU training.
+        # TODO: here we need to make sure shards are the same length across the cores.
         if is_torch_tpu_available() and xm.xrt_world_size() > 1:
             train_datasets = shard_data(train_datasets, num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
         dataset_sizes = [len(train_dataset) for train_dataset in train_datasets]
@@ -166,7 +167,7 @@ def main():
         args=training_args,
         train_dataset=train_dataset if training_args.do_train else None,
         eval_dataset=None,  # Since prototype does not match we feed this in later. #eval_dataset,
-        data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores, tasks=training_args.task),
+        data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores, tasks=data_args.task),
         compute_metrics=compute_metrics_fn,
         data_args=data_args,
         dataset_sizes=dataset_sizes if training_args.do_train else None 

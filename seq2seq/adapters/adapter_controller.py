@@ -12,8 +12,13 @@ class AdapterController(nn.Module):
         super().__init__()
         self.adapters = nn.ModuleDict(dict())
         self.model_config = model_config
-        self.adapters = self.construct_adapters(tasks)
+        # We convert the tasks to a list the same way this is done in collator.
         self.tasks = tasks
+        self.adapters = self.construct_adapters(tasks)
+        self.index_to_tasks = {i: v for i, v in enumerate(tasks)}
+
+    def get_task(self, task):
+        return self.index_to_tasks[task]
 
     def construct_adapters(self, tasks):
         """
@@ -36,15 +41,16 @@ class AdapterController(nn.Module):
         """
         tasks = self.convert_to_list(tasks)
         for task in tasks:
+            task = self.get_adapter(task)
             adapter = self.get_adapter(task)
             for param in adapter.parameters():
                 param.requires_grad = False
 
     def convert_to_list(self, tasks):
-        if isinstance(tasks, str):
-            return [tasks]
-        else:
+        if isinstance(tasks, list):
             return tasks
+        else:
+            return [tasks]
 
     def enable_adapters(self, tasks):
         """
@@ -72,6 +78,7 @@ class AdapterController(nn.Module):
         :param task: the name of the current task.
         :param inputs: the inputs to feed in in the adapter layer.
         :return: outputs of the adapter layer."""
+        task = self.get_task(task)
         # Enables the adapter layer for the given task.
         self.enable_adapters(task)
         # Disable other adapters.

@@ -26,7 +26,6 @@ from transformers.modeling_outputs import BaseModelOutput
 from transformers.utils import logging
 from transformers.modeling_t5 import (T5PreTrainedModel, T5LayerNorm, T5Block,
                                       T5DenseReluDense, T5Attention, T5LayerCrossAttention)
-from seq2seq.adapters import Adapter, AdapterConfig
 from seq2seq.adapters import AdapterController
 
 from .poolings import AutoPooling
@@ -46,9 +45,6 @@ class T5LayerFF(nn.Module):
         self.train_adapters = config.train_adapters
         if self.train_adapters:
             self.adapter_controller = AdapterController(config.tasks, config)
-            #self.adapter = self.adapter_controller().get_adapter("mrpc")
-            #adapter_config = AdapterConfig()
-            #self.adapter = Adapter(config, adapter_config)
 
     def forward(self, hidden_states, task=None):
         #if self.train_adapters:
@@ -76,8 +72,6 @@ class T5LayerSelfAttention(nn.Module):
         if self.train_adapters:
             if self.train_adapters:
                 self.adapter_controller = AdapterController(config.tasks, config)
-            #adapter_config = AdapterConfig()
-            #self.adapter= Adapter(config, adapter_config)
 
     def forward(
         self,

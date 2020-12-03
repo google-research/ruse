@@ -26,8 +26,7 @@
 "save_total_limit": 1,
 "train_adapters": true,
 "do_eval": true,
-"predict_with_generate": true,
-"do_train":true
+"predict_with_generate": true
 }
 
 

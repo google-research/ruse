@@ -29,7 +29,6 @@ from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
 
 from transformers.trainer_pt_utils import reissue_pt_warnings
 
-from seq2seq.tasks import MultiTaskDataLoader, TaskDataLoader  
 from seq2seq.samplers import get_tpu_sampler
 from seq2seq.utils import use_task_specific_params, reset_config
 
@@ -178,9 +177,8 @@ class T5Trainer(Trainer):
             raise ValueError("eval_dataset must implement __len__")
         eval_sampler = self._get_eval_sampler(eval_dataset)
 
-        return TaskDataLoader(
+        return DataLoader(
             dataset=eval_dataset,
-            task=task,
             sampler=eval_sampler,
             batch_size=self.args.eval_batch_size,
             collate_fn=self.data_collator,
@@ -349,16 +347,6 @@ class T5Trainer(Trainer):
         Subclass and override this method if you want to inject some custom behavior.
         """
         #train_dataset = self.get_train_dataset_shards()
-        """
-        return MultiTaskDataLoader(
-            max_steps=self.args.max_steps,
-            tasks_to_datasets=train_dataset,
-            batch_size=self.args.train_batch_size,
-            collate_fn=self.data_collator,
-            drop_last=self.args.dataloader_drop_last,
-            num_workers=self.args.dataloader_num_workers)
-        """
-
         # TODO: we need to make sure that the number of batches are correctly computed
         #   and this is consistent across the cores.
         multitask_sampler = MultiTaskBatchSampler(self.dataset_sizes, self.args.train_batch_size,

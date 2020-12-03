@@ -22,6 +22,8 @@ from seq2seq.models import T5Config
 from seq2seq.tasks import AutoTask, TaskCollator
 from seq2seq.metrics import build_compute_metrics_fn
 from seq2seq.models import T5ForConditionalGeneration
+from seq2seq.adapters import AdapterController
+
 
 logger = logging.getLogger(__name__)
 
@@ -203,12 +205,13 @@ def main():
         trainer.model = model.to(training_args.device)
 
         if training_args.train_adapters:
-            # define adapter mappings.
+            # If task to adapter is given set it in all adapter controller layers.
             if data_args.adapters is not None:
                 task_to_adapter = {eval_task: adapter for eval_task, adapter in
                                    zip(data_args.eval_tasks, data_args.adapters)}
-
-                
+                for name, sub_module in model.named_modules():
+                   if isinstance(sub_module, AdapterController):
+                       sub_module.set_task_to_adapter_map(task_to_adapter)
 
         logger.info(eval_datasets)
         logger.info("*** Evaluate ***")

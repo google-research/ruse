@@ -13,6 +13,7 @@
 "overwrite_output_dir": true,
 "tasks": ["mrpc"],
 "eval_tasks": ["rte"],
+"adapters":["mrpc"],
 "sampling": true,
 "label_smoothing": 0.1,
 "fixed_length_emb": true,

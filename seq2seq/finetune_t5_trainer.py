@@ -191,9 +191,8 @@ def main():
     eval_results = {}
     if training_args.do_eval:
         config = T5Config.from_pretrained(
-        training_args.output_dir, # "t5-base" for the baseline.
-        cache_dir=model_args.cache_dir,
-        )
+        training_args.output_dir,# "t5-base" for the baseline.
+        cache_dir=model_args.cache_dir)
         # TODO: using task-specific params, should be set globally during eval.
         model = T5ForConditionalGeneration.from_pretrained(
             training_args.output_dir, # "t5-base" for the baseline.

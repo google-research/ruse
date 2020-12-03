@@ -2,12 +2,11 @@ import torch.nn as nn
 from transformers.activations import get_activation
 
 class Activations(nn.Module):
-    """Implementation of various activation function."""
+  """Implementation of various activation function."""
 
-    def __init__(self, activation_type):
-        super().__init__()
-        self.f = get_activation(activation_type)
+  def __init__(self, activation_type):
+    super().__init__()
+    self.f = get_activation(activation_type)
 
-    def forward(self, x):
-        return self.f(x)
-
+  def forward(self, x):
+    return self.f(x)

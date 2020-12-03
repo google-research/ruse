@@ -77,15 +77,12 @@ if __name__ == "__main__":
     multitask_sampler = MultiTaskBatchSampler(dataset_sizes, batch_size, temperature)
 
     # Defining datacollator.
-    """
     tokenizer = AutoTokenizer.from_pretrained("t5-small")
     data_args= DataTrainingArguments(sampling=True, task=['mrpc'],
     max_source_length=128, max_target_length=128, val_max_target_length=128,
     test_max_target_length=128, n_train=10, n_val=-1, n_test=-1, eval_beams=None,
     ignore_pad_token_for_loss=True)
-    collator = TaskCollator(tokenizer, data_args, 0)
-    """
-
-    dataloader = DataLoader(multitask_dataset, batch_sampler=multitask_sampler)#, collate_fn=collator)
+    collator = TaskCollator(tokenizer, data_args, tpu_num_cores=0, tasks=["cola", "squad"])
+    dataloader = DataLoader(multitask_dataset, batch_sampler=multitask_sampler, collate_fn=collator)
     for i, batch in enumerate(dataloader):
         print(i, batch)

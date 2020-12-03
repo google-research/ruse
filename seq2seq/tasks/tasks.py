@@ -431,7 +431,7 @@ class AutoTask:
 
 
 class TaskCollator:
-    def __init__(self, tokenizer, data_args, tpu_num_cores=None, return_targets=False, task=None):
+    def __init__(self, tokenizer, data_args, tasks, tpu_num_cores=None, return_targets=False, task=None):
         self.tokenizer = tokenizer
         self.pad_token_id = tokenizer.pad_token_id
         assert (
@@ -439,6 +439,8 @@ class TaskCollator:
         ), f"pad_token_id is not defined for ({self.tokenizer.__class__.__name__}), it must be defined."
         self.data_args = data_args
         self.tpu_num_cores = tpu_num_cores
+        self.task_to_id = {v: i for i, v in enumerate(tasks)}
+
         ######### this is for contrastive loss.
         # TODO: here we need to think how to define the labels for translation, ... tasks and
         # TODO: Also how we can get it to work with multiple datasets.
@@ -491,7 +493,7 @@ class TaskCollator:
         tasks = [x["task"] for x in batch]
         # There should be only one task per batch.
         assert (len(set(tasks)) == 1)
-        batch_encoding["task"] = tasks[0]
+        batch_encoding["task"] = self.task_to_id[tasks[0]]
         return batch_encoding.data
 
 

@@ -186,7 +186,7 @@ def main():
         args=training_args,
         train_dataset=train_dataset if training_args.do_train else None,
         eval_dataset=None,  # Since prototype does not match we feed this in later. #eval_dataset,
-        data_collator=TaskCollator(tokenizer, data_args, training_args.tpu_num_cores),
+        data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores, tasks=training_args.task),
         compute_metrics=compute_metrics_fn,
         data_args=data_args,
         dataset_sizes=dataset_sizes if training_args.do_train else None 

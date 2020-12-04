@@ -35,7 +35,6 @@ class MetaAdapterController(nn.Module):
     self.meta_up_sampler = MetaUpSampler(adapter_config)
     self.meta_down_sampler = MetaDownSampler(adapter_config)
     self.task_to_adapter = {task: task for task in self.tasks}
-    #self.task_embedding_dir=task_embedding_dir
 
   def enable_adapters(self, tasks):
     """

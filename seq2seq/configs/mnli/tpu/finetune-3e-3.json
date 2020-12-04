@@ -26,7 +26,8 @@
 "save_total_limit": 1,
 "do_train": true,
 "tpu_num_cores":8,
-"prediction_loss_only":true
+"prediction_loss_only":true,
+"gcs_bucket": "ruse-xcloud-bucket"
 }
 
 

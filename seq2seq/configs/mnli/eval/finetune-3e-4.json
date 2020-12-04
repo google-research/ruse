@@ -1,0 +1,35 @@
+{
+"model_name_or_path": "t5-small",
+"tokenizer_name": "t5-small",
+"learning_rate": 3e-4,
+"output_dir": "outputs/mnli/finetune/finetune-lr-3e-4/",
+"max_source_length": 128,
+"max_target_length": 128 ,
+"val_max_target_length":128,
+"test_max_target_length":128,
+"num_train_epochs": 3,
+"warmup_steps": 500,
+"eval_steps": 500,
+"overwrite_output_dir": true,
+"tasks": ["mnli"],
+"eval_tasks":["rte", "wnli", "mnli", "snli"],
+"adapters": ["mnli", "mnli", "mnli", "mnli"],
+"sampling": true,
+"label_smoothing": 0.1,
+"freeze_encoder":false,
+"freeze_embeds":false,
+"per_device_train_batch_size":64,
+"per_device_eval_batch_size":64,
+"save_steps": 200,
+"logging_first_step":true,
+"logging_steps": 200,
+"save_total_limit": 1,
+"do_eval": true,
+"predict_with_generate":true
+}
+
+
+
+
+
+

@@ -86,10 +86,14 @@ class Seq2SeqTrainingArguments(TrainingArguments):
     default=None,
     metadata={"help": f"gs bucket."}
   )
-  train_adapters: bool = field(default=False, metadata={"help":
+  train_adapters: Optional[bool] = field(default=False, metadata={"help":
                                                           "Train an adapter instead of the full model."})
-  temperature: int = field(default=1, metadata={"help": "Defines the temperature"
+  temperature: Optional[int] = field(default=1, metadata={"help": "Defines the temperature"
                                                         "value for sampling across the multiple datasets."})
+  meta_adapters: Optional[bool]=field(default=False, metadata={"help":"If set, generates the adapters based on task "
+      "embeddings."})
+  task_embeddings_dir: Optional[str]=field(default=None, metadata={"help":"defines the directory containing task embeddings."
+      "We expect each task have a file with its name there."})
 
 @dataclass
 class ModelArguments:

@@ -24,3 +24,43 @@ class Activations(nn.Module):
 
   def forward(self, x):
     return self.f(x)
+
+
+class MetaDownSampler(nn.Module):
+  def __init__(self, config):
+    super(MetaDownSampler, self).__init__()
+    self.input_dim = config.input_dim
+    self.down_sample_size = config.down_sample_size
+    self.weight_generator = nn.Sequential(
+      nn.Linear(config.task_embedding_dim, config.hidden_dim),
+      nn.ReLU(),
+      nn.Linear(config.hidden_dim, self.input_dim))
+    self.projection = nn.Linear(1, self.down_sample_size)
+    # TODO: this can also be a MLP layer here.
+    self.bias_generator = nn.Linear(config.task_embedding_dim, self.down_sample_size)
+
+  def forward(self, task_embedding):
+    z = self.weight_generator(task_embedding).reshape(-1, 1)
+    weight = self.projection(z).transpose(0, 1)
+    bias = self.bias_generator(task_embedding)
+    return weight, bias
+
+
+class MetaUpSampler(nn.Module):
+  def __init__(self, config):
+    super(MetaUpSampler, self).__init__()
+    self.input_dim = config.input_dim
+    self.down_sample_size = config.down_sample_size
+    self.weight_generator = nn.Sequential(
+      nn.Linear(config.task_embedding_dim, config.hidden_dim),
+      nn.ReLU(),
+      nn.Linear(config.hidden_dim, self.input_dim))
+    self.projection = nn.Linear(1, self.down_sample_size)
+    self.bias_generator = nn.Linear(config.task_embedding_dim, self.input_dim)
+
+  def forward(self, task_embedding):
+    z = self.weight_generator(task_embedding).reshape(-1, 1)
+    weight = self.projection(z)
+    bias = self.bias_generator(task_embedding)
+    return weight, bias
+

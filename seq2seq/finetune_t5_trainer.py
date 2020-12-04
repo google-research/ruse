@@ -118,6 +118,9 @@ def main():
         freeze_params(model)
         for param in model.lm_head.parameters():
           param.require_grad = True
+        if training_args.meta_adapters:
+            # Sets the gradient for all meta-adapters to True.
+            pass
     else:
         if model_args.freeze_embeds:
             freeze_embeds(model)

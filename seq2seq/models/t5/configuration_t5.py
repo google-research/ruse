@@ -111,6 +111,8 @@ class T5Config(PretrainedConfig):
         only_projection_bottleneck=False,
         concat_projection_token = False,
         train_adapters = False,
+        meta_adapters = False,
+        task_embedding_dir = None,
         **kwargs
     ):
         super().__init__(
@@ -140,6 +142,8 @@ class T5Config(PretrainedConfig):
         self.only_projection_bottleneck = only_projection_bottleneck
         self.concat_projection_token = concat_projection_token
         self.train_adapters = train_adapters
+        self.meta_adapters = meta_adapters 
+        self.task_embedding_dir = task_embedding_dir 
 
     @property
     def max_position_embeddings(self):

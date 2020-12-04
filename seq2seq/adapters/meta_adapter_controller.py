@@ -31,7 +31,8 @@ class MetaAdapterController(nn.Module):
     self.task_to_embeddings = {}
     for task in tasks:
       task_embedding_path=os.path.join(self.task_embedding_dir, task+".npy")
-      self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path))
+      # TODO: device needs to be set properly.
+      self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path)).cuda()
     self.meta_up_sampler = MetaUpSampler(adapter_config)
     self.meta_down_sampler = MetaDownSampler(adapter_config)
     self.task_to_adapter = {task: task for task in self.tasks}
@@ -113,8 +114,6 @@ class MetaAdapterController(nn.Module):
     self.disable_adapters(other_tasks)
 
     # Generates the weights/biases for up and down sampler and sets them.
-    print(adapter.down_sampler)
-    
     # TODO: this is only correct if adapter_config.add_layer_norm_before_adapter is set to True.
     # TODO: remove the layer norm from the down_sampler.
     weight_up, bias_up = self.meta_up_sampler(self.task_to_embeddings[task])

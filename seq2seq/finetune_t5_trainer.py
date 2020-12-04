@@ -22,7 +22,7 @@ from seq2seq.models import T5Config
 from seq2seq.tasks import AutoTask, TaskCollator
 from seq2seq.metrics import build_compute_metrics_fn
 from seq2seq.models import T5ForConditionalGeneration
-from seq2seq.adapters import AdapterController
+from seq2seq.adapters import AdapterController, MetaUpSampler, MetaDownSampler, MetaAdapterController
 
 
 logger = logging.getLogger(__name__)
@@ -82,11 +82,14 @@ def main():
         model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
     )
+    # TODO: we need a better way to handle meta_adapters, and train_adapters
+    # and task_embeddings_dir.
     extra_model_params = ("encoder_layerdrop", "decoder_layerdrop", "dropout",
                           "attention_dropout", "fixed_length_emb",
                           "encoder_projection", "encoder_pooling",
                           "projection_length", "only_projection_bottleneck",
-                          "concat_projection_token", "train_adapters")
+                          "concat_projection_token", "train_adapters",
+                          "meta_adapters", "task_embedding_dir")
     for p in extra_model_params:
         if getattr(training_args, p, None):
             assert hasattr(config, p), f"({config.__class__.__name__}) doesn't have a `{p}` attribute"
@@ -120,7 +123,11 @@ def main():
           param.require_grad = True
         if training_args.meta_adapters:
             # Sets the gradient for all meta-adapters to True.
-            pass
+            for name, sub_module in model.named_modules():
+                if isinstance(sub_module, (MetaDownSampler, MetaUpSampler)):
+                    for param_name, param in sub_module.named_parameters():
+                        param.requires_grad = True
+            
     else:
         if model_args.freeze_embeds:
             freeze_embeds(model)
@@ -212,7 +219,9 @@ def main():
                 task_to_adapter = {eval_task: adapter for eval_task, adapter in
                                    zip(data_args.eval_tasks, data_args.adapters)}
                 for name, sub_module in model.named_modules():
-                   if isinstance(sub_module, AdapterController):
+                   # TODO: they need to be object of the same class.
+                   if isinstance(sub_module, AdapterController) or \
+                       isinstance(sub_module, MetaAdapterController):
                        sub_module.set_task_to_adapter_map(task_to_adapter)
 
         logger.info(eval_datasets)

@@ -26,7 +26,7 @@ from transformers.modeling_outputs import BaseModelOutput
 from transformers.utils import logging
 from transformers.modeling_t5 import (T5PreTrainedModel, T5LayerNorm, T5Block,
                                       T5DenseReluDense, T5Attention, T5LayerCrossAttention)
-from seq2seq.adapters import AdapterController
+from seq2seq.adapters import AdapterController, MetaAdapterController
 
 from .poolings import AutoPooling
 from .projections import AutoProjection
@@ -44,7 +44,10 @@ class T5LayerFF(nn.Module):
         self.dropout = nn.Dropout(config.dropout_rate)
         self.train_adapters = config.train_adapters
         if self.train_adapters:
-            self.adapter_controller = AdapterController(config.tasks, config)
+            if config.meta_adapters:
+              self.adapter_controller = MetaAdapterController(config.tasks, config, config.task_embedding_dir)
+            else:
+              self.adapter_controller = AdapterController(config.tasks, config)
 
     def forward(self, hidden_states, task=None):
         #if self.train_adapters:
@@ -70,8 +73,10 @@ class T5LayerSelfAttention(nn.Module):
 
         self.train_adapters = config.train_adapters
         if self.train_adapters:
-            if self.train_adapters:
-                self.adapter_controller = AdapterController(config.tasks, config)
+            if config.meta_adapters:
+              self.adapter_controller = MetaAdapterController(config.tasks, config, config.task_embedding_dir)
+            else:
+              self.adapter_controller = AdapterController(config.tasks, config)
 
     def forward(
         self,

@@ -92,7 +92,7 @@ class Seq2SeqTrainingArguments(TrainingArguments):
                                                         "value for sampling across the multiple datasets."})
   meta_adapters: Optional[bool]=field(default=False, metadata={"help":"If set, generates the adapters based on task "
       "embeddings."})
-  task_embeddings_dir: Optional[str]=field(default=None, metadata={"help":"defines the directory containing task embeddings."
+  task_embedding_dir: Optional[str]=field(default=None, metadata={"help":"defines the directory containing task embeddings."
       "We expect each task have a file with its name there."})
 
 @dataclass

@@ -18,8 +18,10 @@ gcloud compute instance-groups managed create podgroup \
     --size 4 \
     --template podtest \
     --zone europe-west4-a
+EOF
 
 gcloud compute instance-groups list-instances podgroup
+: <<'EOF'
 gcloud compute ssh  podgroup-50vp --zone=europe-west4-a --tunnel-through-iap\
 
 gcloud compute tpus create tpu-pod \
@@ -27,7 +29,6 @@ gcloud compute tpus create tpu-pod \
     --network=default \
     --accelerator-type=v2-32 \
     --version=pytorch-1.7
-EOF
 
 # inside the machine we ssh to 
 export TPU_NAME=tpu-pod
@@ -39,3 +40,7 @@ python -m torch_xla.distributed.xla_dist \
       --env XLA_USE_BF16=1 \
       -- python /usr/share/torch-xla-1.7/pytorch/xla/test/test_train_mp_imagenet.py \
       --fake_data
+
+python -m torch_xla.distributed.xla_dist       --tpu=$TPU_NAME       --conda-env=torch-xla-1.7       --env XLA_USE_BF16=1       -- python /home/rabeeh/ruse/seq2seq/finetune_t5_trainer.py /home/rabeeh/ruse/seq2seq/configs/mnli/tpu/finetune-3e-3.json 
+
+EOF

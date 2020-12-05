@@ -28,21 +28,21 @@ class MetaAdapterController(nn.Module):
     adapter_config.down_sample_size = self.down_sample_size
 
     self.task_to_embeddings = {}
+    """
     for task in tasks:
       #  #task_embedding_path=os.path.join(self.task_embedding_dir, task+".npy")
       #  # TODO: device needs to be set properly.
       self.task_to_embeddings[task] = torch.randn(adapter_config.task_embedding_dim).cuda()
       #  #print("### self.task_to_embeddings ", self.task_to_embeddings[task])
       #  #torch.Tensor(np.load(task_embedding_path)).cuda()
+    """
 
     # Loads the task embeddings.
     #
     #self.task_to_embeddings = nn.ParameterDict(dict())
-
-    """
     self.task_to_embeddings = nn.ParameterDict({
       task: nn.Parameter(torch.randn((adapter_config.task_embedding_dim))) for task in tasks})
-    """
+  
 
 
 

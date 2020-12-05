@@ -124,7 +124,7 @@ def main():
         if training_args.meta_adapters:
             # Sets the gradient for all meta-adapters to True.
             for name, sub_module in model.named_modules():
-                if isinstance(sub_module, (MetaDownSampler, MetaUpSampler)):
+                if isinstance(sub_module, (MetaDownSampler, MetaUpSampler, MetaAdapterController)):
                     for param_name, param in sub_module.named_parameters():
                         param.requires_grad = True
             
@@ -134,6 +134,15 @@ def main():
         if model_args.freeze_encoder:
             freeze_params(model.get_encoder())
             assert_all_frozen(model.get_encoder())
+
+
+
+
+    for name, parameter in model.named_parameters():
+        if parameter.requires_grad:
+            print("### name ", name)
+
+    sys.exit(0)
 
     dataset_class = AutoTask
     if training_args.do_train:

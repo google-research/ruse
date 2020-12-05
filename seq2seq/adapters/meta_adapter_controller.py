@@ -30,9 +30,10 @@ class MetaAdapterController(nn.Module):
     # Loads the task embeddings.
     self.task_to_embeddings = {}
     for task in tasks:
-      task_embedding_path=os.path.join(self.task_embedding_dir, task+".npy")
+      #task_embedding_path=os.path.join(self.task_embedding_dir, task+".npy")
       # TODO: device needs to be set properly.
-      self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path)).cuda()
+      self.task_to_embeddings[task] = nn.Parameter(torch.randn(adapter_config.task_embedding_dim)).cuda()
+      #torch.Tensor(np.load(task_embedding_path)).cuda()
     self.meta_up_sampler = MetaUpSampler(adapter_config)
     self.meta_down_sampler = MetaDownSampler(adapter_config)
     self.task_to_adapter = {task: task for task in self.tasks}
@@ -69,8 +70,7 @@ class MetaAdapterController(nn.Module):
     for task in tasks:
       # TODO(rabeeh): for now we have a fixed config for all tasks.
       adapter_config = MetaAdapterConfig()
-      adapter = MetaAdapter(self.model_config, adapter_config)
-      self.adapters[task] = adapter
+      self.adapters[task] = MetaAdapter(self.model_config, adapter_config)
     return self.adapters
 
   def set_task_to_adapter_map(self, mapping):

@@ -355,6 +355,11 @@ class T5Trainer(Trainer):
 
 
     def compute_loss(self, model, inputs):
+
+        for name, parameter in model.named_parameters():
+          if parameter.requires_grad:
+            print("### name ", name)
+
         labels = inputs.pop("labels")
         loss, _ = self._compute_loss(model, inputs, labels)
         return loss

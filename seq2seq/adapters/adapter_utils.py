@@ -66,6 +66,12 @@ class MetaUpSampler(nn.Module):
 """
 
 
+def init_linear_layer(linear_layer, std=1e-2):
+  """Initializes the linear modules as explained in adapter paper."""
+  nn.init.normal_(linear_layer.weight, std=std)
+  nn.init.zeros_(linear_layer.bias)
+
+
 class MetaDownSampler(nn.Module):
   def __init__(self, config):
     super(MetaDownSampler, self).__init__()
@@ -74,10 +80,16 @@ class MetaDownSampler(nn.Module):
     self.x_dim = config.x_dim
     self.y_dim = config.y_dim
     self.down_sample_size = config.down_sample_size
+
+
+    linear1 = nn.Linear(config.y_dim, config.hidden_dim)
+    init_linear_layer(linear1)
+    linear2 = nn.Linear(config.hidden_dim, self.input_dim)
+    init_linear_layer(linear2)
     self.left_projection = nn.Sequential(
-      nn.Linear(config.y_dim, config.hidden_dim),
+      linear1,
       nn.ReLU(),
-      nn.Linear(config.hidden_dim, self.input_dim))
+      linear2)
     """
     self.right_projection = nn.Sequential(
       nn.Linear(config.y_dim, self.hidden_dim),
@@ -87,14 +99,22 @@ class MetaDownSampler(nn.Module):
     """
     #self.projection = nn.Linear(1, self.down_sample_siz)
     # TODO: this can also be a MLP layer here.
+    linear3 = nn.Linear(config.task_embedding_dim, self.hidden_dim)
+    init_linear_layer(linear3)
+    linear4 = nn.Linear(self.hidden_dim, self.down_sample_size)
+    init_linear_layer(linear4)
     self.bias_generator = nn.Sequential(
-      nn.Linear(config.task_embedding_dim, self.hidden_dim),
+      linear3,
       nn.ReLU(),
-      nn.Linear(self.hidden_dim, self.down_sample_size)
+      linear4
     )
+    #self.weight_layer_norm = nn.LayerNorm(self.input_dim, self.x_dim)
+    #self.bias_layer_norm = nn.LayerNorm(self.down_sample_size)
+
     #nnn.Linear(config.task_embedding_dim, self.down_sample_size)
 
   def forward(self, task_embedding):
+    #task_embedding = self.layernorm(task_embedding)
     task_embedding_reshaped = task_embedding.reshape(self.x_dim, self.y_dim)
     weight = self.left_projection(task_embedding_reshaped)
     #print("#### z ", z.shape)
@@ -103,6 +123,10 @@ class MetaDownSampler(nn.Module):
     #z = self.weight_generator(task_embedding).reshape(-1, 1)
     #weight = self.projection(z).transpose(0, 1)
     #bias = self.bias_generator(task_embedding)
+
+    #weight = self.weight_layer_norm(weight)
+    #bias = self.bias_layer_norm(bias)
+
     return weight, bias
 
 class MetaUpSampler(nn.Module):
@@ -112,18 +136,30 @@ class MetaUpSampler(nn.Module):
     self.input_dim = config.input_dim
     self.x_dim = config.x_dim
     self.y_dim = config.y_dim
+    #self.layernorm = nn.LayerNorm(config.task_embedding_dim)
     self.down_sample_size = config.down_sample_size
+    linear1 = nn.Linear(config.y_dim, config.hidden_dim)
+    init_linear_layer(linear1)
+    linear2 = nn.Linear(config.hidden_dim, self.input_dim)
+    init_linear_layer(linear2)
     self.left_projection = nn.Sequential(
-      nn.Linear(config.y_dim, config.hidden_dim),
+      linear1,
       nn.ReLU(),
-      nn.Linear(config.hidden_dim, self.input_dim))
+      linear2)
+    linear3 = nn.Linear(config.task_embedding_dim, self.hidden_dim)
+    init_linear_layer(linear3)
+    linear4 = nn.Linear(self.hidden_dim, self.input_dim)
+    init_linear_layer(linear4)
     self.bias_generator = nn.Sequential(
-      nn.Linear(config.task_embedding_dim, self.hidden_dim),
+      linear3,
       nn.ReLU(),
-      nn.Linear(self.hidden_dim, self.input_dim)
+      linear4
     )
+    #self.weight_layer_norm = nn.LayerNorm(self.x_dim, self.input_dim)
+    #self.bias_layer_norm = nn.LayerNorm(self.input_dim)
 
   def forward(self, task_embedding):
+    #task_embedding = self.layernorm(task_embedding)
     task_embedding_reshaped = task_embedding.reshape(self.x_dim, self.y_dim)
     weight = self.left_projection(task_embedding_reshaped).transpose(0, 1)
     #print("#### z ", z.shape)
@@ -132,6 +168,10 @@ class MetaUpSampler(nn.Module):
     #z = self.weight_generator(task_embedding).reshape(-1, 1)
     #weight = self.projection(z).transpose(0, 1)
     #bias = self.bias_generator(task_embedding)
+
+    #weight = self.weight_layer_norm(weight)
+    #bias = self.bias_layer_norm(bias)
+
     return weight, bias
 
 """

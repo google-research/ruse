@@ -30,9 +30,8 @@
 "do_eval": true,
 "predict_with_generate": true,
 "meta_adapters": true,
-"task_embedding_dir":"/usr/local/google/home/rabeeh/Desktop/",
-"do_train":true,
-"n_train":10
+"task_embedding_dir":"/idiap/temp/rkarimi/task-transfer/outputs",
+"do_train":true
 }
 
 

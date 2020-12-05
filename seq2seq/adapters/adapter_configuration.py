@@ -39,3 +39,5 @@ class MetaAdapterConfig:
   weight_init_range = 1e-2
   task_embedding_dim = 768
   hidden_dim = 128
+  x_dim = 32
+  y_dim = 24 

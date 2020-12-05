@@ -5,7 +5,7 @@ import os
 
 from .adapter_configuration import MetaAdapterConfig
 from .adapter_utils import MetaUpSampler, MetaDownSampler
-from .adapter_modeling import Adapter
+from .adapter_modeling import Adapter,  MetaAdapter
 
 
 #TODO: one parent class for all adapter controllers.
@@ -23,7 +23,7 @@ class MetaAdapterController(nn.Module):
     self.input_dim = model_config.d_model
     adapter_config = MetaAdapterConfig()
     reduction_factor = adapter_config.reduction_factor if adapter_config.reduction_factor is not None else 2
-    self.down_sample_size = self.input_dim// reduction_factor
+    self.down_sample_size = self.input_dim // reduction_factor
     adapter_config.input_dim = self.input_dim
     adapter_config.down_sample_size = self.down_sample_size
 
@@ -69,7 +69,7 @@ class MetaAdapterController(nn.Module):
     for task in tasks:
       # TODO(rabeeh): for now we have a fixed config for all tasks.
       adapter_config = MetaAdapterConfig()
-      adapter = Adapter(self.model_config, adapter_config)
+      adapter = MetaAdapter(self.model_config, adapter_config)
       self.adapters[task] = adapter
     return self.adapters
 
@@ -118,8 +118,8 @@ class MetaAdapterController(nn.Module):
     # TODO: remove the layer norm from the down_sampler.
     weight_up, bias_up = self.meta_up_sampler(self.task_to_embeddings[task])
     weight_down, bias_down = self.meta_down_sampler(self.task_to_embeddings[task])
-    adapter.down_sampler[0].weight = torch.nn.Parameter(weight_down, requires_grad=False)
-    adapter.down_sampler[0].bias = torch.nn.Parameter(bias_down, requires_grad=False)
-    adapter.up_sampler.weight = torch.nn.Parameter(weight_up, requires_grad=False)
-    adapter.up_sampler.bias = torch.nn.Parameter(bias_up, requires_grad=False)
-    return adapter(inputs)
+    #adapter.down_sampler[0].weight = torch.nn.Parameter(weight_down, requires_grad=False)
+    #adapter.down_sampler[0].bias = torch.nn.Parameter(bias_down, requires_grad=False)
+    #adapter.up_sampler.weight = torch.nn.Parameter(weight_up, requires_grad=False)
+    #adapter.up_sampler.bias = torch.nn.Parameter(bias_up, requires_grad=False)
+    return adapter(inputs, weight_down, bias_down, weight_up, bias_up)

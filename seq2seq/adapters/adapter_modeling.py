@@ -14,6 +14,8 @@
 
 """Implements an Adapter Layer."""
 import torch.nn as nn
+import torch.nn.functional as F
+from transformers.activations import get_activation
 
 from .adapter_utils import Activations
 
@@ -52,6 +54,53 @@ class Adapter(nn.Module):
   def forward(self, x):
     z = self.down_sampler(x)
     output = self.up_sampler(z)
+    if self.add_layer_norm_after_adapter:
+      output = self.post_layer_norm(output)
+    output = output + x
+    return output
+
+
+
+class MetaAdapter(nn.Module):
+  def __init__(self, model_config, adapter_config):
+    super().__init__()
+    self.input_size = model_config.d_model
+    self.add_layer_norm_after_adapter = adapter_config.add_layer_norm_after_adapter
+    self.weight_init_range = adapter_config.weight_init_range
+    # If reduction factor is not passed we consider default value of 2.
+    reduction_factor = adapter_config.reduction_factor if adapter_config.reduction_factor is not None else 2
+    self.down_sample_size = self.input_size // reduction_factor
+
+    # Construct adapter down sampler module.
+    down_sampler_modules = []
+    if adapter_config.add_layer_norm_before_adapter:
+      down_sampler_modules.append(nn.LayerNorm(self.input_size))
+    self.activation_type = adapter_config.non_linearity.lower()
+
+    #down_linear = nn.Linear(self.input_size, self.down_sample_size)
+    #self.init_linear_layer(down_linear, std=self.weight_init_range)
+    #down_sampler_modules.append(down_linear)
+    #down_sampler_modules.append(Activations(adapter_config.non_linearity.lower()))
+    self.down_sampler = nn.Sequential(*down_sampler_modules)
+
+    # Construct adapter up sampler module.
+    #self.up_sampler = nn.Linear(self.down_sample_size, self.input_size)
+    #self.init_linear_layer(self.up_sampler, std=self.weight_init_range)
+    if self.add_layer_norm_after_adapter:
+      self.post_layer_norm = nn.LayerNorm(self.input_size)
+
+  def init_linear_layer(self, linear_layer, std):
+    """Initializes the linear modules as explained in adapter paper."""
+    nn.init.normal_(linear_layer.weight, std=std)
+    nn.init.zeros_(linear_layer.bias)
+
+  def forward(self, x, weight_down, bias_down, weight_up, bias_up):
+    z = self.down_sampler(x)
+    # Apply linear layer and activation.
+    z = F.linear(z, weight=weight_down, bias=bias_down)
+    z = get_activation(self.activation_type)(z)
+    output = F.linear(z, weight=weight_up, bias=bias_up)
+    #output = self.up_sampler(z)
     if self.add_layer_norm_after_adapter:
       output = self.post_layer_norm(output)
     output = output + x

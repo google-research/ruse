@@ -353,13 +353,7 @@ class T5Trainer(Trainer):
         return DataLoader(self.train_dataset, batch_sampler=multitask_sampler,
                                 collate_fn=self.data_collator)
 
-
     def compute_loss(self, model, inputs):
-
-        for name, parameter in model.named_parameters():
-          if parameter.requires_grad:
-            print("### name ", name)
-
         labels = inputs.pop("labels")
         loss, _ = self._compute_loss(model, inputs, labels)
         return loss

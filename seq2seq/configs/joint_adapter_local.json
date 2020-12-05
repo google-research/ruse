@@ -2,7 +2,7 @@
 "model_name_or_path": "t5-small",
 "tokenizer_name": "t5-small",
 "learning_rate": 3e-1,
-"output_dir": "/idiap/temp/rkarimi/ruse/outputs/adapters/joint-adapter-local/",
+"output_dir": "outputs/adapters/joint-adapter-local/",
 "max_source_length": 128,
 "max_target_length": 128 ,
 "val_max_target_length":128,
@@ -11,7 +11,8 @@
 "warmup_steps": 500,
 "eval_steps": 500,
 "overwrite_output_dir": true,
-"task": ["mrpc", "scitail"],
+"tasks": ["mrpc", "scitail"],
+"eval_tasks": ["mrpc", "scitail"],
 "sampling": true,
 "label_smoothing": 0.1,
 "fixed_length_emb": true,
@@ -26,9 +27,7 @@
 "save_total_limit": 1,
 "train_adapters": true,
 "do_eval": true,
-"predict_with_generate": true,
-"max_steps": 29520,
-"do_train": true
+"predict_with_generate": true
 }
 
 

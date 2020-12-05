@@ -118,8 +118,10 @@ class MetaAdapterController(nn.Module):
     # TODO: remove the layer norm from the down_sampler.
     weight_up, bias_up = self.meta_up_sampler(self.task_to_embeddings[task])
     weight_down, bias_down = self.meta_down_sampler(self.task_to_embeddings[task])
-    #adapter.down_sampler[0].weight = torch.nn.Parameter(weight_down, requires_grad=False)
-    #adapter.down_sampler[0].bias = torch.nn.Parameter(bias_down, requires_grad=False)
-    #adapter.up_sampler.weight = torch.nn.Parameter(weight_up, requires_grad=False)
-    #adapter.up_sampler.bias = torch.nn.Parameter(bias_up, requires_grad=False)
+    """
+    adapter.down_sampler[0].weight = torch.nn.Parameter(weight_down, requires_grad=False)
+    adapter.down_sampler[0].bias = torch.nn.Parameter(bias_down, requires_grad=False)
+    adapter.up_sampler.weight = torch.nn.Parameter(weight_up, requires_grad=False)
+    adapter.up_sampler.bias = torch.nn.Parameter(bias_up, requires_grad=False)
+    """
     return adapter(inputs, weight_down, bias_down, weight_up, bias_up)

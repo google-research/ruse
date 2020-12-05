@@ -1,7 +1,7 @@
 {
 "model_name_or_path": "t5-small",
 "tokenizer_name": "t5-small",
-"learning_rate": 3e-1,
+"learning_rate": 3e-2,
 "output_dir": "outputs/adapters/mrpc-meta-adapter-local/",
 "max_source_length": 128,
 "max_target_length": 128 ,

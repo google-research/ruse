@@ -77,6 +77,8 @@ class MetaDownSampler(nn.Module):
     self.left_projection = nn.Sequential(
       nn.Linear(config.y_dim, config.hidden_dim),
       nn.ReLU(),
+      nn.Linear(config.hidden_dim, config.hidden_dim),
+      nn.ReLU(),
       nn.Linear(config.hidden_dim, self.input_dim))
     """
     self.right_projection = nn.Sequential(
@@ -115,6 +117,8 @@ class MetaUpSampler(nn.Module):
     self.down_sample_size = config.down_sample_size
     self.left_projection = nn.Sequential(
       nn.Linear(config.y_dim, config.hidden_dim),
+      nn.ReLU(),
+      nn.Linear(config.hidden_dim, config.hidden_dim),
       nn.ReLU(),
       nn.Linear(config.hidden_dim, self.input_dim))
     self.bias_generator = nn.Sequential(

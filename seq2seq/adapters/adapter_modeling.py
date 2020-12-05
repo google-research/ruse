@@ -97,9 +97,9 @@ class MetaAdapter(nn.Module):
   def forward(self, x, weight_down, bias_down, weight_up, bias_up):
     z = self.down_sampler(x)
     # Apply linear layer and activation.
-    z = F.linear(z, weight=weight_down, bias=bias_down)
-    z = get_activation(self.activation_type)(z)
-    output = F.linear(z, weight=weight_up, bias=bias_up)
+    down = F.linear(z, weight=weight_down, bias=bias_down)
+    middle = get_activation(self.activation_type)(down)
+    output = F.linear(middle, weight=weight_up, bias=bias_up)
     #output = self.up_sampler(z)
     if self.add_layer_norm_after_adapter:
       output = self.post_layer_norm(output)

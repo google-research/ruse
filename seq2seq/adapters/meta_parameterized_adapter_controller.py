@@ -4,10 +4,8 @@ import torch.nn as nn
 from .adapter_configuration import MetaAdapterConfig, MetaParameterizedAdapterConfig
 from .adapter_utils import MetaUpSampler, MetaDownSampler, MetaParameterizedDownSampler, MetaParameterizedUpSampler
 from .adapter_modeling import MetaAdapter
-
-
 #TODO: one parent class for all adapter controllers.
-class MetaAdapterController(nn.Module):
+class MetaParamterizedAdapterController(nn.Module):
   """Implements Adapter controller module which generates
    the adapter layers embeddings."""
 
@@ -19,12 +17,13 @@ class MetaAdapterController(nn.Module):
     self.tasks = tasks
     self.task_embedding_dir = task_embedding_dir
     self.input_dim = model_config.d_model
-    adapter_config = MetaAdapterConfig()
+    adapter_config = MetaParameterizedAdapterConfig()
     reduction_factor = adapter_config.reduction_factor if adapter_config.reduction_factor is not None else 2
     self.down_sample_size = self.input_dim // reduction_factor
     adapter_config.input_dim = self.input_dim
     adapter_config.down_sample_size = self.down_sample_size
 
+    """
     self.task_to_embeddings = {}
     for task in tasks:
       #  #task_embedding_path=os.path.join(self.task_embedding_dir, task+".npy")
@@ -32,14 +31,13 @@ class MetaAdapterController(nn.Module):
       self.task_to_embeddings[task] = torch.randn(adapter_config.task_embedding_dim).cuda()
       #  #print("### self.task_to_embeddings ", self.task_to_embeddings[task])
       #  #torch.Tensor(np.load(task_embedding_path)).cuda()
-
+    """
     # Loads the task embeddings.
-    #self.task_to_embeddings = nn.ParameterDict(dict())
     self.task_to_embeddings = nn.ParameterDict({
       task: nn.Parameter(torch.randn((adapter_config.task_embedding_dim))) for task in tasks})
 
-    self.meta_up_sampler = MetaUpSampler(adapter_config)
-    self.meta_down_sampler = MetaDownSampler(adapter_config)
+    self.meta_up_sampler = MetaParameterizedUpSampler(adapter_config)
+    self.meta_down_sampler = MetaParameterizedDownSampler(adapter_config)
     self.task_to_adapter = {task: task for task in self.tasks}
 
   def enable_adapters(self, tasks):
@@ -123,7 +121,3 @@ class MetaAdapterController(nn.Module):
     weight_up, bias_up = self.meta_up_sampler(self.task_to_embeddings[task])
     weight_down, bias_down = self.meta_down_sampler(self.task_to_embeddings[task])
     return adapter(inputs, weight_down, bias_down, weight_up, bias_up)
-
-
-
-

@@ -47,7 +47,7 @@ class MetaAdapterConfig(AdapterConfig):
 class MetaParameterizedAdapterConfig(AdapterConfig):
   """Implements the adapter configuration proposed by Houlsby et. al, 2019
   proposed in https://arxiv.org/abs/1902.00751."""
-  add_layer_norm_before_adapter: bool = True #False
+  add_layer_norm_before_adapter: bool = False
   add_layer_norm_after_adapter: bool = True
   non_linearity: str = "swish"
   reduction_factor: int = 16

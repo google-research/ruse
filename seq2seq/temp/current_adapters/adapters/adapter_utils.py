@@ -221,7 +221,7 @@ class MetaUpSampler(nn.Module):
 class MetaParameterizedDownSampler(nn.Module):
   def __init__(self, config):
     super(MetaParameterizedDownSampler, self).__init__()
-    self.layer_norm = nn.LayerNorm(config.task_embedding_dim)
+    #self.layer_norm = nn.LayerNorm(config.task_embedding_dim)
 
     self.hidden_dim = config.hidden_dim
     self.input_dim = config.input_dim
@@ -247,7 +247,7 @@ class MetaParameterizedDownSampler(nn.Module):
     )
 
   def forward(self, task_embedding):
-    task_embedding = self.layer_norm(task_embedding.view(-1))
+    #task_embedding = self.layer_norm(task_embedding.view(-1))
 
     task_embedding_reshaped = task_embedding.reshape(self.x_dim, self.y_dim)
     weight = self.left_projection(task_embedding_reshaped).view(self.down_sample_size, self.input_dim)
@@ -260,7 +260,7 @@ class MetaParameterizedDownSampler(nn.Module):
 class MetaParameterizedUpSampler(nn.Module):
   def __init__(self, config):
     super(MetaParameterizedUpSampler, self).__init__()
-    self.layer_norm = nn.LayerNorm(config.task_embedding_dim)
+    #self.layer_norm = nn.LayerNorm(config.task_embedding_dim)
 
     self.hidden_dim = config.hidden_dim
     self.input_dim = config.input_dim
@@ -285,7 +285,7 @@ class MetaParameterizedUpSampler(nn.Module):
       linear4)
 
   def forward(self, task_embedding):
-    task_embedding = self.layer_norm(task_embedding.view(-1))
+    #task_embedding = self.layer_norm(task_embedding.view(-1))
 
     task_embedding_reshaped = task_embedding.reshape(self.x_dim, self.y_dim)
     weight = self.left_projection(task_embedding_reshaped).view(self.input_dim, self.down_sample_size) #transpose(0, 1)

@@ -15,5 +15,6 @@
 from .adapter_modeling import Adapter
 from .adapter_configuration import AdapterConfig, MetaAdapterConfig, MetaParameterizedAdapterConfig
 from .adapter_controller import AdapterController
-from .meta_adapter_controller import MetaAdapterController, MetaParamterizedAdapterController
+from .meta_adapter_controller import MetaAdapterController
+from .meta_parameterized_adapter_controller import MetaParamterizedAdapterController
 from .adapter_utils import MetaDownSampler, MetaUpSampler

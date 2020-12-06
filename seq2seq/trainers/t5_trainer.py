@@ -52,7 +52,8 @@ from seq2seq.utils import upload
 
 
 class T5Trainer(Trainer):
-    def __init__(self, config=None, data_args=None, dataset_sizes=None, *args, **kwargs):
+    def __init__(self, config=None, data_args=None, dataset_sizes=None, task_to_compute_metrics=None,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if config is None:
@@ -63,6 +64,7 @@ class T5Trainer(Trainer):
         else:
             self.config = config
 
+        self.task_to_compute_metrics = task_to_compute_metrics
         self.dataset_sizes = dataset_sizes
         self.data_args = data_args
         self.vocab_size = self.config.tgt_vocab_size if isinstance(self.config, FSMTConfig) else self.config.vocab_size
@@ -186,7 +188,7 @@ class T5Trainer(Trainer):
         )
 
     # : Optional[Dataset] = None
-    def evaluate(self, eval_datasets, task_to_compute_metrics) -> Dict[str, float]:
+    def evaluate(self) -> Dict[str, float]: #eval_datasets, task_to_compute_metrics) -> Dict[str, float]:
         """
         Run evaluation and returns metrics.
 
@@ -210,10 +212,10 @@ class T5Trainer(Trainer):
         #    raise ValueError("eval_dataset must implement __len__")
         tasks_metrics = {}
         model_config = self.model.config
-        for eval_task, eval_dataset in eval_datasets.items():
+        for eval_task, eval_dataset in self.eval_dataset.items():
             use_task_specific_params(self.model, eval_task)
             eval_dataloader = self.get_eval_dataloader(eval_dataset, eval_task)
-            self.compute_metrics = task_to_compute_metrics[eval_task]
+            self.compute_metrics = self.task_to_compute_metrics[eval_task]
             output = self.prediction_loop(
                 eval_dataloader,
                 description="Evaluation",
@@ -231,7 +233,7 @@ class T5Trainer(Trainer):
                 xm.master_print(met.metrics_report())
             reset_config(self.model, model_config)
         # TODO: this is not doing anything.
-        #self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, output.metrics)
+        self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, output.metrics)
         return tasks_metrics
 
     def _compute_loss(self, model, inputs, labels):

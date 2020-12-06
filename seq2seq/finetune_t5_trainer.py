@@ -179,11 +179,12 @@ def main():
         config=config,
         args=training_args,
         train_dataset=train_dataset if training_args.do_train else None,
-        eval_dataset=None,  # Since prototype does not match we feed this in later. #eval_dataset,
+        eval_dataset=eval_datasets, #None,  # Since prototype does not match we feed this in later. #eval_dataset,
         data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores), #, tasks=data_args.tasks),
         compute_metrics=compute_metrics_fn,
         data_args=data_args,
-        dataset_sizes=dataset_sizes if training_args.do_train else None 
+        dataset_sizes=dataset_sizes if training_args.do_train else None,
+        task_to_compute_metrics = compute_metrics_fn
     )
 
     # Training
@@ -228,7 +229,7 @@ def main():
         logger.info(eval_datasets)
         logger.info("*** Evaluate ***")
 
-        result = trainer.evaluate(eval_datasets, compute_metrics_fn)
+        result = trainer.evaluate() #eval_datasets, compute_metrics_fn)
         if trainer.is_world_process_zero():
             logger.info("***** Eval results *****")
             for key, value in result.items():

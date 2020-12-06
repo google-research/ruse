@@ -37,7 +37,7 @@ class MetaAdapterConfig:
   non_linearity: str = "swish"
   reduction_factor: int = 16
   weight_init_range = 1e-2
-  task_embedding_dim = 64 #768
+  task_embedding_dim = 768
   hidden_dim = 128
-  x_dim = 8  #32
-  y_dim = 8 #24
+  x_dim = 32
+  y_dim = 24

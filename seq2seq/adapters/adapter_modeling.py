@@ -21,30 +21,31 @@ from .adapter_utils import Activations
 
 
 class Adapter(nn.Module):
-  def __init__(self, model_config, adapter_config):
+  def __init__(self, config):
     super().__init__()
-    self.input_size = model_config.d_model
-    self.add_layer_norm_after_adapter = adapter_config.add_layer_norm_after_adapter
-    self.weight_init_range = adapter_config.weight_init_range
+    self.config = config
+    self.input_dim = config.input_dim
+    self.add_layer_norm_after_adapter = config.add_layer_norm_after_adapter
+    self.weight_init_range = config.weight_init_range
     # If reduction factor is not passed we consider default value of 2.
-    reduction_factor = adapter_config.reduction_factor if adapter_config.reduction_factor is not None else 2
-    self.down_sample_size = self.input_size // reduction_factor
+    reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
+    self.down_sample_size = self.input_dim // reduction_factor
 
     # Construct adapter down sampler module.
     down_sampler_modules = []
-    if adapter_config.add_layer_norm_before_adapter:
-      down_sampler_modules.append(nn.LayerNorm(self.input_size))
-    down_linear = nn.Linear(self.input_size, self.down_sample_size)
+    if config.add_layer_norm_before_adapter:
+      down_sampler_modules.append(nn.LayerNorm(self.input_dim))
+    down_linear = nn.Linear(self.input_dim, self.down_sample_size)
     self.init_linear_layer(down_linear, std=self.weight_init_range)
     down_sampler_modules.append(down_linear)
-    down_sampler_modules.append(Activations(adapter_config.non_linearity.lower()))
+    down_sampler_modules.append(Activations(config.non_linearity.lower()))
     self.down_sampler = nn.Sequential(*down_sampler_modules)
 
     # Construct adapter up sampler module.
-    self.up_sampler = nn.Linear(self.down_sample_size, self.input_size)
+    self.up_sampler = nn.Linear(self.down_sample_size, self.input_dim)
     self.init_linear_layer(self.up_sampler, std=self.weight_init_range)
     if self.add_layer_norm_after_adapter:
-      self.post_layer_norm = nn.LayerNorm(self.input_size)
+      self.post_layer_norm = nn.LayerNorm(self.input_dim)
 
   def init_linear_layer(self, linear_layer, std):
     """Initializes the linear modules as explained in adapter paper."""
@@ -62,22 +63,22 @@ class Adapter(nn.Module):
 
 
 class MetaAdapter(nn.Module):
-  def __init__(self, model_config, adapter_config):
+  def __init__(self, config):
     super().__init__()
-    self.input_size = model_config.d_model
-    self.add_layer_norm_after_adapter = adapter_config.add_layer_norm_after_adapter
-    self.weight_init_range = adapter_config.weight_init_range
+    self.input_dim = config.input_dim
+    self.add_layer_norm_after_adapter = config.add_layer_norm_after_adapter
+    self.weight_init_range = config.weight_init_range
     # If reduction factor is not passed we consider default value of 2.
-    reduction_factor = adapter_config.reduction_factor if adapter_config.reduction_factor is not None else 2
-    self.down_sample_size = self.input_size // reduction_factor
+    reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
+    self.down_sample_size = self.input_dim // reduction_factor
     # Construct adapter down sampler module.
     down_sampler_modules = []
-    if adapter_config.add_layer_norm_before_adapter:
-      down_sampler_modules.append(nn.LayerNorm(self.input_size))
-    self.activation_type = adapter_config.non_linearity.lower()
+    if config.add_layer_norm_before_adapter:
+      down_sampler_modules.append(nn.LayerNorm(self.input_dim))
+    self.activation_type = config.non_linearity.lower()
     self.down_sampler = nn.Sequential(*down_sampler_modules)
     if self.add_layer_norm_after_adapter:
-      self.post_layer_norm = nn.LayerNorm(self.input_size)
+      self.post_layer_norm = nn.LayerNorm(self.input_dim)
 
   def init_linear_layer(self, linear_layer, std):
     """Initializes the linear modules as explained in adapter paper."""

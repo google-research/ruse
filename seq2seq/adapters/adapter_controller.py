@@ -17,18 +17,18 @@ layers of Adapters, and controls which adapter layer to use."""
 
 import torch.nn as nn
 
-from seq2seq.adapters import Adapter, AdapterConfig
+from seq2seq.adapters import Adapter
 
 
 class AdapterController(nn.Module):
   """Implements Adapter controller module."""
 
-  def __init__(self, tasks, model_config):
+  def __init__(self, config):
     super().__init__()
+    self.config = config
     self.adapters = nn.ModuleDict(dict())
-    self.model_config = model_config
-    self.tasks = tasks
-    self.adapters = self.construct_adapters(tasks)
+    self.tasks = config.tasks
+    self.adapters = self.construct_adapters(self.tasks)
     self.task_to_adapter = {task: task for task in self.tasks}
 
   def set_task_to_adapter_map(self, mapping):
@@ -44,10 +44,7 @@ class AdapterController(nn.Module):
     :param tasks: A list of string contraining task names.
     """
     for task in tasks:
-      # TODO(rabeeh): for now we have a fixed config for all tasks.
-      adapter_config = AdapterConfig()
-      adapter = Adapter(self.model_config, adapter_config)
-      self.adapters[task] = adapter
+      self.adapters[task] = Adapter(self.config)
     return self.adapters
 
   def disable_adapters(self, tasks):

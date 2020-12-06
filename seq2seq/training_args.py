@@ -13,6 +13,7 @@ from typing import Optional, List
 
 from seq2seq.models import POOLING_MAPPING
 from seq2seq.models import PROJECTION_MAPPING
+from seq2seq.adapters import ADAPTER_CONFFIG_MAPPING
 
 arg_to_scheduler = {
   "linear": get_linear_schedule_with_warmup,
@@ -86,16 +87,10 @@ class Seq2SeqTrainingArguments(TrainingArguments):
     default=None,
     metadata={"help": f"gs bucket."}
   )
-  train_adapters: Optional[bool] = field(default=False, metadata={"help":
-                                                          "Train an adapter instead of the full model."})
   temperature: Optional[int] = field(default=1, metadata={"help": "Defines the temperature"
                                                         "value for sampling across the multiple datasets."})
-  meta_adapters: Optional[bool]=field(default=False, metadata={"help":"If set, generates the adapters based on task "
-      "embeddings."})
-  task_embedding_dir: Optional[str]=field(default=None, metadata={"help":"defines the directory containing task embeddings."
-      "We expect each task have a file with its name there."})
-  meta_parameterized_adapters: Optional[bool]=field(default=False, metadata={"help":"If set, generates the adapters based on task "
-      "embeddings."})
+  train_adapters: Optional[bool] = field(default=False, metadata={"help":
+                                                          "Train an adapter instead of the full model."})
 
 @dataclass
 class ModelArguments:
@@ -173,3 +168,19 @@ class DataTrainingArguments:
     default=True,
     metadata={"help": "If only pad tokens should be ignored. This assumes that `config.pad_token_id` is defined."},
   )
+
+@dataclass
+class AdapterTrainingArguments:
+  adapter_config_name: Optional[str] = field(
+    default="parametric-meta-adapter", metadata={"help": "config name for the adapter layers, should be selected "
+                                    f"in {sorted(ADAPTER_CONFFIG_MAPPING.keys())}."}
+  )
+  #meta_adapters: Optional[bool]=field(default=False, metadata={"help":"If set, generates the adapters based on task "
+  #    "embeddings."})
+  task_embedding_dir: Optional[str]=field(default=None,
+                                        metadata={"help":"defines the directory containing task embeddings."
+                                        "We expect each task have a file with its name there."})
+  #meta_parameterized_adapters: Optional[bool]=field(default=False, metadata={"help":"If set, generates the adapters based on task "
+  #    "embeddings."})
+
+

@@ -109,11 +109,12 @@ class T5Config(PretrainedConfig):
         encoder_pooling="max",
         projection_length=16,
         only_projection_bottleneck=False,
-        concat_projection_token = False,
-        train_adapters = False,
-        meta_adapters = False,
-        task_embedding_dir = None,
-        meta_parameterized_adapters=False,
+        concat_projection_token=False,
+        train_adapters=False,
+        #adapter_config=None,
+        #meta_adapters = False,
+        #task_embedding_dir = None,
+        #meta_parameterized_adapters=False,
         **kwargs
     ):
         super().__init__(
@@ -143,9 +144,10 @@ class T5Config(PretrainedConfig):
         self.only_projection_bottleneck = only_projection_bottleneck
         self.concat_projection_token = concat_projection_token
         self.train_adapters = train_adapters
-        self.meta_adapters = meta_adapters 
-        self.task_embedding_dir = task_embedding_dir
-        self.meta_parameterized_adapters = meta_parameterized_adapters
+        #self.adapter_config = adapter_config
+        #self.meta_adapters = meta_adapters
+        #self.task_embedding_dir = task_embedding_dir
+        #self.meta_parameterized_adapters = meta_parameterized_adapters
 
     @property
     def max_position_embeddings(self):

@@ -1,45 +1,37 @@
 import torch
 import torch.nn as nn
 
-from .adapter_configuration import MetaAdapterConfig, MetaParameterizedAdapterConfig
-from .adapter_utils import MetaUpSampler, MetaDownSampler, MetaParameterizedDownSampler, MetaParameterizedUpSampler
+from .adapter_utils import MetaUpSampler, MetaDownSampler
 from .adapter_modeling import MetaAdapter
 
 
-#TODO: one parent class for all adapter controllers.
 class MetaAdapterController(nn.Module):
   """Implements Adapter controller module which generates
    the adapter layers embeddings."""
 
-  def __init__(self, tasks, model_config, task_embedding_dir):
+  def __init__(self, config):
     super().__init__()
     self.adapters = nn.ModuleDict(dict())
-    self.model_config = model_config
-    self.adapters = self.construct_adapters(tasks)
-    self.tasks = tasks
-    self.task_embedding_dir = task_embedding_dir
-    self.input_dim = model_config.d_model
-    adapter_config = MetaAdapterConfig()
-    reduction_factor = adapter_config.reduction_factor if adapter_config.reduction_factor is not None else 2
-    self.down_sample_size = self.input_dim // reduction_factor
-    adapter_config.input_dim = self.input_dim
-    adapter_config.down_sample_size = self.down_sample_size
+    self.config = config
+    self.tasks = config.tasks
+    self.adapters = self.construct_adapters(self.tasks)
+    self.task_embedding_dir = config.task_embedding_dir
+    self.input_dim = config.input_dim
 
+    """
     self.task_to_embeddings = {}
-    for task in tasks:
+    for task in self.tasks:
       #  #task_embedding_path=os.path.join(self.task_embedding_dir, task+".npy")
       #  # TODO: device needs to be set properly.
-      self.task_to_embeddings[task] = torch.randn(adapter_config.task_embedding_dim).cuda()
+      self.task_to_embeddings[task] = torch.randn(config.task_embedding_dim).cuda()
+      #adapter_config.task_embedding_dim).cuda()
       #  #print("### self.task_to_embeddings ", self.task_to_embeddings[task])
       #  #torch.Tensor(np.load(task_embedding_path)).cuda()
-
-    # Loads the task embeddings.
-    #self.task_to_embeddings = nn.ParameterDict(dict())
+    """
     self.task_to_embeddings = nn.ParameterDict({
-      task: nn.Parameter(torch.randn((adapter_config.task_embedding_dim))) for task in tasks})
-
-    self.meta_up_sampler = MetaUpSampler(adapter_config)
-    self.meta_down_sampler = MetaDownSampler(adapter_config)
+      task: nn.Parameter(torch.randn((config.task_embedding_dim))) for task in self.tasks})
+    self.meta_up_sampler = MetaUpSampler(config)
+    self.meta_down_sampler = MetaDownSampler(config)
     self.task_to_adapter = {task: task for task in self.tasks}
 
   def enable_adapters(self, tasks):
@@ -72,9 +64,7 @@ class MetaAdapterController(nn.Module):
     :param tasks: A list of string contraining task names.
     """
     for task in tasks:
-      # TODO(rabeeh): for now we have a fixed config for all tasks.
-      adapter_config = MetaAdapterConfig()
-      self.adapters[task] = MetaAdapter(self.model_config, adapter_config)
+      self.adapters[task] = MetaAdapter(self.config)
     return self.adapters
 
   def set_task_to_adapter_map(self, mapping):
@@ -90,9 +80,6 @@ class MetaAdapterController(nn.Module):
     else:
       return [tasks]
 
-
-  # TODO: this needs to be later without a dictionary and we also generate the parameters
-  #    of the layer norms with meta learners.
   def get_adapter(self, task):
     """Given a task returns its corresponding adapter layer, returns None
     if task is not registered.

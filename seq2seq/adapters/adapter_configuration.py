@@ -14,7 +14,9 @@
 
 """Implements the adapters configuration."""
 
+import torch.nn as nn
 from dataclasses import dataclass
+from collections import OrderedDict
 
 
 @dataclass
@@ -30,13 +32,8 @@ class AdapterConfig(object):
 
 
 class MetaAdapterConfig(AdapterConfig):
-  """Implements the adapter configuration proposed by Houlsby et. al, 2019
-  proposed in https://arxiv.org/abs/1902.00751."""
-  add_layer_norm_before_adapter: bool = False
-  add_layer_norm_after_adapter: bool = True
-  non_linearity: str = "swish"
-  reduction_factor: int = 16
-  weight_init_range = 1e-2
+  """Implements Meta adapter in which a hyper-network generates the parameters of
+   adapter layers. Task embeddings are fixed in this case."""
   task_embedding_dim = 768
   hidden_dim = 128
   x_dim = 32
@@ -44,15 +41,27 @@ class MetaAdapterConfig(AdapterConfig):
 
 
 
-class MetaParameterizedAdapterConfig(AdapterConfig):
-  """Implements the adapter configuration proposed by Houlsby et. al, 2019
-  proposed in https://arxiv.org/abs/1902.00751."""
-  add_layer_norm_before_adapter: bool = False
-  add_layer_norm_after_adapter: bool = True
-  non_linearity: str = "swish"
-  reduction_factor: int = 16
-  weight_init_range = 1e-2
+class ParametricMetaAdapterConfig(AdapterConfig):
+  """Implements meta adapter configuration, in which a hyper-network generates the
+  parameters of adapter layers. Task embeddings are paramters in this case."""
   task_embedding_dim = 64
   hidden_dim = 128
   x_dim = 8
   y_dim = 8
+
+
+
+ADAPTER_CONFFIG_MAPPING = OrderedDict(
+      [("adapter", AdapterConfig),
+      ("meta-adapter", MetaAdapterConfig),
+      ("parametric-meta-adapter", ParametricMetaAdapterConfig)])
+
+class AutoAdapterConfig(nn.Module):
+  """Generic Adapter config class to instantiate different adapter configs."""
+  @classmethod
+  def get(cls, config_name: str):
+    if config_name in ADAPTER_CONFFIG_MAPPING:
+      return ADAPTER_CONFFIG_MAPPING[config_name]()
+    raise ValueError(
+        "Unrecognized adapter config type identifier: {}. Should contain one of {}"
+        .format(config_name, ", ".join(ADAPTER_CONFFIG_MAPPING.keys())))

@@ -26,7 +26,7 @@ from transformers.modeling_outputs import BaseModelOutput
 from transformers.utils import logging
 from transformers.modeling_t5 import (T5PreTrainedModel, T5LayerNorm, T5Block,
                                       T5DenseReluDense, T5Attention, T5LayerCrossAttention)
-from seq2seq.adapters import AdapterController, MetaAdapterController, MetaParamterizedAdapterController
+from seq2seq.adapters import AdapterController, MetaAdapterController, MetaParamterizedAdapterController, AdapterConfig, MetaAdapterConfig, ParametricMetaAdapterConfig
 
 from .poolings import AutoPooling
 from .projections import AutoProjection
@@ -37,19 +37,20 @@ logger = logging.get_logger(__name__)
 
 
 class T5LayerFF(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, adapter_config=None):
         super().__init__()
         self.DenseReluDense = T5DenseReluDense(config)
         self.layer_norm = T5LayerNorm(config.d_model, eps=config.layer_norm_epsilon)
         self.dropout = nn.Dropout(config.dropout_rate)
         self.train_adapters = config.train_adapters
+        self.adapter_config = adapter_config
         if self.train_adapters:
-            if config.meta_parameterized_adapters:
-              self.adapter_controller = MetaParamterizedAdapterController(config.tasks, config, config.task_embedding_dir)
-            elif config.meta_adapters:
-              self.adapter_controller = MetaAdapterController(config.tasks, config, config.task_embedding_dir)
+            if isinstance(self.adapter_config, ParametricMetaAdapterConfig): # meta_parameterized_adapters:
+              self.adapter_controller = MetaParamterizedAdapterController(self.adapter_config) #config.tasks, config, config.task_embedding_dir)
+            elif isinstance(self.adapter_config, MetaAdapterConfig): #config.meta_adapters:
+              self.adapter_controller = MetaAdapterController(self.adapter_config) #config.tasks, config, config.task_embedding_dir)
             else:
-              self.adapter_controller = AdapterController(config.tasks, config)
+              self.adapter_controller = AdapterController(self.adapter_config) #config.tasks, config)
 
     def forward(self, hidden_states, task=None):
         #if self.train_adapters:
@@ -65,7 +66,7 @@ class T5LayerFF(nn.Module):
 
 
 class T5LayerSelfAttention(nn.Module):
-    def __init__(self, config, has_relative_attention_bias=False):
+    def __init__(self, config, has_relative_attention_bias=False, adapter_config=None):
         super().__init__()
         self.SelfAttention = T5Attention(
             config, has_relative_attention_bias=has_relative_attention_bias, is_bidirectional=not config.is_decoder
@@ -73,14 +74,18 @@ class T5LayerSelfAttention(nn.Module):
         self.layer_norm = T5LayerNorm(config.d_model, eps=config.layer_norm_epsilon)
         self.dropout = nn.Dropout(config.dropout_rate)
 
+        self.adapter_config = adapter_config
         self.train_adapters = config.train_adapters
+        print("#### self.adapter_config ", self.adapter_config)
         if self.train_adapters:
-            if config.meta_parameterized_adapters:
-              self.adapter_controller = MetaParamterizedAdapterController(config.tasks, config, config.task_embedding_dir)
-            elif config.meta_adapters:
-              self.adapter_controller = MetaAdapterController(config.tasks, config, config.task_embedding_dir)
+            if isinstance(self.adapter_config, ParametricMetaAdapterConfig): #config.meta_parameterized_adapters:
+              self.adapter_controller = MetaParamterizedAdapterController(self.adapter_config) #tasks, config, config.task_embedding_dir)
+            elif isinstance(self.adapter_config, MetaAdapterConfig): #config.meta_adapters:
+              self.adapter_controller = MetaAdapterController(self.adapter_config) #config.tasks, config, config.task_embedding_dir)
+            elif isintance(self.adapter_config, AdapterConfig):
+              self.adapter_controller = AdapterController(self.adapter_config) #config.tasks, config)
             else:
-              self.adapter_controller = AdapterController(config.tasks, config)
+                 raise ValueError("Config type is invalid ", self.adapter_config) 
 
     def forward(
         self,
@@ -119,16 +124,17 @@ class T5LayerSelfAttention(nn.Module):
 
 
 class T5Block(nn.Module):
-    def __init__(self, config, has_relative_attention_bias=False):
+    def __init__(self, config, has_relative_attention_bias=False, adapter_config=None):
         super().__init__()
+        self.adapter_config=adapter_config
         self.is_decoder = config.is_decoder
         self.layer = nn.ModuleList()
         self.layer.append(T5LayerSelfAttention(config, \
-           has_relative_attention_bias=has_relative_attention_bias))
+           has_relative_attention_bias=has_relative_attention_bias, adapter_config=self.adapter_config))
         if self.is_decoder:
             self.layer.append(T5LayerCrossAttention(config,\
               has_relative_attention_bias=has_relative_attention_bias))
-        self.layer.append(T5LayerFF(config))
+        self.layer.append(T5LayerFF(config, self.adapter_config))
 
     def forward(
         self,
@@ -219,14 +225,14 @@ class T5Block(nn.Module):
 
 
 class T5Stack(T5PreTrainedModel):
-    def __init__(self, config, embed_tokens=None):
+    def __init__(self, config, embed_tokens=None, adapter_config=None):
         super().__init__(config)
-
+        self.adapter_config=adapter_config
         self.embed_tokens = embed_tokens
         self.is_decoder = config.is_decoder
 
         self.block = nn.ModuleList(
-            [T5Block(config, has_relative_attention_bias=bool(i == 0))
+            [T5Block(config, has_relative_attention_bias=bool(i == 0), adapter_config=self.adapter_config)
             for i in range(config.num_layers)]
         )
         self.final_layer_norm = T5LayerNorm(config.d_model,
@@ -419,8 +425,9 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
     authorized_missing_keys = [r"encoder\.embed_tokens\.weight",
       r"decoder\.embed_tokens\.weight", r"lm_head\.weight"]
 
-    def __init__(self, config, tasks=None):
+    def __init__(self, config, adapter_config=None): #, tasks=None):
         super().__init__(config)
+        self.adapter_config=adapter_config
         self.model_dim = config.d_model
         self.shared = nn.Embedding(config.vocab_size, config.d_model)
         encoder_config = copy.deepcopy(config)
@@ -428,8 +435,8 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
         encoder_config.is_encoder_decoder = False
         if config.train_adapters:
             encoder_config.train_adapters = True
-            encoder_config.tasks = tasks
-        self.encoder = T5Stack(encoder_config, self.shared)
+            #encoder_config.tasks = tasks
+        self.encoder = T5Stack(encoder_config, self.shared, adapter_config=adapter_config)
 
         decoder_config = copy.deepcopy(config)
         decoder_config.is_decoder = True
@@ -437,8 +444,8 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
         decoder_config.num_layers = config.num_decoder_layers
         if config.train_adapters:
             decoder_config.train_adapters = True
-            decoder_config.tasks = tasks
-        self.decoder = T5Stack(decoder_config, self.shared)
+            #decoder_config.tasks = tasks
+        self.decoder = T5Stack(decoder_config, self.shared, adapter_config=adapter_config)
         self.lm_head = nn.Linear(config.d_model, config.vocab_size, bias=False)
 
         self.fixed_length_emb = config.fixed_length_emb

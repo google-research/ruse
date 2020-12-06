@@ -17,12 +17,12 @@ from seq2seq.utils import (
 )
 
 from seq2seq.trainers import T5Trainer
-from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments
+from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments, AdapterTrainingArguments
 from seq2seq.models import T5Config
 from seq2seq.tasks import AutoTask, TaskCollator
 from seq2seq.metrics import build_compute_metrics_fn
 from seq2seq.models import T5ForConditionalGeneration
-from seq2seq.adapters import AdapterController, MetaAdapterController, MetaParamterizedAdapterController
+from seq2seq.adapters import AdapterController, MetaAdapterController, MetaParamterizedAdapterController, AutoAdapterConfig
 
 
 logger = logging.getLogger(__name__)
@@ -42,15 +42,15 @@ def main():
     # See all possible arguments in src/transformers/training_args.py or by passing
     # the --help flag to this script. We now keep distinct sets of args, for a cleaner
     # separation of concerns.
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments))
+    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments, AdapterTrainingArguments))
 
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
-        model_args, data_args, training_args = parser.parse_json_file(
+        model_args, data_args, training_args, adapter_args = parser.parse_json_file(
             json_file=os.path.abspath(sys.argv[1]))
     else:
-        model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+        model_args, data_args, training_args, adapter_args = parser.parse_args_into_dataclasses()
     check_output_dir(training_args)
 
     # Setup logging
@@ -72,6 +72,8 @@ def main():
     # Set seed
     set_seed(training_args.seed)
 
+
+
     # Load pretrained model and tokenizer
     #
     # Distributed training:
@@ -88,13 +90,26 @@ def main():
                           "attention_dropout", "fixed_length_emb",
                           "encoder_projection", "encoder_pooling",
                           "projection_length", "only_projection_bottleneck",
-                          "concat_projection_token", "train_adapters",
-                          "meta_adapters", "task_embedding_dir",
-                          "meta_parameterized_adapters")
+                          "concat_projection_token", "train_adapters")
+                          # ,
+                          #"meta_adapters", "task_embedding_dir",
+                          #"meta_parameterized_adapters")
     for p in extra_model_params:
         if getattr(training_args, p, None):
             assert hasattr(config, p), f"({config.__class__.__name__}) doesn't have a `{p}` attribute"
             setattr(config, p, getattr(training_args, p))
+
+    # Gets the adapter config and updates the specified parameters.
+    adapter_config = AutoAdapterConfig.get(adapter_args.adapter_config_name)
+    adapter_config.input_dim = config.d_model
+    adapter_config.tasks = data_args.tasks
+    extra_adapter_params = ("task_embedding_dir")
+    for p in extra_adapter_params:
+        if getattr(adapter_args, p, None):
+            assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"
+            setattr(adapter_config, p, getattr(adapter_args, p))
+    #setattr(config, "adapter_config", adapter_config)
+
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else\
@@ -102,15 +117,17 @@ def main():
         cache_dir=model_args.cache_dir,
     )
 
+    print("#### inside main ", adapter_config)
     if model_args.not_load_t5_checkpoint:
-        model = T5ForConditionalGeneration(config=config, tasks=data_args.tasks)
+        model = T5ForConditionalGeneration(config=config, adapter_config=adapter_config) #, tasks=data_args.tasks)
     else:
         model = T5ForConditionalGeneration.from_pretrained(
             model_args.model_name_or_path,
             from_tf=".ckpt" in model_args.model_name_or_path,
             config=config,
             cache_dir=model_args.cache_dir,
-            tasks=data_args.tasks
+            adapter_config=adapter_config
+            #tasks=data_args.tasks
         )
 
     # set num_beams for evaluation
@@ -122,12 +139,12 @@ def main():
         freeze_params(model)
         for param in model.lm_head.parameters():
           param.require_grad = True
-        if training_args.meta_adapters:
-            # Sets the gradient for all meta-adapters to True.
-            for name, sub_module in model.named_modules():
-                if isinstance(sub_module, (MetaAdapterController, MetaParamterizedAdapterController)):
-                    for param_name, param in sub_module.named_parameters():
-                        param.requires_grad = True
+        #if training_args.meta_adapters:
+        # Sets the gradient for all meta-adapters to True.
+        for name, sub_module in model.named_modules():
+           if isinstance(sub_module, (MetaAdapterController, MetaParamterizedAdapterController)):
+              for param_name, param in sub_module.named_parameters():
+                 param.requires_grad = True
             
     else:
         if model_args.freeze_embeds:
@@ -211,7 +228,7 @@ def main():
             from_tf=".ckpt" in training_args.output_dir,
             config=config,
             cache_dir=model_args.cache_dir,
-            tasks=data_args.tasks
+            adapter_config=adapter_config
         )
         trainer.model = model.to(training_args.device)
 

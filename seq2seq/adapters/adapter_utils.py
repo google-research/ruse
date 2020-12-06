@@ -27,46 +27,6 @@ class Activations(nn.Module):
     return self.f(x)
 
 
-"""
-class MetaDownSampler(nn.Module):
-  def __init__(self, config):
-    super(MetaDownSampler, self).__init__()
-    self.input_dim = config.input_dim
-    self.down_sample_size = config.down_sample_size
-    self.weight_generator = nn.Sequential(
-      nn.Linear(config.task_embedding_dim, config.hidden_dim),
-      nn.ReLU(),
-      nn.Linear(config.hidden_dim, self.input_dim))
-    self.projection = nn.Linear(1, self.down_sample_size)
-    # TODO: this can also be a MLP layer here.
-    self.bias_generator = nn.Linear(config.task_embedding_dim, self.down_sample_size)
-
-  def forward(self, task_embedding):
-    z = self.weight_generator(task_embedding).reshape(-1, 1)
-    weight = self.projection(z).transpose(0, 1)
-    bias = self.bias_generator(task_embedding)
-    return weight, bias
-
-
-class MetaUpSampler(nn.Module):
-  def __init__(self, config):
-    super(MetaUpSampler, self).__init__()
-    self.input_dim = config.input_dim
-    self.down_sample_size = config.down_sample_size
-    self.weight_generator = nn.Sequential(
-      nn.Linear(config.task_embedding_dim, config.hidden_dim),
-      nn.ReLU(),
-      nn.Linear(config.hidden_dim, self.input_dim))
-    self.projection = nn.Linear(1, self.down_sample_size)
-    self.bias_generator = nn.Linear(config.task_embedding_dim, self.input_dim)
-
-  def forward(self, task_embedding):
-    z = self.weight_generator(task_embedding).reshape(-1, 1)
-    weight = self.projection(z)
-    bias = self.bias_generator(task_embedding)
-    return weight, bias
-"""
-
 
 def init_linear_layer(linear_layer, std=1e-2):
   """Initializes the linear modules as explained in adapter paper."""
@@ -82,7 +42,6 @@ class MetaDownSampler(nn.Module):
     self.x_dim = config.x_dim
     self.y_dim = config.y_dim
     self.down_sample_size = config.down_sample_size
-
     linear1 = nn.Linear(config.y_dim, config.hidden_dim)
     init_linear_layer(linear1)
     linear2 = nn.Linear(config.hidden_dim, self.input_dim)
@@ -91,14 +50,6 @@ class MetaDownSampler(nn.Module):
       linear1,
       nn.ReLU(),
       linear2)
-    """
-    self.right_projection = nn.Sequential(
-      nn.Linear(config.y_dim, self.hidden_dim),
-      nn.ReLU(),
-      nn.Linear(self.hidden_dim, self.down_sample_size)
-    )
-    """
-    # self.projection = nn.Linear(1, self.down_sample_siz)
     # TODO: this can also be a MLP layer here.
     linear3 = nn.Linear(config.task_embedding_dim, self.hidden_dim)
     init_linear_layer(linear3)
@@ -109,25 +60,11 @@ class MetaDownSampler(nn.Module):
       nn.ReLU(),
       linear4
     )
-    # self.weight_layer_norm = nn.LayerNorm(self.input_dim, self.x_dim)
-    # self.bias_layer_norm = nn.LayerNorm(self.down_sample_size)
-
-    # nnn.Linear(config.task_embedding_dim, self.down_sample_size)
 
   def forward(self, task_embedding):
-    # task_embedding = self.layernorm(task_embedding)
     task_embedding_reshaped = task_embedding.reshape(self.x_dim, self.y_dim)
     weight = self.left_projection(task_embedding_reshaped)
-    # print("#### z ", z.shape)
-    # weight = self.right_projection(z)
     bias = self.bias_generator(task_embedding).view(-1)
-    # z = self.weight_generator(task_embedding).reshape(-1, 1)
-    # weight = self.projection(z).transpose(0, 1)
-    # bias = self.bias_generator(task_embedding)
-
-    # weight = self.weight_layer_norm(weight)
-    # bias = self.bias_layer_norm(bias)
-
     return weight, bias
 
 
@@ -138,7 +75,6 @@ class MetaUpSampler(nn.Module):
     self.input_dim = config.input_dim
     self.x_dim = config.x_dim
     self.y_dim = config.y_dim
-    # self.layernorm = nn.LayerNorm(config.task_embedding_dim)
     self.down_sample_size = config.down_sample_size
     linear1 = nn.Linear(config.y_dim, config.hidden_dim)
     init_linear_layer(linear1)
@@ -157,77 +93,23 @@ class MetaUpSampler(nn.Module):
       nn.ReLU(),
       linear4
     )
-    # self.weight_layer_norm = nn.LayerNorm(self.x_dim, self.input_dim)
-    # self.bias_layer_norm = nn.LayerNorm(self.input_dim)
 
   def forward(self, task_embedding):
-    # task_embedding = self.layernorm(task_embedding)
     task_embedding_reshaped = task_embedding.reshape(self.x_dim, self.y_dim)
     weight = self.left_projection(task_embedding_reshaped).transpose(0, 1)
-    # print("#### z ", z.shape)
-    # weight = self.right_projection(z)
     bias = self.bias_generator(task_embedding).view(-1)
-    # z = self.weight_generator(task_embedding).reshape(-1, 1)
-    # weight = self.projection(z).transpose(0, 1)
-    # bias = self.bias_generator(task_embedding)
-
-    # weight = self.weight_layer_norm(weight)
-    # bias = self.bias_layer_norm(bias)
-
     return weight, bias
-
-
-"""
-class MetaDownSampler(nn.Module):
-  def __init__(self, config):
-    super(MetaDownSampler, self).__init__()
-    self.input_dim = config.input_dim
-    self.down_sample_size = config.down_sample_size
-    self.weight_generator = nn.Sequential(
-      nn.Linear(config.task_embedding_dim, config.hidden_dim),
-      nn.ReLU(),
-      nn.Linear(config.hidden_dim, self.input_dim))
-    self.projection = nn.Linear(1, self.down_sample_size)
-    # TODO: this can also be a MLP layer here.
-    self.bias_generator = nn.Linear(config.task_embedding_dim, self.down_sample_size)
-
-  def forward(self, task_embedding):
-    z = self.weight_generator(task_embedding).reshape(-1, 1)
-    weight = self.projection(z).transpose(0, 1)
-    bias = self.bias_generator(task_embedding)
-    return weight, bias
-
-
-class MetaUpSampler(nn.Module):
-  def __init__(self, config):
-    super(MetaUpSampler, self).__init__()
-    self.input_dim = config.input_dim
-    self.down_sample_size = config.down_sample_size
-    self.weight_generator = nn.Sequential(
-      nn.Linear(config.task_embedding_dim, config.hidden_dim),
-      nn.ReLU(),
-      nn.Linear(config.hidden_dim, self.input_dim))
-    self.projection = nn.Linear(1, self.down_sample_size)
-    self.bias_generator = nn.Linear(config.task_embedding_dim, self.input_dim)
-
-  def forward(self, task_embedding):
-    z = self.weight_generator(task_embedding).reshape(-1, 1)
-    weight = self.projection(z)
-    bias = self.bias_generator(task_embedding)
-    return weight, bias
-"""
 
 
 class MetaParameterizedDownSampler(nn.Module):
   def __init__(self, config):
     super(MetaParameterizedDownSampler, self).__init__()
-    #self.layer_norm = nn.LayerNorm(config.task_embedding_dim)
-
     self.hidden_dim = config.hidden_dim
     self.input_dim = config.input_dim
     self.x_dim = config.x_dim
     self.y_dim = config.y_dim
-    self.down_sample_size = config.down_sample_size
+    reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
+    self.down_sample_size = self.input_dim // reduction_factor
     linear1 = nn.Linear(config.x_dim, config.hidden_dim)
     init_linear_layer(linear1)
     linear2 = nn.Linear(config.hidden_dim, self.input_dim * self.down_sample_size // config.y_dim)
@@ -247,26 +129,22 @@ class MetaParameterizedDownSampler(nn.Module):
     )
 
   def forward(self, task_embedding):
-    #task_embedding = self.layer_norm(task_embedding.view(-1))
-
     task_embedding_reshaped = task_embedding.reshape(self.x_dim, self.y_dim)
     weight = self.left_projection(task_embedding_reshaped).view(self.down_sample_size, self.input_dim)
     task_embedding = task_embedding.view(-1)
     bias = self.bias_generator(task_embedding).view(-1)
-
     return weight, bias
 
 
 class MetaParameterizedUpSampler(nn.Module):
   def __init__(self, config):
     super(MetaParameterizedUpSampler, self).__init__()
-    #self.layer_norm = nn.LayerNorm(config.task_embedding_dim)
-
     self.hidden_dim = config.hidden_dim
     self.input_dim = config.input_dim
     self.x_dim = config.x_dim
     self.y_dim = config.y_dim
-    self.down_sample_size = config.down_sample_size
+    reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
+    self.down_sample_size = self.input_dim // reduction_factor
     linear1 = nn.Linear(config.y_dim, config.hidden_dim)
     init_linear_layer(linear1)
     linear2 = nn.Linear(config.hidden_dim, self.input_dim * self.down_sample_size // config.y_dim)
@@ -285,31 +163,8 @@ class MetaParameterizedUpSampler(nn.Module):
       linear4)
 
   def forward(self, task_embedding):
-    #task_embedding = self.layer_norm(task_embedding.view(-1))
-
     task_embedding_reshaped = task_embedding.reshape(self.x_dim, self.y_dim)
-    weight = self.left_projection(task_embedding_reshaped).view(self.input_dim, self.down_sample_size) #transpose(0, 1)
-
-
+    weight = self.left_projection(task_embedding_reshaped).view(self.input_dim, self.down_sample_size)
     task_embedding = task_embedding.view(-1)
     bias = self.bias_generator(task_embedding).view(-1)
-
-
     return weight, bias
-
-"""
-if __name__ == "__main__":
-  import torch
-  from seq2seq.adapters import MetaParameterizedAdapterConfig
-  config = MetaParameterizedAdapterConfig()
-  config.input_dim = 512
-  config.down_sample_size = 512 // 16
-  down_sampler = MetaParameterizedDownSampler(config)
-  task_embedding = torch.zeros((8, 8))
-  a, b = down_sampler(task_embedding)
-  print(a.shape, b.shape)
-  up_sampler = MetaParameterizedUpSampler(config)
-  a, b = up_sampler(task_embedding)
-  print(a.shape)
-  print(b.shape)
-"""

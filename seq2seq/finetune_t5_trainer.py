@@ -22,7 +22,7 @@ from seq2seq.models import T5Config
 from seq2seq.tasks import AutoTask, TaskCollator
 from seq2seq.metrics import build_compute_metrics_fn
 from seq2seq.models import T5ForConditionalGeneration
-from seq2seq.adapters import AdapterController, MetaUpSampler, MetaDownSampler, MetaAdapterController
+from seq2seq.adapters import AdapterController, MetaAdapterController, MetaParamterizedAdapterController
 
 
 logger = logging.getLogger(__name__)
@@ -89,7 +89,8 @@ def main():
                           "encoder_projection", "encoder_pooling",
                           "projection_length", "only_projection_bottleneck",
                           "concat_projection_token", "train_adapters",
-                          "meta_adapters", "task_embedding_dir")
+                          "meta_adapters", "task_embedding_dir",
+                          "meta_parameterized_adapters")
     for p in extra_model_params:
         if getattr(training_args, p, None):
             assert hasattr(config, p), f"({config.__class__.__name__}) doesn't have a `{p}` attribute"
@@ -124,7 +125,7 @@ def main():
         if training_args.meta_adapters:
             # Sets the gradient for all meta-adapters to True.
             for name, sub_module in model.named_modules():
-                if isinstance(sub_module, (MetaAdapterController)):
+                if isinstance(sub_module, (MetaAdapterController, MetaParamterizedAdapterController)):
                     for param_name, param in sub_module.named_parameters():
                         param.requires_grad = True
             

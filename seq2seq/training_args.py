@@ -94,6 +94,8 @@ class Seq2SeqTrainingArguments(TrainingArguments):
       "embeddings."})
   task_embedding_dir: Optional[str]=field(default=None, metadata={"help":"defines the directory containing task embeddings."
       "We expect each task have a file with its name there."})
+  meta_parameterized_adapters: Optional[bool]=field(default=False, metadata={"help":"If set, generates the adapters based on task "
+      "embeddings."})
 
 @dataclass
 class ModelArguments:

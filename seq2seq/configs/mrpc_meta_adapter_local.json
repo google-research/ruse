@@ -32,7 +32,8 @@
 "meta_adapters": true,
 "task_embedding_dir":"/idiap/temp/rkarimi/task-transfer/outputs",
 "do_train":true,
-"eval_during_training":true
+"eval_during_training":true,
+"meta_parameterized_adapters": true
 }
 
 

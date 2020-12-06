@@ -18,7 +18,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class AdapterConfig:
+class AdapterConfig(object):
   """Implements the adapter configuration proposed by Houlsby et. al, 2019
   proposed in https://arxiv.org/abs/1902.00751."""
   add_layer_norm_before_adapter: bool = False
@@ -29,7 +29,7 @@ class AdapterConfig:
 
 
 
-class MetaAdapterConfig:
+class MetaAdapterConfig(AdapterConfig):
   """Implements the adapter configuration proposed by Houlsby et. al, 2019
   proposed in https://arxiv.org/abs/1902.00751."""
   add_layer_norm_before_adapter: bool = False
@@ -41,3 +41,18 @@ class MetaAdapterConfig:
   hidden_dim = 128
   x_dim = 32
   y_dim = 24
+
+
+
+class MetaParameterizedAdapterConfig(AdapterConfig):
+  """Implements the adapter configuration proposed by Houlsby et. al, 2019
+  proposed in https://arxiv.org/abs/1902.00751."""
+  add_layer_norm_before_adapter: bool = False
+  add_layer_norm_after_adapter: bool = True
+  non_linearity: str = "swish"
+  reduction_factor: int = 16
+  weight_init_range = 1e-2
+  task_embedding_dim = 64
+  hidden_dim = 128
+  x_dim = 8
+  y_dim = 8

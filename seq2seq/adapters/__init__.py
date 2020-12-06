@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from .adapter_modeling import Adapter
-from .adapter_configuration import AdapterConfig, MetaAdapterConfig
+from .adapter_configuration import AdapterConfig, MetaAdapterConfig, MetaParameterizedAdapterConfig
 from .adapter_controller import AdapterController
-from .meta_adapter_controller import MetaAdapterController
+from .meta_adapter_controller import MetaAdapterController, MetaParamterizedAdapterController
 from .adapter_utils import MetaDownSampler, MetaUpSampler

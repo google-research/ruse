@@ -31,7 +31,8 @@
 "task_embedding_dir":"/idiap/temp/rkarimi/task-transfer/outputs",
 "eval_during_training":true,
 "adapter_config_name":"parametric-meta-adapter", 
-"temperature": 10
+"temperature": 10,
+"do_train": true
 }
 
 

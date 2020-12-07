@@ -41,7 +41,8 @@ class MetaDownSampler(nn.Module):
     self.input_dim = config.input_dim
     self.x_dim = config.x_dim
     self.y_dim = config.y_dim
-    self.down_sample_size = config.down_sample_size
+    reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
+    self.down_sample_size = self.input_dim // reduction_factor
     linear1 = nn.Linear(config.y_dim, config.hidden_dim)
     init_linear_layer(linear1)
     linear2 = nn.Linear(config.hidden_dim, self.input_dim)
@@ -75,7 +76,8 @@ class MetaUpSampler(nn.Module):
     self.input_dim = config.input_dim
     self.x_dim = config.x_dim
     self.y_dim = config.y_dim
-    self.down_sample_size = config.down_sample_size
+    reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
+    self.down_sample_size = self.input_dim // reduction_factor
     linear1 = nn.Linear(config.y_dim, config.hidden_dim)
     init_linear_layer(linear1)
     linear2 = nn.Linear(config.hidden_dim, self.input_dim)

@@ -26,7 +26,7 @@ from transformers.modeling_outputs import BaseModelOutput
 from transformers.utils import logging
 from transformers.modeling_t5 import (T5PreTrainedModel, T5LayerNorm, T5Block,
                                       T5DenseReluDense, T5Attention, T5LayerCrossAttention)
-from seq2seq.adapters import AdapterController, MetaAdapterController, MetaParamterizedAdapterController, AdapterConfig, MetaAdapterConfig, ParametricMetaAdapterConfig
+from seq2seq.adapters import AutoAdapterController
 
 from .poolings import AutoPooling
 from .projections import AutoProjection
@@ -43,14 +43,8 @@ class T5LayerFF(nn.Module):
         self.layer_norm = T5LayerNorm(config.d_model, eps=config.layer_norm_epsilon)
         self.dropout = nn.Dropout(config.dropout_rate)
         self.train_adapters = config.train_adapters
-        self.adapter_config = adapter_config
         if self.train_adapters:
-            if isinstance(self.adapter_config, ParametricMetaAdapterConfig): # meta_parameterized_adapters:
-              self.adapter_controller = MetaParamterizedAdapterController(self.adapter_config) #config.tasks, config, config.task_embedding_dir)
-            elif isinstance(self.adapter_config, MetaAdapterConfig): #config.meta_adapters:
-              self.adapter_controller = MetaAdapterController(self.adapter_config) #config.tasks, config, config.task_embedding_dir)
-            else:
-              self.adapter_controller = AdapterController(self.adapter_config) #config.tasks, config)
+            self.adapter_controller = AutoAdapterController.get(adapter_config)
 
     def forward(self, hidden_states, task=None):
         #if self.train_adapters:
@@ -73,19 +67,9 @@ class T5LayerSelfAttention(nn.Module):
         )
         self.layer_norm = T5LayerNorm(config.d_model, eps=config.layer_norm_epsilon)
         self.dropout = nn.Dropout(config.dropout_rate)
-
-        self.adapter_config = adapter_config
         self.train_adapters = config.train_adapters
-        print("#### self.adapter_config ", self.adapter_config)
         if self.train_adapters:
-            if isinstance(self.adapter_config, ParametricMetaAdapterConfig): #config.meta_parameterized_adapters:
-              self.adapter_controller = MetaParamterizedAdapterController(self.adapter_config) #tasks, config, config.task_embedding_dir)
-            elif isinstance(self.adapter_config, MetaAdapterConfig): #config.meta_adapters:
-              self.adapter_controller = MetaAdapterController(self.adapter_config) #config.tasks, config, config.task_embedding_dir)
-            elif isintance(self.adapter_config, AdapterConfig):
-              self.adapter_controller = AdapterController(self.adapter_config) #config.tasks, config)
-            else:
-                 raise ValueError("Config type is invalid ", self.adapter_config) 
+            self.adapter_controller = AutoAdapterController.get(adapter_config)
 
     def forward(
         self,
@@ -425,7 +409,7 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
     authorized_missing_keys = [r"encoder\.embed_tokens\.weight",
       r"decoder\.embed_tokens\.weight", r"lm_head\.weight"]
 
-    def __init__(self, config, adapter_config=None): #, tasks=None):
+    def __init__(self, config, adapter_config=None):
         super().__init__(config)
         self.adapter_config=adapter_config
         self.model_dim = config.d_model
@@ -435,7 +419,6 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
         encoder_config.is_encoder_decoder = False
         if config.train_adapters:
             encoder_config.train_adapters = True
-            #encoder_config.tasks = tasks
         self.encoder = T5Stack(encoder_config, self.shared, adapter_config=adapter_config)
 
         decoder_config = copy.deepcopy(config)
@@ -444,7 +427,6 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
         decoder_config.num_layers = config.num_decoder_layers
         if config.train_adapters:
             decoder_config.train_adapters = True
-            #decoder_config.tasks = tasks
         self.decoder = T5Stack(decoder_config, self.shared, adapter_config=adapter_config)
         self.lm_head = nn.Linear(config.d_model, config.vocab_size, bias=False)
 

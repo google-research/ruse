@@ -72,8 +72,6 @@ def main():
     # Set seed
     set_seed(training_args.seed)
 
-
-
     # Load pretrained model and tokenizer
     #
     # Distributed training:
@@ -91,9 +89,6 @@ def main():
                           "encoder_projection", "encoder_pooling",
                           "projection_length", "only_projection_bottleneck",
                           "concat_projection_token", "train_adapters")
-                          # ,
-                          #"meta_adapters", "task_embedding_dir",
-                          #"meta_parameterized_adapters")
     for p in extra_model_params:
         if getattr(training_args, p, None):
             assert hasattr(config, p), f"({config.__class__.__name__}) doesn't have a `{p}` attribute"
@@ -108,18 +103,13 @@ def main():
         if getattr(adapter_args, p, None):
             assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"
             setattr(adapter_config, p, getattr(adapter_args, p))
-    #setattr(config, "adapter_config", adapter_config)
-
-
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else\
           model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
     )
-
-    print("#### inside main ", adapter_config)
     if model_args.not_load_t5_checkpoint:
-        model = T5ForConditionalGeneration(config=config, adapter_config=adapter_config) #, tasks=data_args.tasks)
+        model = T5ForConditionalGeneration(config=config, adapter_config=adapter_config)
     else:
         model = T5ForConditionalGeneration.from_pretrained(
             model_args.model_name_or_path,
@@ -127,7 +117,6 @@ def main():
             config=config,
             cache_dir=model_args.cache_dir,
             adapter_config=adapter_config
-            #tasks=data_args.tasks
         )
 
     # set num_beams for evaluation
@@ -139,8 +128,6 @@ def main():
         freeze_params(model)
         for param in model.lm_head.parameters():
           param.require_grad = True
-        #if training_args.meta_adapters:
-        # Sets the gradient for all meta-adapters to True.
         for name, sub_module in model.named_modules():
            if isinstance(sub_module, (MetaAdapterController, MetaParamterizedAdapterController)):
               for param_name, param in sub_module.named_parameters():
@@ -196,8 +183,8 @@ def main():
         config=config,
         args=training_args,
         train_dataset=train_dataset if training_args.do_train else None,
-        eval_dataset=eval_datasets, #None,  # Since prototype does not match we feed this in later. #eval_dataset,
-        data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores), #, tasks=data_args.tasks),
+        eval_dataset=eval_datasets,
+        data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores),
         compute_metrics=compute_metrics_fn,
         data_args=data_args,
         dataset_sizes=dataset_sizes if training_args.do_train else None,
@@ -246,7 +233,7 @@ def main():
         logger.info(eval_datasets)
         logger.info("*** Evaluate ***")
 
-        result = trainer.evaluate() #eval_datasets, compute_metrics_fn)
+        result = trainer.evaluate()
         if trainer.is_world_process_zero():
             logger.info("***** Eval results *****")
             for key, value in result.items():

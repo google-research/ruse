@@ -20,4 +20,4 @@ cd seq2seq/
 python finetune_t5_trainer.py configs/test.json
 
 xcloud seq2seq/google/launch_xla.py  -- --config_path seq2seq/configs/meta_adapter_experiments/finetune-2e-5.json  --job_name finetune2e-5
-
+xcloud seq2seq/google/launch_xla.py  -- --config_path seq2seq/configs/meta_adapter_experiments/train_num_samples_gpu/finetune-100.json  --job_name finetune-100 --num_gpus 1

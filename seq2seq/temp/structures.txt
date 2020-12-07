@@ -19,3 +19,5 @@ python setup.py develop
 cd seq2seq/
 python finetune_t5_trainer.py configs/test.json
 
+xcloud seq2seq/google/launch_xla.py  -- --config_path seq2seq/configs/meta_adapter_experiments/finetune-2e-5.json  --job_name finetune2e-5
+

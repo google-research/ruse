@@ -1,0 +1,38 @@
+{
+"model_name_or_path": "t5-small",
+"tokenizer_name": "t5-small",
+"learning_rate": 3e-3,
+"output_dir": "outputs/experiment/joint/adapters-meta/lr-3e-3",
+"max_source_length": 128,
+"max_target_length": 128 ,
+"val_max_target_length":128,
+"test_max_target_length":128,
+"num_train_epochs": 20,
+"warmup_steps": 500,
+"eval_steps": 1,
+"overwrite_output_dir": true,
+"tasks": ["mrpc", "rte"],
+"eval_tasks": ["mrpc", "rte"],
+"adapters":["mrpc", "rte"],
+"sampling": true,
+"label_smoothing": 0.1,
+"freeze_encoder":false,
+"freeze_embeds":false,
+"per_device_train_batch_size":64,
+"per_device_eval_batch_size":64,
+"save_steps": 200,
+"logging_first_step":true,
+"logging_steps": 200,
+"save_total_limit": 1,
+"train_adapters": true,
+"task_embedding_dir":"/idiap/user/rkarimi/dev/ruse/seq2seq/task_embeddings",
+"adapter_config_name":"meta-adapter",
+"temperature": 10,
+"do_train": true,
+"do_eval": true,
+"predict_with_generate": true
+}
+
+
+
+

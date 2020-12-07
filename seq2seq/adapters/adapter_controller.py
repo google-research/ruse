@@ -14,12 +14,14 @@
 
 """Implements Adapter Controller, a module that keeps multiple 
 layers of Adapters, and controls which adapter layer to use."""
+import os
 import torch
 import torch.nn as nn
 from seq2seq.adapters import Adapter
 from .adapter_utils import MetaUpSampler, MetaDownSampler, MetaParameterizedDownSampler, MetaParameterizedUpSampler
 from .adapter_modeling import MetaAdapter
 from .adapter_configuration import AdapterConfig, MetaAdapterConfig, ParametricMetaAdapterConfig
+import numpy as np
 
 class AdapterController(nn.Module):
   """Implements Adapter controller module."""
@@ -116,12 +118,12 @@ class MetaAdapterController(AdapterController):
     self.input_dim = config.input_dim
     self.task_to_embeddings = {}
     for task in self.tasks:
-      #  #task_embedding_path=os.path.join(self.task_embedding_dir, task+".npy")
-      #  # TODO: device needs to be set properly.
-      self.task_to_embeddings[task] = torch.randn(config.task_embedding_dim).cuda()
+      task_embedding_path=os.path.join(self.task_embedding_dir, task+".npy")
+      # TODO: device needs to be set properly.
+      self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path)).cuda()
+      #torch.randn(config.task_embedding_dim).cuda()
       #adapter_config.task_embedding_dim).cuda()
       #  #print("### self.task_to_embeddings ", self.task_to_embeddings[task])
-      #  #torch.Tensor(np.load(task_embedding_path)).cuda()
     #self.task_to_embeddings = nn.ParameterDict({
     #  task: nn.Parameter(torch.randn((config.task_embedding_dim))) for task in self.tasks})
     self.meta_up_sampler = MetaUpSampler(config)

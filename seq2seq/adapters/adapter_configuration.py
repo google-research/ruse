@@ -34,11 +34,11 @@ class AdapterConfig(object):
 class MetaAdapterConfig(AdapterConfig):
   """Implements Meta adapter in which a hyper-network generates the parameters of
    adapter layers. Task embeddings are fixed in this case."""
-  task_embedding_dim = 768
+  task_embedding_dim = 512
   task_embedding_dir = None
   hidden_dim = 128
   x_dim = 32
-  y_dim = 24
+  y_dim = 16
 
 
 

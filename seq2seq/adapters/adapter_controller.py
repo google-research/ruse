@@ -114,7 +114,6 @@ class MetaAdapterController(AdapterController):
     self.adapters = self.construct_adapters(self.tasks)
     self.task_embedding_dir = config.task_embedding_dir
     self.input_dim = config.input_dim
-    """
     self.task_to_embeddings = {}
     for task in self.tasks:
       #  #task_embedding_path=os.path.join(self.task_embedding_dir, task+".npy")
@@ -123,9 +122,8 @@ class MetaAdapterController(AdapterController):
       #adapter_config.task_embedding_dim).cuda()
       #  #print("### self.task_to_embeddings ", self.task_to_embeddings[task])
       #  #torch.Tensor(np.load(task_embedding_path)).cuda()
-    """
-    self.task_to_embeddings = nn.ParameterDict({
-      task: nn.Parameter(torch.randn((config.task_embedding_dim))) for task in self.tasks})
+    #self.task_to_embeddings = nn.ParameterDict({
+    #  task: nn.Parameter(torch.randn((config.task_embedding_dim))) for task in self.tasks})
     self.meta_up_sampler = MetaUpSampler(config)
     self.meta_down_sampler = MetaDownSampler(config)
     self.task_to_adapter = {task: task for task in self.tasks}

@@ -211,7 +211,7 @@ class T5Block(nn.Module):
 class T5Stack(T5PreTrainedModel):
     def __init__(self, config, embed_tokens=None, adapter_config=None):
         super().__init__(config)
-        self.adapter_config=adapter_config
+        self.adapter_config = adapter_config
         self.embed_tokens = embed_tokens
         self.is_decoder = config.is_decoder
 

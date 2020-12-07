@@ -2,7 +2,7 @@
 "model_name_or_path": "t5-small",
 "tokenizer_name": "t5-small",
 "learning_rate": 3e-2,
-"output_dir": "outputs/adapters/joint-meta-adapter-local-1/",
+"output_dir": "outputs/experiment/joint/adapters/lr-3e-2",
 "max_source_length": 128,
 "max_target_length": 128 ,
 "val_max_target_length":128,
@@ -11,7 +11,7 @@
 "warmup_steps": 500,
 "eval_steps": 1,
 "overwrite_output_dir": true,
-"tasks": ["mrpc", "rte"], 
+"tasks": ["mrpc", "rte"],
 "eval_tasks": ["mrpc", "rte"],
 "adapters":["mrpc", "rte"],
 "sampling": true,
@@ -25,17 +25,14 @@
 "logging_steps": 200,
 "save_total_limit": 1,
 "train_adapters": true,
-"do_eval": true,
-"predict_with_generate": true,
-"meta_adapters": true,
 "task_embedding_dir":"/idiap/temp/rkarimi/task-transfer/outputs",
-"adapter_config_name":"parametric-meta-adapter", 
+"adapter_config_name":"parametric-meta-adapter",
 "temperature": 10,
-"do_train": true
+"do_train": true,
+"tpu_num_cores":8,
+"prediction_loss_only":true,
+"gcs_bucket": "ruse-xcloud-bucket"
 }
-
-
-
 
 
 

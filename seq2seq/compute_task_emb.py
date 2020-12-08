@@ -84,7 +84,6 @@ def _prepare_inputs(inputs: Dict[str, Union[torch.Tensor, Any]], args) -> Dict[s
         return inputs
 
 def get_dataloader(dataset: Dataset, args, data_collator) -> DataLoader:
-        print("#### args.eval_batch_size ", args.eval_batch_size)
         sampler = SequentialSampler(dataset)
         return DataLoader(
             dataset=dataset,
@@ -138,6 +137,7 @@ if __name__ == "__main__":
       cache_dir=model_args.cache_dir
   )
   model = model.to(training_args.device)
+  model.eval()
   # TODO: I set add_prefix to False, change if needed.
   dataset_class = AutoTask
   train_datasets = {task: dataset_class.get(task).get_dataset(

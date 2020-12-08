@@ -84,7 +84,7 @@ configs=[
          "paramteric-meta-adapter-3e-4.json"
          ]
 for config in configs:
-    run_jobs(configs_dir, config, "mixture1-lm-head-true-"+config[:-5])
+    run_jobs(configs_dir, config, "mixture1-lm-head-trainable-"+config[:-5])
 
 # submit adapters
 configs_dir = "configs/mixtures2/gpu/adapter/"
@@ -95,4 +95,4 @@ configs=[
          "paramteric-meta-adapter-3e-3.json",
          "paramteric-meta-adapter-3e-4.json"]
 for config in configs:
-    run_jobs(configs_dir, config, "mixture2-lm-head-true-"+config[:-5])
+    run_jobs(configs_dir, config, "mixture2-lm-head-trainable-"+config[:-5])

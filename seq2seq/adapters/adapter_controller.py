@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Implements Adapter Controller, a module that keeps multiple 
 layers of Adapters, and controls which adapter layer to use."""
 import os
@@ -26,7 +25,8 @@ from .adapter_utils import HyperNetUpSampler, HyperNetDownSampler
 
 
 class AdapterController(nn.Module):
-  """Implements Adapter controller module."""
+  """Implements Adapter controller module which controls the logics of
+  putting adapter layers within transformer's layers."""
 
   def __init__(self, config):
     super().__init__()
@@ -46,7 +46,7 @@ class AdapterController(nn.Module):
     """
     Constructs adapter layers and adds them to a dictionary for the given
     tasks.
-    :param tasks: A list of string contraining task names.
+    :param tasks: A list of string containing the task names.
     """
     for task in tasks:
       self.adapters[task] = Adapter(self.config)
@@ -82,8 +82,7 @@ class AdapterController(nn.Module):
         param.requires_grad = True
 
   def get_adapter(self, task):
-    """Given a task returns its corresponding adapter layer, returns None
-    if task is not registered.
+    """Given a task returns its corresponding adapter layer.
     :param task: Input task name.
     :return: Adapter layer corresponding to the given task.
     """
@@ -110,8 +109,11 @@ class AdapterController(nn.Module):
 
 
 class MetaAdapterController(AdapterController):
-  """Implements Adapter controller module which generates
-   the adapter layers embeddings."""
+  """Implements Meta Adapter controller module, in which
+  the adapter layers' weights are generated from a hyper-network.
+  In this case, task-embeddings are fixed, they can be initialized
+  from a directory (task_embedding_dir) or if not given, the task
+  embeddings will be initialized to random."""
 
   def __init__(self, config):
     super().__init__(config)
@@ -125,10 +127,9 @@ class MetaAdapterController(AdapterController):
     for task in self.tasks:
       if self.task_embedding_dir is not None:
         task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
-        # TODO: device needs to be set properly.
-        self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path)).cuda()
+        self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path))
       else:
-        self.task_to_embeddings[task] = torch.Tensor(torch.randn(config.task_embedding_dim)).cuda()
+        self.task_to_embeddings[task] = torch.Tensor(torch.randn(config.task_embedding_dim))
     self.meta_up_sampler = HyperNetUpSampler(config)
     self.meta_down_sampler = HyperNetDownSampler(config)
     self.task_to_adapter = {task: task for task in self.tasks}
@@ -137,7 +138,7 @@ class MetaAdapterController(AdapterController):
     """
     Constructs adapter layers and adds them to a dictionary for the given
     tasks.
-    :param tasks: A list of string contraining task names.
+    :param tasks: A list of string containing task names.
     """
     for task in tasks:
       self.adapters[task] = MetaAdapter(self.config)
@@ -150,8 +151,11 @@ class MetaAdapterController(AdapterController):
 
 
 class MetaParamterizedAdapterController(MetaAdapterController):
-  """Implements Adapter controller module which generates
-   the adapter layers embeddings."""
+  """Implements Meta parameterized Adapter controller module, in which
+  the adapter layers' weights are generated from a hyper-network.
+  In this case, task-embeddings are parametric, they can be initialized
+  from a directory (task_embedding_dir) or if not given, the task
+  embeddings will be initialized to random."""
 
   def __init__(self, config):
     super().__init__(config)
@@ -165,7 +169,6 @@ class MetaParamterizedAdapterController(MetaAdapterController):
     for task in self.tasks:
       if self.task_embedding_dir is not None:
         task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
-        # TODO: device needs to be set properly.
         task_seed = torch.Tensor(np.load(task_embedding_path))
       else:
         task_seed = torch.randn(config.task_embedding_dim)
@@ -176,7 +179,8 @@ class MetaParamterizedAdapterController(MetaAdapterController):
 
 
 class AutoAdapterController(nn.Module):
-  """Generic adapter controller class to instantiate different adapter controller classes."""
+  """Generic adapter controller class to instantiate different adapter
+  controller classes."""
 
   @classmethod
   def get(cls, config):

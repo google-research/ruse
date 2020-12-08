@@ -14,11 +14,14 @@
 
 """Implements the adapters configuration."""
 
+from collections import OrderedDict
 from dataclasses import dataclass
+
+import torch.nn as nn
 
 
 @dataclass
-class AdapterConfig:
+class AdapterConfig(object):
   """Implements the adapter configuration proposed by Houlsby et. al, 2019
   proposed in https://arxiv.org/abs/1902.00751."""
   add_layer_norm_before_adapter: bool = False
@@ -26,3 +29,41 @@ class AdapterConfig:
   non_linearity: str = "swish"
   reduction_factor: int = 16
   weight_init_range = 1e-2
+
+
+class MetaAdapterConfig(AdapterConfig):
+  """Implements Meta adapter in which a hyper-network generates the parameters of
+   adapter layers. Task embeddings are fixed in this case."""
+  task_embedding_dim = 512
+  task_embedding_dir = None
+  hidden_dim = 128
+  x_dim = 32
+  y_dim = 16
+
+
+class ParametricMetaAdapterConfig(AdapterConfig):
+  """Implements meta adapter configuration, in which a hyper-network generates the
+  parameters of adapter layers. Task embeddings are paramters in this case."""
+  task_embedding_dim = 64
+  hidden_dim = 128
+  task_embedding_dir = None
+  x_dim = 8
+  y_dim = 8
+
+
+ADAPTER_CONFFIG_MAPPING = OrderedDict(
+  [("adapter", AdapterConfig),
+   ("meta-adapter", MetaAdapterConfig),
+   ("parametric-meta-adapter", ParametricMetaAdapterConfig)])
+
+
+class AutoAdapterConfig(nn.Module):
+  """Generic Adapter config class to instantiate different adapter configs."""
+
+  @classmethod
+  def get(cls, config_name: str):
+    if config_name in ADAPTER_CONFFIG_MAPPING:
+      return ADAPTER_CONFFIG_MAPPING[config_name]()
+    raise ValueError(
+      "Unrecognized adapter config type identifier: {}. Should contain one of {}"
+        .format(config_name, ", ".join(ADAPTER_CONFFIG_MAPPING.keys())))

@@ -17,7 +17,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from transformers.activations import get_activation
 
-from .adapter_utils import Activations
+from .adapter_utils import Activations, linear_layer
 
 
 class Adapter(nn.Module):
@@ -34,20 +34,13 @@ class Adapter(nn.Module):
     down_sampler_modules = []
     if config.add_layer_norm_before_adapter:
       down_sampler_modules.append(nn.LayerNorm(self.input_dim))
-    down_linear = nn.Linear(self.input_dim, self.down_sample_size)
-    self.init_linear_layer(down_linear, std=self.weight_init_range)
+    down_linear = linear_layer(self.input_dim, self.down_sample_size, std=self.weight_init_range)
     down_sampler_modules.append(down_linear)
     down_sampler_modules.append(Activations(config.non_linearity.lower()))
     self.down_sampler = nn.Sequential(*down_sampler_modules)
-    self.up_sampler = nn.Linear(self.down_sample_size, self.input_dim)
-    self.init_linear_layer(self.up_sampler, std=self.weight_init_range)
+    self.up_sampler = linear_layer(self.down_sample_size, self.input_dim, std=self.weight_init_range)
     if self.add_layer_norm_after_adapter:
       self.post_layer_norm = nn.LayerNorm(self.input_dim)
-
-  def init_linear_layer(self, linear_layer, std):
-    """Initializes the linear modules as explained in adapter paper."""
-    nn.init.normal_(linear_layer.weight, std=std)
-    nn.init.zeros_(linear_layer.bias)
 
   def forward(self, x):
     z = self.down_sampler(x)
@@ -75,11 +68,6 @@ class MetaAdapter(nn.Module):
     self.down_sampler = nn.Sequential(*down_sampler_modules)
     if self.add_layer_norm_after_adapter:
       self.post_layer_norm = nn.LayerNorm(self.input_dim)
-
-  def init_linear_layer(self, linear_layer, std):
-    """Initializes the linear modules as explained in the adapter paper."""
-    nn.init.normal_(linear_layer.weight, std=std)
-    nn.init.zeros_(linear_layer.bias)
 
   def forward(self, x, weight_down, bias_down, weight_up, bias_up):
     z = self.down_sampler(x)

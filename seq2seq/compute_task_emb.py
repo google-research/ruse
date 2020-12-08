@@ -1,7 +1,7 @@
 """We compute the task embeddings from pretrained T5 encoder,
 by computing the average of encoder's representation over the
 whole dataset."""
-# usage: python compute_task_emb.py configs/meta_adapter_experiments/gpu/test.json
+# usage: python compute_task_emb.py  configs/task-embedding.json
 
 import os
 import sys
@@ -84,6 +84,7 @@ def _prepare_inputs(inputs: Dict[str, Union[torch.Tensor, Any]], args) -> Dict[s
         return inputs
 
 def get_dataloader(dataset: Dataset, args, data_collator) -> DataLoader:
+        print("#### args.eval_batch_size ", args.eval_batch_size)
         sampler = SequentialSampler(dataset)
         return DataLoader(
             dataset=dataset,

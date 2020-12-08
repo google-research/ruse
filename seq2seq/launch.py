@@ -2,7 +2,7 @@ import os
 
 def run_jobs(configs_dir, config_name, job_name):
     config_path = os.path.join(configs_dir, config_name)
-    command="/google/bin/releases/cloud-alphabetcloud-xcloud/xcloud_cli/xcloud_cli.par seq2seq/google/launch_xla.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(config_path, job_name)
+    command="/google/bin/releases/cloud-alphabetcloud-xcloud/xcloud_cli/xcloud_cli.par google/launch_xla.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(config_path, job_name)
     os.system(command)
 
 
@@ -12,10 +12,10 @@ configs_dir = "configs/mixtures1/gpu/adapter"
 configs=["paramteric-meta-adapter-1e-2.json",
          "paramteric-meta-adapter-3e-1.json",
          "paramteric-meta-adapter-3e-2.json",
-         "paramteric-meta-adapter-3e-3.json"]
+         "paramteric-meta-adapter-3e-3.json"
+         ]
 for config in configs:
     run_jobs(configs_dir, config, "mixture1-"+config[:-5])
-
 
 # submit finetune.
 configs_dir = "configs/mixtures1/gpu/finetune"

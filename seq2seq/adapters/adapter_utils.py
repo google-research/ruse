@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Implementation of different activation functions and adapter layers."""
+"""Implementation of different activation functions and hyper-network layers."""
 
 import torch.nn as nn
 from transformers.activations import get_activation
@@ -45,8 +45,7 @@ class HyperNetDownSampler(nn.Module):
     super(HyperNetDownSampler, self).__init__()
     self.hidden_dim = config.hidden_dim
     self.input_dim = config.input_dim
-    reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
-    self.down_sample_size = self.input_dim // reduction_factor
+    self.down_sample_size = self.input_dim // config.reduction_factor
     self.weight_generator = nn.Sequential(
       linear_layer(config.task_embedding_dim, self.hidden_dim),
       nn.ReLU(),
@@ -68,8 +67,7 @@ class HyperNetUpSampler(nn.Module):
     super(HyperNetUpSampler, self).__init__()
     self.hidden_dim = config.hidden_dim
     self.input_dim = config.input_dim
-    reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
-    self.down_sample_size = self.input_dim // reduction_factor
+    self.down_sample_size = self.input_dim // config.reduction_factor
     self.weight_generator = nn.Sequential(
       linear_layer(config.task_embedding_dim, self.hidden_dim),
       linear_layer(self.hidden_dim, self.input_dim * self.down_sample_size))

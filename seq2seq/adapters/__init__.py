@@ -14,5 +14,5 @@
 from .adapter_modeling import Adapter
 from .adapter_configuration import AdapterConfig, MetaAdapterConfig, ParametricMetaAdapterConfig
 from .adapter_controller import AdapterController, MetaAdapterController, MetaParamterizedAdapterController, AutoAdapterController
-from .adapter_utils import MetaDownSampler, MetaUpSampler
+from .adapter_utils import HyperNetDownSampler, HyperNetUpSampler #MetaDownSampler, MetaUpSampler
 from .adapter_configuration import ADAPTER_CONFFIG_MAPPING, AutoAdapterConfig

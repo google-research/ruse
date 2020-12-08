@@ -30,9 +30,7 @@ class Adapter(nn.Module):
     self.input_dim = config.input_dim
     self.add_layer_norm_after_adapter = config.add_layer_norm_after_adapter
     self.weight_init_range = config.weight_init_range
-    # If reduction factor is not passed we consider default value of 2.
-    reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
-    self.down_sample_size = self.input_dim // reduction_factor
+    self.down_sample_size = self.input_dim // config.reduction_factor
     down_sampler_modules = []
     if config.add_layer_norm_before_adapter:
       down_sampler_modules.append(nn.LayerNorm(self.input_dim))
@@ -69,9 +67,7 @@ class MetaAdapter(nn.Module):
     self.input_dim = config.input_dim
     self.add_layer_norm_after_adapter = config.add_layer_norm_after_adapter
     self.weight_init_range = config.weight_init_range
-    # If reduction factor is not passed we consider default value of 2.
-    reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
-    self.down_sample_size = self.input_dim // reduction_factor
+    self.down_sample_size = self.input_dim // config.reduction_factor
     down_sampler_modules = []
     if config.add_layer_norm_before_adapter:
       down_sampler_modules.append(nn.LayerNorm(self.input_dim))

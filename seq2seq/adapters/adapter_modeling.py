@@ -23,6 +23,7 @@ from .adapter_utils import Activations
 class Adapter(nn.Module):
   """Convetional Adapter layer, in which the weights of up and down sampler modules
   are parameters and are optimized."""
+
   def __init__(self, config):
     super().__init__()
     self.config = config
@@ -32,8 +33,6 @@ class Adapter(nn.Module):
     # If reduction factor is not passed we consider default value of 2.
     reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
     self.down_sample_size = self.input_dim // reduction_factor
-
-    # Construct adapter down sampler module.
     down_sampler_modules = []
     if config.add_layer_norm_before_adapter:
       down_sampler_modules.append(nn.LayerNorm(self.input_dim))
@@ -42,8 +41,6 @@ class Adapter(nn.Module):
     down_sampler_modules.append(down_linear)
     down_sampler_modules.append(Activations(config.non_linearity.lower()))
     self.down_sampler = nn.Sequential(*down_sampler_modules)
-
-    # Construct adapter up sampler module.
     self.up_sampler = nn.Linear(self.down_sample_size, self.input_dim)
     self.init_linear_layer(self.up_sampler, std=self.weight_init_range)
     if self.add_layer_norm_after_adapter:
@@ -66,6 +63,7 @@ class Adapter(nn.Module):
 class MetaAdapter(nn.Module):
   """Meta Adapter layer, in which the weights of up and down sampler modules
   are given and are not optimized."""
+
   def __init__(self, config):
     super().__init__()
     self.input_dim = config.input_dim
@@ -74,7 +72,6 @@ class MetaAdapter(nn.Module):
     # If reduction factor is not passed we consider default value of 2.
     reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
     self.down_sample_size = self.input_dim // reduction_factor
-    # Construct adapter down sampler module.
     down_sampler_modules = []
     if config.add_layer_norm_before_adapter:
       down_sampler_modules.append(nn.LayerNorm(self.input_dim))

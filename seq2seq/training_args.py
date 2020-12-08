@@ -180,6 +180,3 @@ class AdapterTrainingArguments:
                                         "We expect each task have a file with its name there."})
 
   task_embedding_dim: Optional[int] = field(default=None, metadata={"help": "task embedding dimensions."})
-  task_x_dim: Optional[int] = field(default=None, metadata={"help": "x dimension of task embedding."})
-  task_y_dim: Optional[int] = field(default=None, metadata={"help": "y dimension of task embedding."})
-

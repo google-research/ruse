@@ -22,7 +22,7 @@ import torch.nn as nn
 
 from .adapter_configuration import AdapterConfig, MetaAdapterConfig, ParametricMetaAdapterConfig
 from .adapter_modeling import MetaAdapter, Adapter
-from .adapter_utils import MetaUpSampler, MetaDownSampler, MetaParameterizedDownSampler, MetaParameterizedUpSampler
+from .adapter_utils import HyperNetUpSampler, HyperNetDownSampler
 
 
 class AdapterController(nn.Module):
@@ -129,8 +129,8 @@ class MetaAdapterController(AdapterController):
         self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path)).cuda()
       else:
         self.task_to_embeddings[task] = torch.Tensor(torch.randn(config.task_embedding_dim)).cuda()
-    self.meta_up_sampler = MetaUpSampler(config)
-    self.meta_down_sampler = MetaDownSampler(config)
+    self.meta_up_sampler = HyperNetUpSampler(config)
+    self.meta_down_sampler = HyperNetDownSampler(config)
     self.task_to_adapter = {task: task for task in self.tasks}
 
   def construct_adapters(self, tasks):
@@ -149,7 +149,7 @@ class MetaAdapterController(AdapterController):
     return adapter(inputs, weight_down, bias_down, weight_up, bias_up)
 
 
-class MetaParamterizedAdapterController(AdapterController):
+class MetaParamterizedAdapterController(MetaAdapterController):
   """Implements Adapter controller module which generates
    the adapter layers embeddings."""
 
@@ -170,24 +170,9 @@ class MetaParamterizedAdapterController(AdapterController):
       else:
         task_seed = torch.randn(config.task_embedding_dim)
       self.task_to_embeddings[task] = nn.Parameter(task_seed)
-    self.meta_up_sampler = MetaParameterizedUpSampler(config)
-    self.meta_down_sampler = MetaParameterizedDownSampler(config)
+    self.meta_up_sampler = HyperNetUpSampler(config)
+    self.meta_down_sampler = HyperNetDownSampler(config)
     self.task_to_adapter = {task: task for task in self.tasks}
-
-  def construct_adapters(self, tasks):
-    """
-    Constructs adapter layers and adds them to a dictionary for the given
-    tasks.
-    :param tasks: A list of string contraining task names.
-    """
-    for task in tasks:
-      self.adapters[task] = MetaAdapter(self.config)
-    return self.adapters
-
-  def call_adapter(self, adapter, inputs, task):
-    weight_up, bias_up = self.meta_up_sampler(self.task_to_embeddings[task])
-    weight_down, bias_down = self.meta_down_sampler(self.task_to_embeddings[task])
-    return adapter(inputs, weight_down, bias_down, weight_up, bias_up)
 
 
 class AutoAdapterController(nn.Module):

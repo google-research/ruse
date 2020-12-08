@@ -98,7 +98,7 @@ def main():
     adapter_config = AutoAdapterConfig.get(adapter_args.adapter_config_name)
     adapter_config.input_dim = config.d_model
     adapter_config.tasks = data_args.tasks
-    extra_adapter_params = ("task_embedding_dir","task_embedding_dim", "task_x_dim", "task_y_dim")
+    extra_adapter_params = ("task_embedding_dir","task_embedding_dim")
     for p in extra_adapter_params:
         if getattr(adapter_args, p, None):
             assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"

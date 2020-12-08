@@ -26,7 +26,6 @@
 "save_total_limit": 1,
 "task_embedding_dir":"/idiap/temp/rkarimi/task-transfer/outputs",
 "temperature": 10,
-"do_train": true,
 "do_eval": true,
 "predict_with_generate": true,
 "n_train": 100

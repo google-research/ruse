@@ -38,11 +38,11 @@ class MetaDownSampler(nn.Module):
     super(MetaDownSampler, self).__init__()
     self.hidden_dim = config.hidden_dim
     self.input_dim = config.input_dim
-    self.x_dim = config.x_dim
-    self.y_dim = config.y_dim
+    self.task_x_dim = config.task_x_dim
+    self.task_y_dim = config.task_y_dim
     reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
     self.down_sample_size = self.input_dim // reduction_factor
-    linear1 = nn.Linear(config.y_dim, config.hidden_dim)
+    linear1 = nn.Linear(config.task_y_dim, config.hidden_dim)
     init_linear_layer(linear1)
     linear2 = nn.Linear(config.hidden_dim, self.input_dim)
     init_linear_layer(linear2)
@@ -62,7 +62,7 @@ class MetaDownSampler(nn.Module):
     )
 
   def forward(self, task_embedding):
-    task_embedding_reshaped = task_embedding.reshape(self.x_dim, self.y_dim)
+    task_embedding_reshaped = task_embedding.reshape(self.task_x_dim, self.task_y_dim)
     weight = self.left_projection(task_embedding_reshaped)
     bias = self.bias_generator(task_embedding).view(-1)
     return weight, bias
@@ -73,11 +73,11 @@ class MetaUpSampler(nn.Module):
     super(MetaUpSampler, self).__init__()
     self.hidden_dim = config.hidden_dim
     self.input_dim = config.input_dim
-    self.x_dim = config.x_dim
-    self.y_dim = config.y_dim
+    self.task_x_dim = config.task_x_dim
+    self.task_y_dim = config.task_y_dim
     reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
     self.down_sample_size = self.input_dim // reduction_factor
-    linear1 = nn.Linear(config.y_dim, config.hidden_dim)
+    linear1 = nn.Linear(config.task_y_dim, config.hidden_dim)
     init_linear_layer(linear1)
     linear2 = nn.Linear(config.hidden_dim, self.input_dim)
     init_linear_layer(linear2)
@@ -96,7 +96,7 @@ class MetaUpSampler(nn.Module):
     )
 
   def forward(self, task_embedding):
-    task_embedding_reshaped = task_embedding.reshape(self.x_dim, self.y_dim)
+    task_embedding_reshaped = task_embedding.reshape(self.task_x_dim, self.task_y_dim)
     weight = self.left_projection(task_embedding_reshaped).transpose(0, 1)
     bias = self.bias_generator(task_embedding).view(-1)
     return weight, bias
@@ -107,13 +107,13 @@ class MetaParameterizedDownSampler(nn.Module):
     super(MetaParameterizedDownSampler, self).__init__()
     self.hidden_dim = config.hidden_dim
     self.input_dim = config.input_dim
-    self.x_dim = config.x_dim
-    self.y_dim = config.y_dim
+    self.task_x_dim = config.task_x_dim
+    self.task_y_dim = config.task_y_dim
     reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
     self.down_sample_size = self.input_dim // reduction_factor
-    linear1 = nn.Linear(config.x_dim, config.hidden_dim)
+    linear1 = nn.Linear(config.task_x_dim, config.hidden_dim)
     init_linear_layer(linear1)
-    linear2 = nn.Linear(config.hidden_dim, self.input_dim * self.down_sample_size // config.y_dim)
+    linear2 = nn.Linear(config.hidden_dim, self.input_dim * self.down_sample_size // config.task_y_dim)
     init_linear_layer(linear2)
     self.left_projection = nn.Sequential(
       linear1,
@@ -130,7 +130,7 @@ class MetaParameterizedDownSampler(nn.Module):
     )
 
   def forward(self, task_embedding):
-    task_embedding_reshaped = task_embedding.reshape(self.x_dim, self.y_dim)
+    task_embedding_reshaped = task_embedding.reshape(self.task_x_dim, self.task_y_dim)
     weight = self.left_projection(task_embedding_reshaped).view(self.down_sample_size, self.input_dim)
     task_embedding = task_embedding.view(-1)
     bias = self.bias_generator(task_embedding).view(-1)
@@ -142,13 +142,13 @@ class MetaParameterizedUpSampler(nn.Module):
     super(MetaParameterizedUpSampler, self).__init__()
     self.hidden_dim = config.hidden_dim
     self.input_dim = config.input_dim
-    self.x_dim = config.x_dim
-    self.y_dim = config.y_dim
+    self.task_x_dim = config.task_x_dim
+    self.task_y_dim = config.task_y_dim
     reduction_factor = config.reduction_factor if config.reduction_factor is not None else 2
     self.down_sample_size = self.input_dim // reduction_factor
-    linear1 = nn.Linear(config.y_dim, config.hidden_dim)
+    linear1 = nn.Linear(config.task_y_dim, config.hidden_dim)
     init_linear_layer(linear1)
-    linear2 = nn.Linear(config.hidden_dim, self.input_dim * self.down_sample_size // config.y_dim)
+    linear2 = nn.Linear(config.hidden_dim, self.input_dim * self.down_sample_size // config.task_y_dim)
     init_linear_layer(linear2)
     self.left_projection = nn.Sequential(
       linear1,
@@ -164,8 +164,9 @@ class MetaParameterizedUpSampler(nn.Module):
       linear4)
 
   def forward(self, task_embedding):
-    task_embedding_reshaped = task_embedding.reshape(self.x_dim, self.y_dim)
+    task_embedding_reshaped = task_embedding.reshape(self.task_x_dim, self.task_y_dim)
     weight = self.left_projection(task_embedding_reshaped).view(self.input_dim, self.down_sample_size)
     task_embedding = task_embedding.view(-1)
     bias = self.bias_generator(task_embedding).view(-1)
     return weight, bias
+

@@ -175,12 +175,11 @@ class AdapterTrainingArguments:
     default="parametric-meta-adapter", metadata={"help": "config name for the adapter layers, should be selected "
                                     f"in {sorted(ADAPTER_CONFFIG_MAPPING.keys())}."}
   )
-  #meta_adapters: Optional[bool]=field(default=False, metadata={"help":"If set, generates the adapters based on task "
-  #    "embeddings."})
   task_embedding_dir: Optional[str]=field(default=None,
                                         metadata={"help":"defines the directory containing task embeddings."
                                         "We expect each task have a file with its name there."})
-  #meta_parameterized_adapters: Optional[bool]=field(default=False, metadata={"help":"If set, generates the adapters based on task "
-  #    "embeddings."})
 
+  task_embedding_dim: Optional[int] = field(default=None, metadata={"help": "task embedding dimensions."})
+  task_x_dim: Optional[int] = field(default=None, metadata={"help": "x dimension of task embedding."})
+  task_y_dim: Optional[int] = field(default=None, metadata={"help": "y dimension of task embedding."})
 

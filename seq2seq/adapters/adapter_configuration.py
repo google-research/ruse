@@ -37,18 +37,18 @@ class MetaAdapterConfig(AdapterConfig):
   task_embedding_dim = 512
   task_embedding_dir = None
   hidden_dim = 128
-  x_dim = 32
-  y_dim = 16
+  task_x_dim = 32
+  task_y_dim = 16
 
 
 class ParametricMetaAdapterConfig(AdapterConfig):
   """Implements meta adapter configuration, in which a hyper-network generates the
   parameters of adapter layers. Task embeddings are paramters in this case."""
-  task_embedding_dim = 64
   hidden_dim = 128
   task_embedding_dir = None
-  x_dim = 8
-  y_dim = 8
+  task_embedding_dim = 64
+  task_x_dim = 8
+  task_y_dim = 8
 
 
 ADAPTER_CONFFIG_MAPPING = OrderedDict(

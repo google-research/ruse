@@ -21,6 +21,8 @@ from .adapter_utils import Activations
 
 
 class Adapter(nn.Module):
+  """Convetional Adapter layer, in which the weights of up and down sampler modules
+  are parameters and are optimized."""
   def __init__(self, config):
     super().__init__()
     self.config = config
@@ -62,6 +64,8 @@ class Adapter(nn.Module):
 
 
 class MetaAdapter(nn.Module):
+  """Meta Adapter layer, in which the weights of up and down sampler modules
+  are given and are not optimized."""
   def __init__(self, config):
     super().__init__()
     self.input_dim = config.input_dim

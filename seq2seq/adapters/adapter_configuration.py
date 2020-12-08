@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Implements the adapters configuration."""
+"""Implements the adapters' configurations."""
 
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -41,7 +41,7 @@ class MetaAdapterConfig(AdapterConfig):
 
 class ParametricMetaAdapterConfig(AdapterConfig):
   """Implements meta adapter configuration, in which a hyper-network generates the
-  parameters of adapter layers. Task embeddings are paramters in this case."""
+  parameters of adapter layers. Task embeddings are parameters in this case."""
   hidden_dim = 128
   task_embedding_dir = None
   task_embedding_dim = 64

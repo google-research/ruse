@@ -77,7 +77,7 @@ class MetaAdapter(nn.Module):
       self.post_layer_norm = nn.LayerNorm(self.input_dim)
 
   def init_linear_layer(self, linear_layer, std):
-    """Initializes the linear modules as explained in adapter paper."""
+    """Initializes the linear modules as explained in the adapter paper."""
     nn.init.normal_(linear_layer.weight, std=std)
     nn.init.zeros_(linear_layer.bias)
 

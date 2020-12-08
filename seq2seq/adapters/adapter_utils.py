@@ -43,6 +43,7 @@ def linear_layer(input_dim, output_dim, std=1e-2):
 class HyperNetDownSampler(nn.Module):
   """This module generates the down sampler's weights for the meta adapter
   layers."""
+
   def __init__(self, config):
     super(HyperNetDownSampler, self).__init__()
     self.hidden_dim = config.hidden_dim
@@ -66,6 +67,7 @@ class HyperNetDownSampler(nn.Module):
 
 class HyperNetUpSampler(nn.Module):
   """This module generates the up sampler's weight for the meta adapter layers."""
+
   def __init__(self, config):
     super(HyperNetUpSampler, self).__init__()
     self.hidden_dim = config.hidden_dim

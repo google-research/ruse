@@ -123,7 +123,7 @@ class MetaAdapterController(AdapterController):
     self.input_dim = config.input_dim
     self.task_to_embeddings = {}
     for task in self.tasks:
-      if self.task_to_embeddings is not None:
+      if self.task_embedding_dir is not None:
         task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
         # TODO: device needs to be set properly.
         self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path)).cuda()
@@ -160,8 +160,16 @@ class MetaParamterizedAdapterController(AdapterController):
     self.tasks = config.tasks
     self.adapters = self.construct_adapters(self.tasks)
     self.input_dim = config.input_dim
-    self.task_to_embeddings = nn.ParameterDict({
-      task: nn.Parameter(torch.randn((config.task_embedding_dim))) for task in self.tasks})
+    self.task_embedding_dir = config.task_embedding_dir
+    self.task_to_embeddings = nn.ParameterDict(dict())
+    for task in self.tasks:
+      if self.task_embedding_dir is not None:
+        task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
+        # TODO: device needs to be set properly.
+        task_seed = torch.Tensor(np.load(task_embedding_path))
+      else:
+        task_seed = torch.randn(config.task_embedding_dim)
+      self.task_to_embeddings[task] = nn.Parameter(task_seed)
     self.meta_up_sampler = MetaParameterizedUpSampler(config)
     self.meta_down_sampler = MetaParameterizedDownSampler(config)
     self.task_to_adapter = {task: task for task in self.tasks}

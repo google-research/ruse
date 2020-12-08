@@ -14,9 +14,10 @@
 
 """Implements the adapters configuration."""
 
-import torch.nn as nn
-from dataclasses import dataclass
 from collections import OrderedDict
+from dataclasses import dataclass
+
+import torch.nn as nn
 
 
 @dataclass
@@ -30,7 +31,6 @@ class AdapterConfig(object):
   weight_init_range = 1e-2
 
 
-
 class MetaAdapterConfig(AdapterConfig):
   """Implements Meta adapter in which a hyper-network generates the parameters of
    adapter layers. Task embeddings are fixed in this case."""
@@ -39,7 +39,6 @@ class MetaAdapterConfig(AdapterConfig):
   hidden_dim = 128
   x_dim = 32
   y_dim = 16
-
 
 
 class ParametricMetaAdapterConfig(AdapterConfig):
@@ -52,18 +51,19 @@ class ParametricMetaAdapterConfig(AdapterConfig):
   y_dim = 8
 
 
-
 ADAPTER_CONFFIG_MAPPING = OrderedDict(
-      [("adapter", AdapterConfig),
-      ("meta-adapter", MetaAdapterConfig),
-      ("parametric-meta-adapter", ParametricMetaAdapterConfig)])
+  [("adapter", AdapterConfig),
+   ("meta-adapter", MetaAdapterConfig),
+   ("parametric-meta-adapter", ParametricMetaAdapterConfig)])
+
 
 class AutoAdapterConfig(nn.Module):
   """Generic Adapter config class to instantiate different adapter configs."""
+
   @classmethod
   def get(cls, config_name: str):
     if config_name in ADAPTER_CONFFIG_MAPPING:
       return ADAPTER_CONFFIG_MAPPING[config_name]()
     raise ValueError(
-        "Unrecognized adapter config type identifier: {}. Should contain one of {}"
+      "Unrecognized adapter config type identifier: {}. Should contain one of {}"
         .format(config_name, ", ".join(ADAPTER_CONFFIG_MAPPING.keys())))

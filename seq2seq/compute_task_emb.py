@@ -1,6 +1,8 @@
 """We compute the task embeddings from pretrained T5 encoder,
 by computing the average of encoder's representation over the
 whole dataset."""
+# usage: python compute_task_emb.py configs/meta_adapter_experiments/gpu/test.json
+
 import os
 import sys
 import logging
@@ -14,11 +16,15 @@ from dataclasses import dataclass, field
 from transformers import TrainingArguments
 from transformers import AutoTokenizer, HfArgumentParser, set_seed
 from seq2seq.models import T5ForConditionalGeneration, T5Config
-from seq2seq.utils import check_output_dir
 from seq2seq.tasks import AutoTask, TaskCollator
 from torch.utils.data.dataloader import DataLoader
 
 logger = logging.getLogger(__name__)
+
+
+def create_output_dir(output_dir):
+  if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
 @dataclass
 class ModelArguments:
@@ -96,7 +102,7 @@ if __name__ == "__main__":
     model_args, training_args, data_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
   else:
     model_args, training_args, data_args = parser.parse_args_into_dataclasses()
-  check_output_dir(training_args)
+  create_output_dir(training_args.output_dir)
 
   # Setup logging
   logging.basicConfig(

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Implementation of different activation functions."""
+"""Implementation of different activation functions and adapter layers."""
 
 import torch.nn as nn
 from transformers.activations import get_activation
@@ -25,7 +25,6 @@ class Activations(nn.Module):
 
   def forward(self, x):
     return self.f(x)
-
 
 
 def init_linear_layer(linear_layer, std=1e-2):

@@ -15,13 +15,15 @@
 """Implements Adapter Controller, a module that keeps multiple 
 layers of Adapters, and controls which adapter layer to use."""
 import os
+
+import numpy as np
 import torch
 import torch.nn as nn
-from seq2seq.adapters import Adapter
-from .adapter_utils import MetaUpSampler, MetaDownSampler, MetaParameterizedDownSampler, MetaParameterizedUpSampler
-from .adapter_modeling import MetaAdapter
+
 from .adapter_configuration import AdapterConfig, MetaAdapterConfig, ParametricMetaAdapterConfig
-import numpy as np
+from .adapter_modeling import MetaAdapter, Adapter
+from .adapter_utils import MetaUpSampler, MetaDownSampler, MetaParameterizedDownSampler, MetaParameterizedUpSampler
+
 
 class AdapterController(nn.Module):
   """Implements Adapter controller module."""
@@ -87,6 +89,9 @@ class AdapterController(nn.Module):
     """
     return self.adapters[task]
 
+  def call_adapter(self, adapter, inputs, task):
+    return adapter(inputs)
+
   def forward(self, task, inputs):
     """Retrieves the adapter layer corresponding to the given
     task. It freezes the adapter layers for all the other tasks
@@ -101,7 +106,7 @@ class AdapterController(nn.Module):
     other_tasks = [x for x in self.tasks if x != task]
     self.disable_adapters(other_tasks)
     adapter = self.get_adapter(task)
-    return adapter(inputs)
+    return self.call_adapter(adapter, inputs, task)
 
 
 class MetaAdapterController(AdapterController):
@@ -118,14 +123,12 @@ class MetaAdapterController(AdapterController):
     self.input_dim = config.input_dim
     self.task_to_embeddings = {}
     for task in self.tasks:
-      task_embedding_path=os.path.join(self.task_embedding_dir, task+".npy")
-      # TODO: device needs to be set properly.
-      self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path)).cuda()
-      #torch.randn(config.task_embedding_dim).cuda()
-      #adapter_config.task_embedding_dim).cuda()
-      #  #print("### self.task_to_embeddings ", self.task_to_embeddings[task])
-    #self.task_to_embeddings = nn.ParameterDict({
-    #  task: nn.Parameter(torch.randn((config.task_embedding_dim))) for task in self.tasks})
+      if self.task_to_embeddings is not None:
+        task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
+        # TODO: device needs to be set properly.
+        self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path)).cuda()
+      else:
+        self.task_to_embeddings[task] = torch.Tensor(torch.randn(config.task_embedding_dim)).cuda()
     self.meta_up_sampler = MetaUpSampler(config)
     self.meta_down_sampler = MetaDownSampler(config)
     self.task_to_adapter = {task: task for task in self.tasks}
@@ -140,24 +143,7 @@ class MetaAdapterController(AdapterController):
       self.adapters[task] = MetaAdapter(self.config)
     return self.adapters
 
-  def forward(self, task, inputs):
-    """Retrieves the adapter layer corresponding to the given
-    task. It freezes the adapter layers for all the other tasks
-    and call the selected adapter layer.
-    :param task: the name of the current task.
-    :param inputs: the inputs to feed in in the adapter layer.
-    :return: outputs of the adapter layer."""
-    task = self.get_task(task)
-    adapter = self.get_adapter(task)
-
-    # Enables the adapter layer for the given task.
-    self.enable_adapters(task)
-    # Disable other adapters.
-    other_tasks = [x for x in self.tasks if x != task]
-    self.disable_adapters(other_tasks)
-    # Generates the weights/biases for up and down sampler and sets them.
-    # TODO: this is only correct if adapter_config.add_layer_norm_before_adapter is set to True.
-    # TODO: remove the layer norm from the down_sampler.
+  def call_adapter(self, adapter, inputs, task):
     weight_up, bias_up = self.meta_up_sampler(self.task_to_embeddings[task])
     weight_down, bias_down = self.meta_down_sampler(self.task_to_embeddings[task])
     return adapter(inputs, weight_down, bias_down, weight_up, bias_up)
@@ -190,31 +176,15 @@ class MetaParamterizedAdapterController(AdapterController):
       self.adapters[task] = MetaAdapter(self.config)
     return self.adapters
 
-  def forward(self, task, inputs):
-    """Retrieves the adapter layer corresponding to the given
-    task. It freezes the adapter layers for all the other tasks
-    and call the selected adapter layer.
-    :param task: the name of the current task.
-    :param inputs: the inputs to feed in in the adapter layer.
-    :return: outputs of the adapter layer."""
-    task = self.get_task(task)
-    adapter = self.get_adapter(task)
-    # Enables the adapter layer for the given task.
-    self.enable_adapters(task)
-    # Disable other adapters.
-    other_tasks = [x for x in self.tasks if x != task]
-    self.disable_adapters(other_tasks)
-    # Generates the weights/biases for up and down sampler and sets them.
-    # TODO: this is only correct if adapter_config.add_layer_norm_before_adapter is set to True.
-    # TODO: remove the layer norm from the down_sampler.
+  def call_adapter(self, adapter, inputs, task):
     weight_up, bias_up = self.meta_up_sampler(self.task_to_embeddings[task])
     weight_down, bias_down = self.meta_down_sampler(self.task_to_embeddings[task])
     return adapter(inputs, weight_down, bias_down, weight_up, bias_up)
 
 
-
 class AutoAdapterController(nn.Module):
   """Generic adapter controller class to instantiate different adapter controller classes."""
+
   @classmethod
   def get(cls, config):
     if isinstance(config, ParametricMetaAdapterConfig):

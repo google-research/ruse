@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Implements an Adapter Layer."""
+"""Implements an Adapter Layer and Meta Adapter layer."""
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers.activations import get_activation
@@ -59,7 +59,6 @@ class Adapter(nn.Module):
       output = self.post_layer_norm(output)
     output = output + x
     return output
-
 
 
 class MetaAdapter(nn.Module):

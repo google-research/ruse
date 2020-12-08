@@ -7,7 +7,7 @@ def run_jobs(configs_dir, config_name, job_name):
 
 
 # submit adapters
-configs_dir = "configs/mixtures1/gpu/adapter"
+configs_dir = "configs/mixtures1-task/gpu/adapter/"
 configs=[
          "paramteric-meta-adapter-1e-2.json",
          "paramteric-meta-adapter-3e-1.json",
@@ -18,6 +18,7 @@ configs=[
 for config in configs:
     run_jobs(configs_dir, config, "mixture1-"+config[:-5])
 
+"""
 # submit finetune.
 configs_dir = "configs/mixtures1/gpu/finetune"
 configs=["finetune-2e-5.json",
@@ -26,9 +27,10 @@ configs=["finetune-2e-5.json",
          "finetune-3e-5.json"]
 for config in configs:
     run_jobs(configs_dir, config, "mixture1-"+config[:-5])
+"""
 
 # submit adapters
-configs_dir = "configs/mixtures2/gpu/adapter"
+configs_dir = "configs/mixtures2-task/gpu/adapter/"
 configs=[
          "paramteric-meta-adapter-1e-2.json",
          "paramteric-meta-adapter-3e-1.json",
@@ -38,6 +40,7 @@ configs=[
 for config in configs:
     run_jobs(configs_dir, config, "mixture2-"+config[:-5])
 
+"""
 # submit finetune.
 configs_dir = "configs/mixtures2/gpu/finetune"
 configs=["finetune-2e-5.json",
@@ -46,3 +49,4 @@ configs=["finetune-2e-5.json",
          "finetune-3e-5.json"]
 for config in configs:
     run_jobs(configs_dir, config, "mixture2-"+config[:-5])
+"""

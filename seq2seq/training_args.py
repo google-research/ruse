@@ -112,6 +112,8 @@ class ModelArguments:
   )
   freeze_encoder: bool = field(default=False, metadata={"help": "Whether tp freeze the encoder."})
   freeze_embeds: bool = field(default=False, metadata={"help": "Whether  to freeze the embeddings."})
+  freeze_model_but_lm_head: bool = field(default=False, metadata={"help": "Whether to freeze the"
+      "whole model and only keep the language model head as the training parameter."})
 
 
 @dataclass

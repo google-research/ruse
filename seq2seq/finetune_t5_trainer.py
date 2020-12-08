@@ -127,12 +127,15 @@ def main():
         # Sets the last layer of decoder to be trained.
         freeze_params(model)
         for param in model.lm_head.parameters():
-          param.require_grad = True
+          param.requires_grad = True
         for name, sub_module in model.named_modules():
            if isinstance(sub_module, (MetaAdapterController, MetaParamterizedAdapterController)):
               for param_name, param in sub_module.named_parameters():
                  param.requires_grad = True
-            
+    elif model_args.freeze_model_but_lm_head:
+        freeze_params(model)
+        for param in model.lm_head.parameters():
+            param.requires_grad = True
     else:
         if model_args.freeze_embeds:
             freeze_embeds(model)

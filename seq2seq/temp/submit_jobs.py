@@ -27,7 +27,7 @@ def run_experiment(configs_dir, configs, outpath_base):
       curr_job = job_string.format(os.path.join(configs_dir, config))
       submit_job(curr_job, "config-"+config, outpath_base)
 
-
+"""
 outpath_base = "/idiap/temp/rkarimi/internship/mixture1/adapter/"
 configs_dir = "configs/mixtures1/gpu/adapter"
 configs=["paramteric-meta-adapter-1e-2.json",
@@ -35,7 +35,7 @@ configs=["paramteric-meta-adapter-1e-2.json",
          "paramteric-meta-adapter-3e-2.json",
          "paramteric-meta-adapter-3e-3.json"]
 run_experiment(configs_dir, configs, outpath_base)
-
+"""
 
 outpath_base = "/idiap/temp/rkarimi/internship/mixture2/adapter/"
 configs_dir = "configs/mixtures2/gpu/adapter"
@@ -46,7 +46,7 @@ configs=["paramteric-meta-adapter-1e-2.json",
 run_experiment(configs_dir, configs, outpath_base)
 
 
-
+"""
 outpath_base = "/idiap/temp/rkarimi/internship/mixture1/finetune/"
 configs_dir = "configs/mixtures1/gpu/finetune/"
 configs=["finetune-2e-5.json",  
@@ -54,6 +54,7 @@ configs=["finetune-2e-5.json",
   	 "finetune-3e-4.json",
          "finetune-3e-5.json"]
 run_experiment(configs_dir, configs, outpath_base)
+"""
 
 
 outpath_base = "/idiap/temp/rkarimi/internship/mixture2/finetune/"

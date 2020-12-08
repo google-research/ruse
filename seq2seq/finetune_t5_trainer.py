@@ -126,6 +126,7 @@ def main():
     if training_args.train_adapters:
         # Sets the last layer of decoder to be trained.
         freeze_params(model)
+        # TODO: make this a parameter.
         for param in model.lm_head.parameters():
           param.requires_grad = True
         for name, sub_module in model.named_modules():

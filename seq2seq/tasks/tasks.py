@@ -51,7 +51,7 @@ class AbstractTaskDataset(abc.ABC):
     return prefix + " : " + text if add_prefix else text
 
   def load_dataset(self, split):
-    return datasets.load_dataset(self.task.name, split=split)
+    return datasets.load_dataset(self.task.name, split=split, script_version="master")
 
   def get_dataset(self, split, n_obs=None, add_prefix=True):
     split = self.get_sampled_split(split, n_obs)
@@ -143,7 +143,7 @@ class IWSLT2017ENNL(AbstractTaskDataset):
   pair = f"en-nl"
 
   def load_dataset(self, split):
-    return datasets.load_dataset("iwslt2017", 'iwslt2017-en-ko', split=split)
+    return datasets.load_dataset("iwslt2017", 'iwslt2017-en-nl', split=split)
 
   def preprocessor(self, example, add_prefix=True):
     return {"src_texts": self.add_prefix(example['translation']["en"],
@@ -218,10 +218,10 @@ class WMT14HIENTaskDataset(AbstractTaskDataset):
     return datasets.load_dataset("wmt14", self.pair, split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix(example['translation']["hi"],
+    return {"src_texts": self.add_prefix(example['translation']["en"],
                                          "Translate English to Romanian",
                                          add_prefix),
-            "tgt_texts": str(example['translation']["en"]), "task": self.task.name}
+            "tgt_texts": str(example['translation']["hi"]), "task": self.task.name}
 
 
 class TRECTaskDataset(AbstractTaskDataset):
@@ -430,7 +430,7 @@ class AutoTask:
 
 
 class TaskCollator:
-  def __init__(self, tokenizer, data_args, tpu_num_cores=None, return_targets=False, task=None):  # , tasks=None):
+  def __init__(self, tokenizer, data_args, tpu_num_cores=None, return_targets=False, task=None):
     self.tokenizer = tokenizer
     self.pad_token_id = tokenizer.pad_token_id
     assert (

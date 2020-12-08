@@ -47,6 +47,7 @@ class ParametricMetaAdapterConfig(AdapterConfig):
   parameters of adapter layers. Task embeddings are paramters in this case."""
   task_embedding_dim = 64
   hidden_dim = 128
+  task_embedding_dir = None
   x_dim = 8
   y_dim = 8
 

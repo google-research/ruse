@@ -12,8 +12,9 @@ def run_jobs(config_path, job_name):
 def make_name(prefix, keys, values):
   name = prefix+"-"
   for key, value in zip(keys, values):
-    value = '{:.4e}'.format(value)
+    value = '{:.0e}'.format(value)
     name = name+f"{key}-{value}-"
+    name=name.replace('.', '')
   return name[:-1]
 
 def do_sweep(basic_config_path, sweep, short_keys, job_prefix):

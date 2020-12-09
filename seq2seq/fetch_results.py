@@ -43,3 +43,20 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 retrieve_results(output_dir, sweep, short_keys, job_prefix)
 
 
+output_dir= "outputs/mixture2/meta-adapter/rand/"
+job_prefix = "mix2-meta-rand"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]}) 
+retrieve_results(output_dir, sweep, short_keys, job_prefix)
+
+output_dir= "outputs/mixture1/meta-adapter/task-emb/"
+job_prefix = "mix1-meta-task-emb"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]}) 
+retrieve_results(output_dir, sweep, short_keys, job_prefix)
+
+output_dir= "outputs/mixture2/meta-adapter/task-emb/"
+job_prefix = "mix2-meta-task-emb"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]}) 
+retrieve_results(output_dir, sweep, short_keys, job_prefix)

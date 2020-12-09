@@ -103,6 +103,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
 
+"""
 basic_config_path="configs/experiments/mixture1/paramteric-meta-rand-with-lm-head.json"
 job_prefix = "mix1-param-meta-rand-head"
 short_keys = ["lr"]
@@ -112,6 +113,20 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 basic_config_path="configs/experiments/mixture2/paramteric-meta-rand-with-lm-head.json"
 job_prefix = "mix2-param-meta-rand-head"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+"""
+
+basic_config_path="configs/experiments/mixture1/only-lm-head.json"
+job_prefix = "mix1-only-head"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+
+
+basic_config_path="configs/experiments/mixture2/only-lm-head.json"
+job_prefix = "mix2-only-head"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)

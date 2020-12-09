@@ -248,6 +248,7 @@ def main():
 
             # Saves the results to a gs-bucket.
             if training_args.gcs_bucket is not None:
+                logger.info("***** Uploading results into gs-bucket *****")
                 upload(training_args.output_dir, training_args.gcs_bucket)
 
 

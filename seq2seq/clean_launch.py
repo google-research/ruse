@@ -12,6 +12,7 @@ def run_jobs(config_path, job_name):
 def make_name(prefix, keys, values):
   name = prefix+"-"
   for key, value in zip(keys, values):
+    value = '{:.4e}'.format(value)
     name = name+f"{key}-{value}-"
   return name[:-1]
 
@@ -25,6 +26,7 @@ def do_sweep(basic_config_path, sweep, short_keys, job_prefix):
     updates = {key: value for key, value in zip(keys, option)}
     config.update(updates)
     name = make_name(job_prefix, short_keys, option)
+    print("### name ", name)
     output_dir = os.path.join(parent_config['output_dir'], name)
     config.update({'output_dir': output_dir})
     config_path = "temp.json"

@@ -32,6 +32,7 @@
 "predict_with_generate": true,
 "n_train": 10,
 "task_embedding_dim": 512,
+"task_embedding_dir":"task_embeddings",
 "gcs_bucket": "ruse-xcloud-bucket"
 }
 

@@ -90,6 +90,7 @@ def main():
                           "projection_length", "only_projection_bottleneck",
                           "concat_projection_token", "train_adapters")
     for p in extra_model_params:
+        # TODO(rabeeh): this is a bug, if you set something to false, it wont be called.
         if getattr(training_args, p, None):
             assert hasattr(config, p), f"({config.__class__.__name__}) doesn't have a `{p}` attribute"
             setattr(config, p, getattr(training_args, p))
@@ -98,11 +99,13 @@ def main():
     adapter_config = AutoAdapterConfig.get(adapter_args.adapter_config_name)
     adapter_config.input_dim = config.d_model
     adapter_config.tasks = data_args.tasks
-    extra_adapter_params = ("task_embedding_dir","task_embedding_dim")
+    extra_adapter_params = ("task_embedding_dir", "task_embedding_dim",
+                            "add_layer_norm_before_adapter", "add_layer_norm_after_adapter")
     for p in extra_adapter_params:
-        if getattr(adapter_args, p, None):
+        if hasattr(adapter_args, p):
             assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"
             setattr(adapter_config, p, getattr(adapter_args, p))
+
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else\
           model_args.model_name_or_path,

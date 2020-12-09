@@ -182,3 +182,7 @@ class AdapterTrainingArguments:
                                         "We expect each task have a file with its name there."})
 
   task_embedding_dim: Optional[int] = field(default=None, metadata={"help": "task embedding dimensions."})
+  add_layer_norm_before_adapter: Optional[bool] = field(default=False,
+        metadata={"help": "whether to have layer-norm before adapter."})
+  add_layer_norm_after_adapter: Optional[bool] = field(default=True,
+        metadata={"help": "whether to have layer-norm after adapter."})

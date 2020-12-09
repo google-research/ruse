@@ -205,11 +205,18 @@ def main():
         # For convenience, we also re-save the tokenizer to the same directory,
         # so that you can share your model easily on huggingface.co/models =)
         if trainer.is_world_process_zero():
+            ############## for debug
+            logger.info("***** saving models right after training *****")
+            ##############
             trainer.state.save_to_json(os.path.join(training_args.output_dir, "trainer_state.json"))
             tokenizer.save_pretrained(training_args.output_dir)
 
     # Evaluation
     eval_results = {}
+    ############### for debug
+    if trainer.is_world_process_zero():
+        logger.info("***** before evaluation right after training *****")
+    ###############
     if training_args.do_eval:
         config = T5Config.from_pretrained(
         training_args.output_dir,# "t5-base" for the baseline.
@@ -223,6 +230,10 @@ def main():
             adapter_config=adapter_config
         )
         trainer.model = model.to(training_args.device)
+        ############### for debug
+        if trainer.is_world_process_zero():
+            logger.info("***** this is after model creation for evaluation. *****")
+        ###############
 
         if training_args.train_adapters:
             # If task to adapter is given set it in all adapter controller layers.

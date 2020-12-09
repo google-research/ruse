@@ -118,6 +118,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
+"""
 basic_config_path="configs/experiments/mixture1/only-lm-head.json"
 job_prefix = "mix1-only-head"
 short_keys = ["lr"]
@@ -130,3 +131,24 @@ job_prefix = "mix2-only-head"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+"""
+
+
+
+basic_config_path="configs/experiments/mixture2/t5-scratch.json"
+job_prefix = "mix1-t5-scratch"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+
+
+basic_config_path = "configs/experiments/mixture1/t5-scratch.json"
+job_prefix = "mix2-t5-scratch"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+
+
+
+
+

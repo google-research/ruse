@@ -79,7 +79,7 @@ class HyperNetUpSampler(nn.Module):
       linear_layer(self.hidden_dim, self.input_dim * self.down_sample_size))
     self.bias_generator = nn.Sequential(
       linear_layer(config.task_embedding_dim, self.hidden_dim),
-      nn.ReLU(),
+      #nn.ReLU(),
       linear_layer(self.hidden_dim, self.input_dim))
 
   def forward(self, task_embedding):

@@ -27,7 +27,6 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix):
     results.update({key: value for key, value in zip(keys, option)})
     df = df.append(results, ignore_index=True)
 
-
   cols = list(df.columns.values)
   cols.remove('learning_rate')
   cols = ['learning_rate'] + cols

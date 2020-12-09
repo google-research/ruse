@@ -36,14 +36,14 @@ def do_sweep(basic_config_path, sweep, short_keys, job_prefix):
       json.dump(config, f)
     run_jobs(config_path, name)
 
-
+"""
 basic_config_path="configs/experiments/mixture1/test.json"
 job_prefix = "test"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-
 """
+
 # Mixture 1.
 basic_config_path="configs/experiments/mixture1/meta-rand.json"
 job_prefix = "mix1-meta-rand"
@@ -99,4 +99,3 @@ job_prefix = "mix2-param-meta-task-emb"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-"""

@@ -125,11 +125,12 @@ class MetaAdapterController(AdapterController):
     self.input_dim = config.input_dim
     self.task_to_embeddings = {}
     for task in self.tasks:
+      # TODO: fix it.
       if self.task_embedding_dir is not None:
         task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
-        self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path))
+        self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path)).cuda()
       else:
-        self.task_to_embeddings[task] = torch.Tensor(torch.randn(config.task_embedding_dim))
+        self.task_to_embeddings[task] = torch.Tensor(torch.randn(config.task_embedding_dim)).cuda()
     self.meta_up_sampler = HyperNetUpSampler(config)
     self.meta_down_sampler = HyperNetDownSampler(config)
     self.task_to_adapter = {task: task for task in self.tasks}
@@ -172,7 +173,8 @@ class MetaParamterizedAdapterController(MetaAdapterController):
         task_seed = torch.Tensor(np.load(task_embedding_path))
       else:
         task_seed = torch.randn(config.task_embedding_dim)
-      self.task_to_embeddings[task] = nn.Parameter(task_seed)
+      # TODO: fix it.
+      self.task_to_embeddings[task] = nn.Parameter(task_seed).cuda()
     self.meta_up_sampler = HyperNetUpSampler(config)
     self.meta_down_sampler = HyperNetDownSampler(config)
     self.task_to_adapter = {task: task for task in self.tasks}

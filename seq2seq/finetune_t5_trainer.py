@@ -23,7 +23,7 @@ from seq2seq.tasks import AutoTask, TaskCollator
 from seq2seq.metrics import build_compute_metrics_fn
 from seq2seq.models import T5ForConditionalGeneration
 from seq2seq.adapters import AdapterController, MetaAdapterController, MetaParamterizedAdapterController, AutoAdapterConfig
-
+from seq2seq.utils import upload
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +140,7 @@ def main():
         if model_args.freeze_encoder:
             freeze_params(model.get_encoder())
             assert_all_frozen(model.get_encoder())
-        
+
     if model_args.unfreeze_lm_head:
         for param in model.lm_head.parameters():
           param.requires_grad = True
@@ -245,6 +245,11 @@ def main():
                 logger.info("  %s = %s", key, value)
             save_json(result, os.path.join(training_args.output_dir, "eval_results.json"))
             eval_results.update(result)
+
+            # Saves the results to a gs-bucket.
+            if training_args.gcs_bucket is not None:
+                upload(training_args.output_dir, training_args.gcs_bucket)
+
 
     if training_args.do_predict:
         logging.info("*** Test ***")

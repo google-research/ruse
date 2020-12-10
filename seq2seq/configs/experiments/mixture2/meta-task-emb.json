@@ -30,7 +30,7 @@
 "do_eval": true,
 "predict_with_generate": true,
 "n_train":  8500,
-"task_embedding_dir":"task_embeddings",
+"task_embedding_dir":"task_embeddings/n-train-all",
 "task_embedding_dim": 512,
 "gcs_bucket": "ruse-xcloud-bucket"
 }

@@ -31,8 +31,8 @@ logger = getLogger(__name__)
 
 
 def upload(upload_dir: str, gcs_bucket: str) -> None:
-    os.system("gsutil rm -r {}".format(os.path.join("gs://"+gcs_bucket, upload_dir)))
-    os.system("gsutil -m cp -r {} {}".format(upload_dir, os.path.join("gs://"+gcs_bucket, upload_dir)))
+    os.system("/root/google-cloud-sdk/bin/gsutil rm -r {}".format(os.path.join("gs://"+gcs_bucket, upload_dir)))
+    os.system("/root/google-cloud-sdk/bin/gsutil -m cp -r {} {}".format(upload_dir, os.path.join("gs://"+gcs_bucket, upload_dir)))
 
 
 """

@@ -136,32 +136,31 @@ class MetaAdapterController(nn.Module):
     self.task_embedding_dir = config.task_embedding_dir
     self.input_dim = config.input_dim
     self.task_to_embeddings = {}
-    self.set_task_embeddings(self.tasks, config.task_embedding_dim)
+    self.task_embedding_dim = config.task_embedding_dim
+    self.set_task_embeddings(self.tasks)
     self.meta_up_sampler = HyperNetUpSampler(config)
     self.meta_down_sampler = HyperNetDownSampler(config)
     self.activation_type = config.non_linearity.lower()
     self.add_layer_norm_before_adapter = config.add_layer_norm_before_adapter
     self.add_layer_norm_after_adapter = config.add_layer_norm_after_adapter
 
-  def set_task_embeddings(self, tasks, task_embedding_dim):
+  def set_task_embeddings(self, tasks):
     for task in tasks:
       # TODO: fix it.
       if self.task_embedding_dir is not None:
         task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
         self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path)).cuda()
       else:
-        self.task_to_embeddings[task] = torch.Tensor(torch.randn(task_embedding_dim)).cuda()
+        self.task_to_embeddings[task] = torch.Tensor(torch.randn(self.task_embedding_dim)).cuda()
 
   def call_adapter(self, inputs, task):
     # TODO: fix this.
     task_emb = self.task_to_embeddings[task].cuda()  
     weight_up, bias_up = self.meta_up_sampler(task_emb)
     weight_down, bias_down = self.meta_down_sampler(task_emb)
-
     down = F.linear(inputs, weight=weight_down, bias=bias_down)
     middle = get_activation(self.activation_type)(down)
     output = F.linear(middle, weight=weight_up, bias=bias_up)
-
     return output
 
   def forward(self, task, inputs):
@@ -171,17 +170,13 @@ class MetaAdapterController(nn.Module):
     :param task: the name of the current task.
     :param inputs: the inputs to feed in in the adapter layer.
     :return: outputs of the adapter layer."""
-
     if self.add_layer_norm_before_adapter:
       z = self.pre_layer_norm(inputs)
     else:
       z = inputs
-
     outputs = self.call_adapter(z, task)
-
     if self.add_layer_norm_after_adapter:
       outputs = self.post_layer_norm(outputs)
-
     outputs = outputs + inputs
     return outputs
 
@@ -201,16 +196,19 @@ class MetaParamterizedAdapterController(MetaAdapterController):
     self.input_dim = config.input_dim
     self.task_embedding_dir = config.task_embedding_dir
     self.task_to_embeddings = nn.ParameterDict(dict())
-    for task in self.tasks:
+    self.task_embedding_dim = config.task_embedding_dim
+    self.set_task_embeddings(self.tasks)
+    self.meta_up_sampler = HyperNetUpSampler(config)
+    self.meta_down_sampler = HyperNetDownSampler(config)
+
+  def set_task_embeddings(self, tasks):
+    for task in tasks:
       if self.task_embedding_dir is not None:
         task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
         task_seed = torch.Tensor(np.load(task_embedding_path)).cuda()
       else:
-        task_seed = torch.randn(config.task_embedding_dim).cuda()
-      # TODO: fix it.
+        task_seed = torch.randn(self.task_embedding_dim).cuda()
       self.task_to_embeddings[task] = nn.Parameter(task_seed)
-    self.meta_up_sampler = HyperNetUpSampler(config)
-    self.meta_down_sampler = HyperNetDownSampler(config)
 
 
 class AutoAdapterController(nn.Module):

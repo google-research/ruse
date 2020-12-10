@@ -240,8 +240,7 @@ def main():
             if adapter_args.adapter_config_name in ["meta-adapter", "parametric-meta-adapter"]:
               for name, sub_module in model.named_modules():
                 if isinstance(sub_module, MetaAdapterController):
-                  # TODO: does it work for parameterized version.
-                  sub_module.set_task_embeddings(data_args.eval_tasks, adapter_config.task_embedding_dim)
+                  sub_module.set_task_embeddings(data_args.eval_tasks)
 
         logger.info(eval_datasets)
         logger.info("*** Evaluate ***")

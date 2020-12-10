@@ -135,16 +135,19 @@ class MetaAdapterController(AdapterController):
     self.task_embedding_dir = config.task_embedding_dir
     self.input_dim = config.input_dim
     self.task_to_embeddings = {}
-    for task in self.tasks:
+    self.set_task_embeddings(self.tasks, config.task_embedding_dim)
+    self.meta_up_sampler = HyperNetUpSampler(config)
+    self.meta_down_sampler = HyperNetDownSampler(config)
+    self.task_to_adapter = {task: task for task in self.tasks}
+
+  def set_task_embeddings(self, tasks, task_embedding_dim):
+    for task in tasks:
       # TODO: fix it.
       if self.task_embedding_dir is not None:
         task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
         self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path)).cuda()
       else:
-        self.task_to_embeddings[task] = torch.Tensor(torch.randn(config.task_embedding_dim)).cuda()
-    self.meta_up_sampler = HyperNetUpSampler(config)
-    self.meta_down_sampler = HyperNetDownSampler(config)
-    self.task_to_adapter = {task: task for task in self.tasks}
+        self.task_to_embeddings[task] = torch.Tensor(torch.randn(task_embedding_dim)).cuda()
 
   def construct_adapters(self, tasks):
     """
@@ -161,6 +164,27 @@ class MetaAdapterController(AdapterController):
     weight_down, bias_down = self.meta_down_sampler(self.task_to_embeddings[task])
     return adapter(inputs, weight_down, bias_down, weight_up, bias_up)
 
+
+  def forward(self, eval_task, inputs):
+    """Retrieves the adapter layer corresponding to the given
+    task. It freezes the adapter layers for all the other tasks
+    and call the selected adapter layer.
+    :param task: the name of the current task.
+    :param inputs: the inputs to feed in in the adapter layer.
+    :return: outputs of the adapter layer."""
+    task = self.get_task(eval_task)
+    # Enables the adapter layer for the given task.
+    self.enable_adapters(task)
+    # Disable other adapters.
+    other_tasks = [x for x in self.tasks if x != task]
+    self.disable_adapters(other_tasks)
+    adapter = self.get_adapter(task)
+    if self.add_layer_norm_before_adapter_inside_controller:
+      inputs = self.pre_layer_norm(inputs)
+    outputs = self.call_adapter(adapter, inputs, eval_task)
+    if self.add_layer_norm_after_adapter_inside_controller:
+      outputs = self.post_layer_norm(outputs)
+    return outputs
 
 class MetaParamterizedAdapterController(MetaAdapterController):
   """Implements Meta parameterized Adapter controller module, in which

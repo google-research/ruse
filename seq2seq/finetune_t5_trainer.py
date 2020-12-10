@@ -236,6 +236,7 @@ def main():
             cache_dir=model_args.cache_dir,
             adapter_config=adapter_config
         )
+
         trainer.model = model.to(training_args.device)
         ############### for debug
         if trainer.is_world_process_zero():
@@ -252,6 +253,7 @@ def main():
                    if isinstance(sub_module, AdapterController) or \
                        isinstance(sub_module, MetaAdapterController):
                        sub_module.set_task_to_adapter_map(task_to_adapter)
+                       sub_module.set_task_embeddings(data_args.eval_tasks, adapter_config.task_embedding_dim)
 
         logger.info(eval_datasets)
         logger.info("*** Evaluate ***")

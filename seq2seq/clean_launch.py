@@ -5,7 +5,7 @@ import itertools
 import copy
 
 def run_jobs(config_path, job_name):
-  command = "/google/bin/releases/cloud-alphabetcloud-xcloud/xcloud_cli/xcloud_cli.par google/launch_xla_clean.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(
+  command = "/google/bin/releases/cloud-alphabetcloud-xcloud/xcloud_cli/xcloud_cli.par google/launch_xla_clean1.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(
     config_path, job_name)
   os.system(command)
 
@@ -51,20 +51,20 @@ job_prefix = "mix1-meta-rand"
 short_keys = ["lr"] #, "rate"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]}) #, 'rate': [5, 10, 15]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+"""
 
 basic_config_path="configs/experiments/mixture1/meta-task-emb.json"
-job_prefix = "mix1-meta-task-emb"
+job_prefix = "mix1-meta-task-emb-new"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
-
+"""
 basic_config_path="configs/experiments/mixture1/paramteric-meta-rand.json"
 job_prefix = "mix1-param-meta-rand"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-
 
 basic_config_path="configs/experiments/mixture1/paramteric-meta-task-emb.json"
 job_prefix = "mix1-param-meta-task-emb"
@@ -72,22 +72,21 @@ short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
-
 # Mixture 2.
 basic_config_path="configs/experiments/mixture2/meta-rand.json"
 job_prefix = "mix2-meta-rand"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-
+"""
 
 basic_config_path="configs/experiments/mixture2/meta-task-emb.json"
-job_prefix = "mix2-meta-task-emb"
+job_prefix = "mix2-meta-task-emb-new"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
-
+"""
 basic_config_path="configs/experiments/mixture2/paramteric-meta-rand.json"
 job_prefix = "mix2-param-meta-rand"
 short_keys = ["lr"]
@@ -101,7 +100,6 @@ short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
-
 
 """
 basic_config_path="configs/experiments/mixture1/paramteric-meta-rand-with-lm-head.json"

@@ -41,7 +41,7 @@ def upload(upload_dir: str, gcs_bucket: str, gcs_path: str = None) -> None:
       filename = os.path.join(dirpath, name)
       blob = storage.Blob(os.path.join(gcs_path, name), bucket)
       with open(filename, 'rb') as f:
-        blob.upload_from_file(f)
+        blob.upload_from_file(f, num_retries=10, timeout=10*60)
 
 
 def use_task_specific_params(model, task):

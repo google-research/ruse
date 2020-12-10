@@ -23,17 +23,12 @@ from seq2seq.tasks import AutoTask, TaskCollator
 from seq2seq.metrics import build_compute_metrics_fn
 from seq2seq.models import T5ForConditionalGeneration
 from seq2seq.adapters import AdapterController, MetaAdapterController, MetaParamterizedAdapterController, AutoAdapterConfig
-#from seq2seq.utils import upload
+from seq2seq.utils import upload
 
 logger = logging.getLogger(__name__)
 
 if is_torch_tpu_available():
     import torch_xla.core.xla_model as xm
-
-
-def upload(upload_dir: str, gcs_bucket: str) -> None:
-    os.system("gsutil rm -r {}".format(os.path.join("gs://"+gcs_bucket, upload_dir)))
-    os.system("gsutil -m cp -r {} {}".format(upload_dir, os.path.join("gs://"+gcs_bucket, upload_dir)))
 
 
 def shard_data(datasets, num_replicas, rank):

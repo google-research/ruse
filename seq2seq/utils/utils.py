@@ -30,9 +30,14 @@ except (ImportError, ModuleNotFoundError):
 logger = getLogger(__name__)
 
 
+def upload(upload_dir: str, gcs_bucket: str) -> None:
+    os.system("gsutil rm -r {}".format(os.path.join("gs://"+gcs_bucket, upload_dir)))
+    os.system("gsutil -m cp -r {} {}".format(upload_dir, os.path.join("gs://"+gcs_bucket, upload_dir)))
+
+
+"""
 def upload(upload_dir: str, gcs_bucket: str, gcs_path: str = None) -> None:
-  """Upload files to GCS.
-  """
+  #Upload files to GCS.
   gcs_path = upload_dir
   storage_client = storage.Client()
   bucket = storage_client.get_bucket(gcs_bucket)
@@ -42,6 +47,7 @@ def upload(upload_dir: str, gcs_bucket: str, gcs_path: str = None) -> None:
       blob = storage.Blob(os.path.join(gcs_path, name), bucket)
       with open(filename, 'rb') as f:
         blob.upload_from_file(f, num_retries=10, timeout=10*60)
+"""
 
 
 def use_task_specific_params(model, task):

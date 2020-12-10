@@ -36,6 +36,7 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix):
   #print(output.head())
 
 
+"""
 output_dir= "outputs/mixture1/meta-adapter/rand/"
 job_prefix = "mix1-meta-rand"
 short_keys = ["lr"]
@@ -125,6 +126,63 @@ retrieve_results(output_dir, sweep, short_keys, job_prefix)
 
 output_dir="outputs/mixture2/t5-scratch/"
 job_prefix = "mix2-t5-scratch"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix)
+"""
+
+output_dir = "outputs/mixture1/meta-adapter-no-layer-norm/task-emb/"
+job_prefix = "mix1-meta-task-emb-no-ln-r"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix)
+
+output_dir = "outputs/mixture2/meta-adapter-no-layer-norm/task-emb/"
+job_prefix = "mix2-meta-task-emb-no-ln-r"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix)
+
+
+
+output_dir = "outputs/mixture1/meta-adapter-no-layer-norm-inside-pre-false-post-true/task-emb/"
+job_prefix = "mix1-meta-task-false-true-r"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix)
+
+output_dir = "outputs/mixture2/meta-adapter-no-layer-norm-inside-pre-false-post-true/task-emb/"
+job_prefix = "mix2-meta-task-false-true-r"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix)
+
+
+
+
+output_dir = "outputs/mixture1/meta-adapter-no-layer-norm-inside-pre-true-post-false/task-emb/"
+job_prefix = "mix1-meta-task-true-false"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix)
+
+output_dir = "outputs/mixture2/meta-adapter-no-layer-norm-inside-pre-true-post-false/task-emb/"
+job_prefix = "mix2-meta-task-true-false"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix)
+
+
+
+
+output_dir = "outputs/mixture1/meta-adapter-no-layer-norm-inside-pre-true-post-true/task-emb/"
+job_prefix = "mix1-meta-task-true-true"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix)
+
+output_dir = "outputs/mixture2/meta-adapter-no-layer-norm-inside-pre-true-post-true/task-emb/"
+job_prefix = "mix2-meta-task-true-true"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 retrieve_results(output_dir, sweep, short_keys, job_prefix)

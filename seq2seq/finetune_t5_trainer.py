@@ -99,8 +99,12 @@ def main():
     adapter_config = AutoAdapterConfig.get(adapter_args.adapter_config_name)
     adapter_config.input_dim = config.d_model
     adapter_config.tasks = data_args.tasks
-    extra_adapter_params = ("task_embedding_dir", "task_embedding_dim",
-                            "add_layer_norm_before_adapter", "add_layer_norm_after_adapter")
+    extra_adapter_params = ("task_embedding_dir",
+                            "task_embedding_dim",
+                            "add_layer_norm_before_adapter",
+                            "add_layer_norm_after_adapter",
+                            "add_layer_norm_before_adapter_inside_controller",
+                            "add_layer_norm_after_adapter_inside_controller")
     for p in extra_adapter_params:
         if hasattr(adapter_args, p):
             assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"

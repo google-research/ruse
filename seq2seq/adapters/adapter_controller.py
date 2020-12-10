@@ -35,6 +35,12 @@ class AdapterController(nn.Module):
     self.tasks = config.tasks
     self.adapters = self.construct_adapters(self.tasks)
     self.task_to_adapter = {task: task for task in self.tasks}
+    self.add_layer_norm_before_adapter_inside_controller = config.add_layer_norm_before_adapter_inside_controller
+    self.add_layer_norm_after_adapter_inside_controller = config.add_layer_norm_after_adapter_inside_controller
+    if self.add_layer_norm_before_adapter_inside_controller:
+      self.pre_layer_norm = nn.LayerNorm(config.input_dim)
+    if self.add_layer_norm_after_adapter_inside_controller:
+      self.post_layer_norm = nn.LayerNorm(config.input_dim)
 
   def set_task_to_adapter_map(self, mapping):
     self.task_to_adapter = mapping
@@ -105,7 +111,12 @@ class AdapterController(nn.Module):
     other_tasks = [x for x in self.tasks if x != task]
     self.disable_adapters(other_tasks)
     adapter = self.get_adapter(task)
-    return self.call_adapter(adapter, inputs, task)
+    if self.add_layer_norm_before_adapter_inside_controller:
+      inputs = self.pre_layer_norm(inputs)
+    outputs = self.call_adapter(adapter, inputs, task)
+    if self.add_layer_norm_after_adapter_inside_controller:
+      outputs = self.post_layer_norm(outputs)
+    return outputs
 
 
 class MetaAdapterController(AdapterController):

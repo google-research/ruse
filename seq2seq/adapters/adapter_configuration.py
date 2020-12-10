@@ -26,6 +26,11 @@ class AdapterConfig(object):
   proposed in https://arxiv.org/abs/1902.00751."""
   add_layer_norm_before_adapter: bool = False
   add_layer_norm_after_adapter: bool = True
+  # TODO: this needs to be joined as one argument, so in case of meta ones
+  #   this is referring to inside the controller and if not this is referring to inside adapters.
+  #   make the default the one which works the best.
+  add_layer_norm_before_adapter_inside_controller: bool = False
+  add_layer_norm_after_adapter_inside_controller: bool = False
   non_linearity: str = "swish"
   reduction_factor: int = 16
   weight_init_range = 1e-2

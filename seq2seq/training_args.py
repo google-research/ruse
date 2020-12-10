@@ -186,7 +186,3 @@ class AdapterTrainingArguments:
         metadata={"help": "whether to have layer-norm before adapter."})
   add_layer_norm_after_adapter: Optional[bool] = field(default=True,
         metadata={"help": "whether to have layer-norm after adapter."})
-  add_layer_norm_before_adapter_inside_controller: Optional[bool] = field(default=False,
-        metadata={"help": "whether to have layer-norm before adapter inside adapter controller."})
-  add_layer_norm_after_adapter_inside_controller: Optional[bool] = field(default=False,
-        metadata={"help": "whether to have layer-norm after adapter inside adapter controller."})

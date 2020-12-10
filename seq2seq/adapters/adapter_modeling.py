@@ -14,8 +14,6 @@
 
 """Implements an Adapter Layer and Meta Adapter layer."""
 import torch.nn as nn
-import torch.nn.functional as F
-from transformers.activations import get_activation
 
 from .adapter_utils import Activations, linear_layer
 
@@ -45,34 +43,6 @@ class Adapter(nn.Module):
   def forward(self, x):
     z = self.down_sampler(x)
     output = self.up_sampler(z)
-    if self.add_layer_norm_after_adapter:
-      output = self.post_layer_norm(output)
-    output = output + x
-    return output
-
-
-class MetaAdapter(nn.Module):
-  """Meta Adapter layer, in which the weights of up and down sampler modules
-  are given and are not optimized."""
-
-  def __init__(self, config):
-    super().__init__()
-    self.input_dim = config.input_dim
-    self.add_layer_norm_after_adapter = config.add_layer_norm_after_adapter
-    self.weight_init_range = config.weight_init_range
-    self.down_sample_size = self.input_dim // config.reduction_factor
-    self.add_layer_norm_before_adapter = config.add_layer_norm_before_adapter
-    if self.add_layer_norm_before_adapter:
-      self.pre_layer_norm = nn.LayerNorm(self.input_dim)
-    self.activation_type = config.non_linearity.lower()
-    if self.add_layer_norm_after_adapter:
-      self.post_layer_norm = nn.LayerNorm(self.input_dim)
-
-  def forward(self, x, weight_down, bias_down, weight_up, bias_up):
-    z = self.pre_layer_norm(x) if self.add_layer_norm_before_adapter else x
-    down = F.linear(z, weight=weight_down, bias=bias_down)
-    middle = get_activation(self.activation_type)(down)
-    output = F.linear(middle, weight=weight_up, bias=bias_up)
     if self.add_layer_norm_after_adapter:
       output = self.post_layer_norm(output)
     output = output + x

@@ -102,9 +102,7 @@ def main():
     extra_adapter_params = ("task_embedding_dir",
                             "task_embedding_dim",
                             "add_layer_norm_before_adapter",
-                            "add_layer_norm_after_adapter",
-                            "add_layer_norm_before_adapter_inside_controller",
-                            "add_layer_norm_after_adapter_inside_controller")
+                            "add_layer_norm_after_adapter")
     for p in extra_adapter_params:
         if hasattr(adapter_args, p):
             assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"
@@ -212,18 +210,11 @@ def main():
         # For convenience, we also re-save the tokenizer to the same directory,
         # so that you can share your model easily on huggingface.co/models =)
         if trainer.is_world_process_zero():
-            ############## for debug
-            logger.info("***** saving models right after training *****")
-            ##############
             trainer.state.save_to_json(os.path.join(training_args.output_dir, "trainer_state.json"))
             tokenizer.save_pretrained(training_args.output_dir)
 
     # Evaluation
     eval_results = {}
-    ############### for debug
-    if trainer.is_world_process_zero():
-        logger.info("***** before evaluation right after training *****")
-    ###############
     if training_args.do_eval:
         config = T5Config.from_pretrained(
         training_args.output_dir,# "t5-base" for the baseline.
@@ -236,24 +227,21 @@ def main():
             cache_dir=model_args.cache_dir,
             adapter_config=adapter_config
         )
-
         trainer.model = model.to(training_args.device)
-        ############### for debug
-        if trainer.is_world_process_zero():
-            logger.info("***** this is after model creation for evaluation. *****")
-        ###############
-
         if training_args.train_adapters:
             # If task to adapter is given set it in all adapter controller layers.
-            if data_args.adapters is not None:
-                task_to_adapter = {eval_task: adapter for eval_task, adapter in
-                                   zip(data_args.eval_tasks, data_args.adapters)}
+            if adapter_args.adapter_config_name == "adapter" and data_args.adapters is not None:
                 for name, sub_module in model.named_modules():
-                   # TODO: they need to be object of the same class.
-                   if isinstance(sub_module, AdapterController) or \
-                       isinstance(sub_module, MetaAdapterController):
+                  task_to_adapter = {eval_task: adapter for eval_task, adapter in
+                                     zip(data_args.eval_tasks, data_args.adapters)}
+                  if isinstance(sub_module, AdapterController):
                        sub_module.set_task_to_adapter_map(task_to_adapter)
-                       sub_module.set_task_embeddings(data_args.eval_tasks, adapter_config.task_embedding_dim)
+
+            if adapter_args.adapter_config_name in ["meta-adapter", "parametric-meta-adapter"]:
+              for name, sub_module in model.named_modules():
+                if isinstance(sub_module, MetaAdapterController):
+                  # TODO: does it work for parameterized version.
+                  sub_module.set_task_embeddings(data_args.eval_tasks, adapter_config.task_embedding_dim)
 
         logger.info(eval_datasets)
         logger.info("*** Evaluate ***")

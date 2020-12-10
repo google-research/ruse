@@ -146,58 +146,51 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
 
-"""
 basic_config_path="configs/experiments/mixture1/meta-task-emb-no-layer-norm.json"
-job_prefix = "mix1-meta-task-emb-no-ln"
+job_prefix = "mix1-meta-task-emb-no-ln-r"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 
 basic_config_path="configs/experiments/mixture2/meta-task-emb-no-layer-norm.json"
-job_prefix = "mix2-meta-task-emb-no-ln"
+job_prefix = "mix2-meta-task-emb-no-ln-r"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-"""
-
-
-
-
-
 
 basic_config_path="configs/experiments/mixture1/meta-task-emb-no-layer-norm-layernorm-inside-controller-pre-false-post-true.json"
-job_prefix = "mix1-meta-task-false-true"
+job_prefix = "mix1-meta-task-false-true-r"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 basic_config_path="configs/experiments/mixture1/meta-task-emb-no-layer-norm-layernorm-inside-controller-pre-true-post-false.json"
-job_prefix = "mix1-meta-task-true-false"
+job_prefix = "mix1-meta-task-true-false-r"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 basic_config_path="configs/experiments/mixture1/meta-task-emb-no-layer-norm-layernorm-inside-controller-pre-true-post-true.json"
-job_prefix = "mix1-meta-task-true-true"
+job_prefix = "mix1-meta-task-true-true-r"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 basic_config_path="configs/experiments/mixture2/meta-task-emb-no-layer-norm-layernorm-inside-controller-pre-false-post-true.json"
-job_prefix = "mix2-meta-task-false-true"
+job_prefix = "mix2-meta-task-false-true-r"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 basic_config_path="configs/experiments/mixture2/meta-task-emb-no-layer-norm-layernorm-inside-controller-pre-true-post-false.json"
-job_prefix = "mix2-meta-task-true-false"
+job_prefix = "mix2-meta-task-true-false-r"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 basic_config_path="configs/experiments/mixture2/meta-task-emb-no-layer-norm-layernorm-inside-controller-pre-true-post-true.json"
-job_prefix = "mix2-meta-task-true-true"
+job_prefix = "mix2-meta-task-true-true-r"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)

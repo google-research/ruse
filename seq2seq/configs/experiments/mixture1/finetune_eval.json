@@ -12,7 +12,7 @@
 "eval_steps": 200,
 "overwrite_output_dir": true,
 "tasks": ["qnli", "scitail", "boolq"],
-"eval_tasks": ["cola", "snli", "yelp"],
+"eval_tasks": ["cola", "snli", "yelp_polarity"],
 "sampling": true,
 "label_smoothing": 0.1,
 "freeze_encoder":false,

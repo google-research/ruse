@@ -160,8 +160,9 @@ class MetaAdapterController(AdapterController):
     return self.adapters
 
   def call_adapter(self, adapter, inputs, task):
-    weight_up, bias_up = self.meta_up_sampler(self.task_to_embeddings[task])
-    weight_down, bias_down = self.meta_down_sampler(self.task_to_embeddings[task])
+    task_emb = self.task_to_embeddings[task].cuda()  
+    weight_up, bias_up = self.meta_up_sampler(task_emb)
+    weight_down, bias_down = self.meta_down_sampler(task_emb)
     return adapter(inputs, weight_down, bias_down, weight_up, bias_up)
 
   # TODO: this needs to be checked.

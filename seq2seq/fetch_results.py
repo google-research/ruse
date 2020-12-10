@@ -32,7 +32,7 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix):
   cols = ['learning_rate'] + cols
   df = df[cols]
   #print(df.to_markdown())
-  print(tabulate(df, headers='keys', tablefmt='rst', showindex=False))
+  print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
   #print(output.head())
 
 

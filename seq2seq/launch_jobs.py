@@ -23,7 +23,10 @@ def run_jobs(config_path, job_name):
 def make_name(prefix, keys, values):
   name = prefix+"-"
   for key, value in zip(keys, values):
-    value = '{0:.0e}'.format(value)
+    if isinstance(value, float):
+       value = '{0:.0e}'.format(value)
+    elif isinstance(value, str):
+       value = value.split("/")[-1]
     #value = '{:.0e}'.format(value)
     name = name+f"{key}-{value}-"
     #name=name.replace('.', '')
@@ -45,7 +48,8 @@ def do_sweep(basic_config_path, sweep, short_keys, job_prefix):
     config_path = "temp.json"
     with open(config_path, 'w') as f:
       json.dump(config, f)
-    run_jobs(config_path, name)
+    #run_jobs(config_path, name)
+    print(config)
 
 """
 basic_config_path="configs/experiments/mixture1/test.json"
@@ -225,7 +229,8 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 # evaluate on multitple rate of task-embeddings.
 basic_config_path="configs/experiments/mixture1/meta-task-emb-no-layer-norm-eval.json"
 job_prefix = "mix2-finetune"
-short_keys = ["lr"]
-sweep = collections.OrderedDict({'task_embedding_dir': [2e-5, 3e-3, 3e-4, 3e-5]})
+short_keys = ["task-emb-dir"]
+sweep = collections.OrderedDict({'task_embedding_dir': ["task_embeddings/n_train_100",
+"task_embeddings/n_train_1000", "task_embeddings/n_train_2000", "task_embeddings/n_train_all"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 

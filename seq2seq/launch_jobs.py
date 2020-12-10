@@ -227,11 +227,24 @@ sweep = collections.OrderedDict({'learning_rate': [2e-5, 3e-3, 3e-4, 3e-5]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
-# evaluate on multitple rate of task-embeddings.
-basic_config_path="configs/experiments/mixture1/meta-task-emb-no-layer-norm-eval.json"
-job_prefix = "mix1-no-ln-eval"
-short_keys = ["dir"]
-sweep = collections.OrderedDict({'task_embedding_dir': ["task_embeddings/n-train-100",
-"task_embeddings/n-train-1000", "task_embeddings/n-train-2000", "task_embeddings/n-train-all"]})
-do_sweep(basic_config_path, sweep, short_keys, job_prefix, update_output=False)
 
+
+
+"""
+basic_config_path="configs/experiments/mixture2/meta-task-emb.json"
+job_prefix = "mix2-meta-task-emb" # -new
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+"""
+
+
+basic_config_path = "configs/experiments/mixture2/paramteric-meta-task-emb.json"
+job_prefix = "mix2-param-meta-task-emb"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100",
+                                                        "task_embeddings/n-train-1000", "task_embeddings/n-train-2000",
+                                                        "task_embeddings/n-train-all"]
+                                 })
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)

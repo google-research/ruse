@@ -141,6 +141,10 @@ class MetaAdapterController(nn.Module):
     self.activation_type = config.non_linearity.lower()
     self.add_layer_norm_before_adapter = config.add_layer_norm_before_adapter
     self.add_layer_norm_after_adapter = config.add_layer_norm_after_adapter
+    if self.add_layer_norm_after_adapter:
+      self.post_layer_norm = nn.LayerNorm(self.input_dim)
+    if self.add_layer_norm_before_adapter:
+      self.pre_layer_norm = nn.LayerNorm(self.input_dim)
 
 
   def set_task_embeddings(self, tasks):

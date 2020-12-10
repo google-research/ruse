@@ -32,7 +32,7 @@ def make_name(prefix, keys, values):
     #name=name.replace('.', '')
   return name[:-1]
 
-def do_sweep(basic_config_path, sweep, short_keys, job_prefix):
+def do_sweep(basic_config_path, sweep, short_keys, job_prefix, update_output=True):
   with open(basic_config_path, "r") as infile:
     parent_config = json.loads(infile.read())
   values = list(sweep.values())
@@ -43,8 +43,9 @@ def do_sweep(basic_config_path, sweep, short_keys, job_prefix):
     config.update(updates)
     name = make_name(job_prefix, short_keys, option)
     print("### name ", name)
-    output_dir = os.path.join(parent_config['output_dir'], name)
-    config.update({'output_dir': output_dir})
+    if update_output:
+       output_dir = os.path.join(parent_config['output_dir'], name)
+       config.update({'output_dir': output_dir})
     config_path = "temp.json"
     with open(config_path, 'w') as f:
       json.dump(config, f)
@@ -228,9 +229,9 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 # evaluate on multitple rate of task-embeddings.
 basic_config_path="configs/experiments/mixture1/meta-task-emb-no-layer-norm-eval.json"
-job_prefix = "mix2-finetune"
-short_keys = ["task-emb-dir"]
-sweep = collections.OrderedDict({'task_embedding_dir': ["task_embeddings/n_train_100",
-"task_embeddings/n_train_1000", "task_embeddings/n_train_2000", "task_embeddings/n_train_all"]})
-do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+job_prefix = "mix1-no-ln-eval"
+short_keys = ["dir"]
+sweep = collections.OrderedDict({'task_embedding_dir': ["task_embeddings/n-train-100",
+"task_embeddings/n-train-1000", "task_embeddings/n-train-2000", "task_embeddings/n-train-all"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, update_output=False)
 

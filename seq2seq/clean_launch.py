@@ -51,15 +51,14 @@ job_prefix = "mix1-meta-rand"
 short_keys = ["lr"] #, "rate"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]}) #, 'rate': [5, 10, 15]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-"""
 
 basic_config_path="configs/experiments/mixture1/meta-task-emb.json"
-job_prefix = "mix1-meta-task-emb-new"
+job_prefix = "mix1-meta-task-emb" # -new
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
-"""
+
 basic_config_path="configs/experiments/mixture1/paramteric-meta-rand.json"
 job_prefix = "mix1-param-meta-rand"
 short_keys = ["lr"]
@@ -78,15 +77,14 @@ job_prefix = "mix2-meta-rand"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-"""
+
 
 basic_config_path="configs/experiments/mixture2/meta-task-emb.json"
-job_prefix = "mix2-meta-task-emb-new"
+job_prefix = "mix2-meta-task-emb" # -new
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
-"""
 basic_config_path="configs/experiments/mixture2/paramteric-meta-rand.json"
 job_prefix = "mix2-param-meta-rand"
 short_keys = ["lr"]
@@ -148,6 +146,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
 
+"""
 basic_config_path="configs/experiments/mixture1/meta-task-emb-no-layer-norm.json"
 job_prefix = "mix1-meta-task-emb-no-ln"
 short_keys = ["lr"]
@@ -155,9 +154,50 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 
-
 basic_config_path="configs/experiments/mixture2/meta-task-emb-no-layer-norm.json"
 job_prefix = "mix2-meta-task-emb-no-ln"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+"""
+
+
+
+
+
+
+basic_config_path="configs/experiments/mixture1/meta-task-emb-no-layer-norm-layernorm-inside-controller-pre-false-post-true.json"
+job_prefix = "mix1-meta-task-false-true"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+
+basic_config_path="configs/experiments/mixture1/meta-task-emb-no-layer-norm-layernorm-inside-controller-pre-true-post-false.json"
+job_prefix = "mix1-meta-task-true-false"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+
+basic_config_path="configs/experiments/mixture1/meta-task-emb-no-layer-norm-layernorm-inside-controller-pre-true-post-true.json"
+job_prefix = "mix1-meta-task-true-true"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+
+basic_config_path="configs/experiments/mixture2/meta-task-emb-no-layer-norm-layernorm-inside-controller-pre-false-post-true.json"
+job_prefix = "mix2-meta-task-false-true"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+
+basic_config_path="configs/experiments/mixture2/meta-task-emb-no-layer-norm-layernorm-inside-controller-pre-true-post-false.json"
+job_prefix = "mix2-meta-task-true-false"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+
+basic_config_path="configs/experiments/mixture2/meta-task-emb-no-layer-norm-layernorm-inside-controller-pre-true-post-true.json"
+job_prefix = "mix2-meta-task-true-true"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)

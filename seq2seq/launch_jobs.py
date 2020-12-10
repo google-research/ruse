@@ -5,16 +5,6 @@ import itertools
 import copy
 
 
-job_string_base = '''
-#!/bin/bash
-
-#$ -S /bin/bash
-#$ -cwd
-#$ -l q_short_gpu  -l h=vgn[ehgf]* -P nlu 
-
-source activate internship
-'''
-
 def run_jobs(config_path, job_name):
   command = "/google/bin/releases/cloud-alphabetcloud-xcloud/xcloud_cli/xcloud_cli.par google/launch_xla_clean1.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(
     config_path, job_name)
@@ -49,8 +39,7 @@ def do_sweep(basic_config_path, sweep, short_keys, job_prefix, update_output=Tru
     config_path = "temp.json"
     with open(config_path, 'w') as f:
       json.dump(config, f)
-    #run_jobs(config_path, name)
-    print(config)
+    run_jobs(config_path, name)
 
 """
 basic_config_path="configs/experiments/mixture1/test.json"
@@ -239,9 +228,6 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                                         "task_embeddings/n-train-all"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
-
-
-
 basic_config_path = "configs/experiments/mixture2/meta-task-emb.json"
 job_prefix = "m2-meta-task"
 short_keys = ["lr", 'emb']
@@ -265,8 +251,6 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                                         "task_embeddings/n-train-2000",
                                                         "task_embeddings/n-train-all"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-
-
 
 
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"

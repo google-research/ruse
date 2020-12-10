@@ -4,6 +4,27 @@ import collections
 import itertools
 import copy
 
+
+job_string_base = '''
+#!/bin/bash
+
+#$ -S /bin/bash
+#$ -cwd
+#$ -l q_short_gpu  -l h=vgn[e]* -P nlu 
+
+source activate internship
+'''
+
+def run_jobs_local(config_path, name, outpath="/idiap/temp/rkarimi/task-emb"):
+    if not os.path.exists(outpath):
+       os.makedirs(outpath)
+    curr_job=job_string_base+'''python compute_task_emb.py  {0}'''.format(config_path)
+    job_name = "template.job"
+    with open(job_name, "w") as f:
+       f.write(curr_job)
+    os.system("qsub -V -N {0} -e {1}.err -o {1}.out template.job".format(name, os.path.join(outpath, name)))
+
+
 def run_jobs(config_path, job_name):
   command = "/google/bin/releases/cloud-alphabetcloud-xcloud/xcloud_cli/xcloud_cli.par google/launch_xla_clean1.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(
     config_path, job_name)
@@ -18,7 +39,7 @@ def make_name(prefix, keys, values):
     #name=name.replace('.', '')
   return name[:-1]
 
-def do_sweep(basic_config_path, sweep, short_keys, job_prefix):
+def do_sweep(basic_config_path, sweep, short_keys, job_prefix, local=False):
   with open(basic_config_path, "r") as infile:
     parent_config = json.loads(infile.read())
   values = list(sweep.values())
@@ -34,7 +55,10 @@ def do_sweep(basic_config_path, sweep, short_keys, job_prefix):
     config_path = "temp.json"
     with open(config_path, 'w') as f:
       json.dump(config, f)
-    run_jobs(config_path, name)
+    if local:
+       run_jobs_local(config_path, name)
+    else:
+       run_jobs(config_path, name)
 
 """
 basic_config_path="configs/experiments/mixture1/test.json"
@@ -196,7 +220,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
-
+"""
 # finetune.
 basic_config_path="configs/experiments/mixture1/finetune.json"
 job_prefix = "mix1-finetune"
@@ -209,3 +233,12 @@ job_prefix = "mix2-finetune"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [2e-5, 3e-3, 3e-4, 3e-5]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+"""
+
+# compute task embeddings for different test samples.
+basic_config_path = "configs/task-embedding.json"
+short_keys = ["n_train"]
+job_prefix="task-emb"
+sweep = collections.OrderedDict({'n_train': [100, 500, 1000, 2000, 3000]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, local=True)
+

@@ -356,6 +356,9 @@ class T5Trainer(Trainer):
                                 collate_fn=self.data_collator)
 
     def compute_loss(self, model, inputs):
+        for name, param in model.named_parameters():
+            if param.requires_grad:
+               print(name)
         labels = inputs.pop("labels")
         loss, _ = self._compute_loss(model, inputs, labels)
         return loss

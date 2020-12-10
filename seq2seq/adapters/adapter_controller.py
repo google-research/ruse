@@ -164,7 +164,7 @@ class MetaAdapterController(AdapterController):
     weight_down, bias_down = self.meta_down_sampler(self.task_to_embeddings[task])
     return adapter(inputs, weight_down, bias_down, weight_up, bias_up)
 
-
+  # TODO: this needs to be checked.
   def forward(self, eval_task, inputs):
     """Retrieves the adapter layer corresponding to the given
     task. It freezes the adapter layers for all the other tasks

@@ -23,7 +23,7 @@ import torch.nn.functional as F
 from transformers.activations import get_activation
 
 from .adapter_configuration import AdapterConfig, MetaAdapterConfig, ParametricMetaAdapterConfig
-from .adapter_modeling import  Adapter #MetaAdapter,
+from .adapter_modeling import Adapter
 from .adapter_utils import HyperNetUpSampler, HyperNetDownSampler
 
 class AdapterController(nn.Module):
@@ -96,9 +96,6 @@ class AdapterController(nn.Module):
     """
     return self.adapters[task]
 
-  def call_adapter(self, adapter, inputs, task):
-    return adapter(inputs)
-
   def forward(self, task, inputs):
     """Retrieves the adapter layer corresponding to the given
     task. It freezes the adapter layers for all the other tasks
@@ -115,7 +112,7 @@ class AdapterController(nn.Module):
     adapter = self.get_adapter(task)
     if self.add_layer_norm_before_adapter_inside_controller:
       inputs = self.pre_layer_norm(inputs)
-    outputs = self.call_adapter(adapter, inputs, task)
+    outputs = adapter(inputs)
     if self.add_layer_norm_after_adapter_inside_controller:
       outputs = self.post_layer_norm(outputs)
     return outputs
@@ -130,13 +127,14 @@ class MetaAdapterController(nn.Module):
 
   def __init__(self, config):
     super().__init__()
+    self.device = config.device
     self.adapters = nn.ModuleDict(dict())
     self.config = config
     self.tasks = config.tasks
+    self.task_embedding_dim = config.task_embedding_dim
     self.task_embedding_dir = config.task_embedding_dir
     self.input_dim = config.input_dim
     self.task_to_embeddings = {}
-    self.task_embedding_dim = config.task_embedding_dim
     self.set_task_embeddings(self.tasks)
     self.meta_up_sampler = HyperNetUpSampler(config)
     self.meta_down_sampler = HyperNetDownSampler(config)
@@ -144,20 +142,19 @@ class MetaAdapterController(nn.Module):
     self.add_layer_norm_before_adapter = config.add_layer_norm_before_adapter
     self.add_layer_norm_after_adapter = config.add_layer_norm_after_adapter
 
+
   def set_task_embeddings(self, tasks):
     for task in tasks:
-      # TODO: fix it.
       if self.task_embedding_dir is not None:
         task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
-        self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path)).cuda()
+        self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path)).to(self.device)
       else:
-        self.task_to_embeddings[task] = torch.Tensor(torch.randn(self.task_embedding_dim)).cuda()
+        self.task_to_embeddings[task] = torch.Tensor(torch.randn(self.task_embedding_dim)).to(self.device)
 
   def call_adapter(self, inputs, task):
-    # TODO: fix this.
-    task_emb = self.task_to_embeddings[task].cuda()  
-    weight_up, bias_up = self.meta_up_sampler(task_emb)
-    weight_down, bias_down = self.meta_down_sampler(task_emb)
+    task_embedding = self.task_to_embeddings[task]
+    weight_up, bias_up = self.meta_up_sampler(task_embedding)
+    weight_down, bias_down = self.meta_down_sampler(task_embedding)
     down = F.linear(inputs, weight=weight_down, bias=bias_down)
     middle = get_activation(self.activation_type)(down)
     output = F.linear(middle, weight=weight_up, bias=bias_up)
@@ -190,24 +187,16 @@ class MetaParamterizedAdapterController(MetaAdapterController):
 
   def __init__(self, config):
     super().__init__(config)
-    self.adapters = nn.ModuleDict(dict())
-    self.config = config
-    self.tasks = config.tasks
-    self.input_dim = config.input_dim
-    self.task_embedding_dir = config.task_embedding_dir
     self.task_to_embeddings = nn.ParameterDict(dict())
-    self.task_embedding_dim = config.task_embedding_dim
     self.set_task_embeddings(self.tasks)
-    self.meta_up_sampler = HyperNetUpSampler(config)
-    self.meta_down_sampler = HyperNetDownSampler(config)
 
   def set_task_embeddings(self, tasks):
     for task in tasks:
       if self.task_embedding_dir is not None:
         task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
-        task_seed = torch.Tensor(np.load(task_embedding_path)).cuda()
+        task_seed = torch.Tensor(np.load(task_embedding_path)).to(self.device)
       else:
-        task_seed = torch.randn(self.task_embedding_dim).cuda()
+        task_seed = torch.randn(self.task_embedding_dim).to(self.device)
       self.task_to_embeddings[task] = nn.Parameter(task_seed)
 
 

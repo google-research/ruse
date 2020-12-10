@@ -107,6 +107,7 @@ def main():
         if hasattr(adapter_args, p):
             assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"
             setattr(adapter_config, p, getattr(adapter_args, p))
+    adapter_config.device = training_args.device
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else\

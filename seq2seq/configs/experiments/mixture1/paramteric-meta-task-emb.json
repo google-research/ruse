@@ -13,7 +13,6 @@
 "overwrite_output_dir": true,
 "tasks": ["qnli", "scitail", "boolq"],
 "eval_tasks": ["qnli", "scitail", "boolq"],
-"adapters": ["qnli", "scitail", "boolq"],
 "sampling": true,
 "label_smoothing": 0.1,
 "freeze_encoder":false,

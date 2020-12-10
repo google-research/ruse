@@ -10,7 +10,7 @@ job_string_base = '''
 
 #$ -S /bin/bash
 #$ -cwd
-#$ -l q_short_gpu  -l h=vgn[e]* -P nlu 
+#$ -l q_short_gpu  -l h=vgn[ehgf]* -P nlu 
 
 source activate internship
 '''

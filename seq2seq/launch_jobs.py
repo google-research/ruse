@@ -39,9 +39,7 @@ def do_sweep(basic_config_path, sweep, short_keys, job_prefix, update_output=Tru
     config_path = "temp.json"
     with open(config_path, 'w') as f:
       json.dump(config, f)
-    print(config)
-    print("--"*100)
-    #run_jobs(config_path, name)
+    run_jobs(config_path, name)
 
 """
 basic_config_path="configs/experiments/mixture1/test.json"

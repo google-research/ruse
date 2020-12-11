@@ -146,14 +146,21 @@ class MetaAdapterController(nn.Module):
     if self.add_layer_norm_before_adapter:
       self.pre_layer_norm = nn.LayerNorm(self.input_dim)
 
+  def load_or_init_task_embedding(self, task):
+      if self.task_embedding_dir is not None:
+        task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
+        return torch.Tensor(np.load(task_embedding_path)).to(self.device)
+      else:
+        return torch.Tensor(torch.randn(self.task_embedding_dim)).to(self.device)
 
   def set_task_embeddings(self, tasks):
     for task in tasks:
-      if self.task_embedding_dir is not None:
-        task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
-        self.task_to_embeddings[task] = torch.Tensor(np.load(task_embedding_path)).to(self.device)
-      else:
-        self.task_to_embeddings[task] = torch.Tensor(torch.randn(self.task_embedding_dim)).to(self.device)
+       self.task_to_embeddings[task] = self.load_or_init_task_embedding(task)
+  
+  def update_task_embeddings(self, tasks):
+    for task in tasks:
+      if task not in self.task_to_embeddings:
+        self.task_to_embeddings[task] = self.load_or_init_task_embedding(task)
 
   def call_adapter(self, inputs, task):
     task_embedding = self.task_to_embeddings[task]
@@ -196,13 +203,12 @@ class MetaParamterizedAdapterController(MetaAdapterController):
 
   def set_task_embeddings(self, tasks):
     for task in tasks:
-      if self.task_embedding_dir is not None:
-        task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
-        task_seed = torch.Tensor(np.load(task_embedding_path)).to(self.device)
-      else:
-        task_seed = torch.randn(self.task_embedding_dim).to(self.device)
-      self.task_to_embeddings[task] = nn.Parameter(task_seed)
+      self.task_to_embeddings[task] = nn.Parameter(self.load_or_init_task_embedding(task))
 
+  def update_task_embeddings(self, tasks):
+    for task in tasks:
+      if task not in self.task_to_embeddings:
+        self.task_to_embeddings[task] = nn.Parameter(self.load_or_init_task_embedding(task))
 
 class AutoAdapterController(nn.Module):
   """Generic adapter controller class to instantiate different adapter

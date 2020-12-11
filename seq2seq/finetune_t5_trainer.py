@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import copy
 
 import datasets
 from transformers.file_utils import is_torch_tpu_available
@@ -217,46 +218,75 @@ def main():
     eval_results = {}
     if training_args.do_eval:
         result = {}
-        # set the model here. 
-        config = T5Config.from_pretrained(
-             training_args.output_dir,# "t5-base" for the baseline.
-             cache_dir=model_args.cache_dir)
-        # TODO: using task-specific params, should be set globally during eval.
-        model = T5ForConditionalGeneration.from_pretrained(
-            training_args.output_dir, # "t5-base" for the baseline.
-            from_tf=".ckpt" in training_args.output_dir,
-            config=config,
-            cache_dir=model_args.cache_dir,
-            adapter_config=adapter_config
-        )
-        trainer.model = model.to(training_args.device)
-        model_config = model.config
         for eval_task, eval_dataset in eval_datasets.items():
-           use_task_specific_params(trainer.model, eval_task)
-           # set the eval dataset.
-           trainer.eval_dataset = eval_dataset 
-           use_task_specific_params(trainer.model, eval_task)
-           trainer.compute_metrics = compute_metrics_fn[eval_task]
- 
-           if training_args.train_adapters:
-             # If task to adapter is given set it in all adapter controller layers.
-             if adapter_args.adapter_config_name == "adapter" and data_args.adapters is not None:
-               for name, sub_module in model.named_modules():
-                  task_to_adapter = {eval_task: adapter for eval_task, adapter in
-                                     zip(data_args.eval_tasks, data_args.adapters)}
-                  if isinstance(sub_module, AdapterController):
-                       sub_module.set_task_to_adapter_map(task_to_adapter)
-             if adapter_args.adapter_config_name in ["meta-adapter", "parametric-meta-adapter"]:
-               for name, sub_module in model.named_modules():
-                 if isinstance(sub_module, MetaAdapterController):
-                   sub_module.set_task_embeddings(data_args.eval_tasks)
+            config = T5Config.from_pretrained(
+                training_args.output_dir,  # "t5-base" for the baseline.
+                cache_dir=model_args.cache_dir)
+            model = T5ForConditionalGeneration.from_pretrained(
+                training_args.output_dir,  # "t5-base" for the baseline.
+                from_tf=".ckpt" in training_args.output_dir,
+                config=config,
+                cache_dir=model_args.cache_dir,
+                adapter_config=adapter_config
+            )
+            if training_args.train_adapters:
+                if adapter_args.adapter_config_name == "adapter" and data_args.adapters is not None:
+                    for name, sub_module in model.named_modules():
+                        task_to_adapter = {eval_task: adapter for eval_task, adapter in
+                                           zip(data_args.eval_tasks, data_args.adapters)}
+                        if isinstance(sub_module, AdapterController):
+                            sub_module.set_task_to_adapter_map(task_to_adapter)
+                if adapter_args.adapter_config_name in ["meta-adapter", "parametric-meta-adapter"]:
+                    for name, sub_module in model.named_modules():
+                        if isinstance(sub_module, MetaAdapterController):
+                            sub_module.update_task_embeddings([eval_task]) #data_args.eval_tasks)
+                # TODO: here we need to check if this exsits we do not redo the task-embeddings.
 
-	         # call the eval here
-           task_metric = trainer.evaluate()
-           tasks_metric = {eval_task+"_"+k: v for k, v in task_metric.items()}
-           result.update(tasks_metric)
-           reset_config(trainer.model, model_config)
+            model_config = model.config
+            if training_args.do_finetune:
+                train_dataset = dataset_class.get(eval_task).get_dataset(
+                    split="train", n_obs=data_args.n_finetune,
+                    add_prefix=False if training_args.train_adapters else True)
+                dataset_sizes = [len(train_dataset)]
+                compute_metrics_fn = (
+                    build_compute_metrics_fn(data_args.eval_tasks, tokenizer)
+                    if training_args.predict_with_generate else None
+                )
+                eval_training_args = copy.deepcopy(training_args)
+                eval_training_args.output_dir = os.path.join(training_args.output_dir, eval_task)
+                eval_data_args = copy.deepcopy(data_args)
+                eval_data_args.tasks = [eval_task]
+                eval_data_args.eval_tasks = [eval_task]
+                trainer = T5Trainer(
+                    model=model,
+                    config=config,
+                    args=eval_training_args,
+                    train_dataset=train_dataset,
+                    eval_dataset=eval_dataset,
+                    data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores),
+                    compute_metrics=compute_metrics_fn[eval_task],
+                    data_args=eval_data_args,
+                    dataset_sizes=dataset_sizes
+                )
+                # TODO: in case of multiple gpus would not work.
+                trainer.train(
+                    model_path=training_args.output_dir if os.path.isdir(training_args.output_dir) else None
+                )
+                trainer.save_model()
+                if trainer.is_world_process_zero():
+                    trainer.state.save_to_json(os.path.join(eval_training_args.output_dir, "trainer_state.json"))
+                    tokenizer.save_pretrained(eval_training_args.output_dir)
+            else:
+                trainer.model = model.to(training_args.device)
+                trainer.eval_dataset = eval_dataset
+                trainer.compute_metrics = compute_metrics_fn[eval_task]
 
+            use_task_specific_params(trainer.model, eval_task)
+
+            task_metric = trainer.evaluate()
+            tasks_metric = {eval_task+"_"+k: v for k, v in task_metric.items()}
+            result.update(tasks_metric)
+            reset_config(trainer.model, model_config)
 
         #logger.info(eval_datasets)
         logger.info("*** Evaluate ***")

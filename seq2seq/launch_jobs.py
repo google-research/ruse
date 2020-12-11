@@ -39,7 +39,9 @@ def do_sweep(basic_config_path, sweep, short_keys, job_prefix, update_output=Tru
     config_path = "temp.json"
     with open(config_path, 'w') as f:
       json.dump(config, f)
-    run_jobs(config_path, name)
+    print(config)
+    print("--"*100)
+    #run_jobs(config_path, name)
 
 """
 basic_config_path="configs/experiments/mixture1/test.json"
@@ -217,36 +219,6 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
 
-
-###########
-basic_config_path = "configs/experiments/mixture2/paramteric-meta-task-emb.json"
-job_prefix = "m2-pmeta-task-updd"
-short_keys = ["lr", 'emb']
-sweep = collections.OrderedDict({'learning_rate': [ 3e-1],
-                                 'task_embedding_dir': [
-                                                        "task_embeddings/n-train-2000",
-                                                        "task_embeddings/n-train-all"]})
-do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-
-basic_config_path = "configs/experiments/mixture2/paramteric-meta-task-emb.json"
-job_prefix = "m2-pmeta-task-updd"
-short_keys = ["lr", 'emb']
-sweep = collections.OrderedDict({'learning_rate': [ 3e-2],
-                                 'task_embedding_dir': [
-                                                        "task_embeddings/n-train-2000",
-                                                        "task_embeddings/n-train-100"]})
-do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-
-
-basic_config_path = "configs/experiments/mixture2/paramteric-meta-task-emb.json"
-job_prefix = "m2-pmeta-task-updd"
-short_keys = ["lr", 'emb']
-sweep = collections.OrderedDict({'learning_rate': [ 3e-4],
-                                 'task_embedding_dir': [
-                                                        "task_embeddings/n-train-all"]})
-do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-###########
-
 """
 basic_config_path = "configs/experiments/mixture2/paramteric-meta-task-emb.json"
 job_prefix = "m2-pmeta-task-updd"
@@ -293,3 +265,17 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                                         "task_embeddings/n-train-all"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
+
+# evaluation in one of our models with different fine-tuning samples, only task-embedding not freezed.
+basic_config_path = "configs/experiments/mixture1/paramteric-meta-task-emb-eval-adapter.json"
+job_prefix = "pmeta-eval-adapter"
+short_keys = ["n-finetune"]
+sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+
+
+basic_config_path = "configs/experiments/mixture1/paramteric-meta-task-emb-eval-only-task.json"
+job_prefix = "pmeta-eval-task-emb"
+short_keys = ["n-finetune"]
+sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)

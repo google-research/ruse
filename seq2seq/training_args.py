@@ -170,6 +170,9 @@ class DataTrainingArguments:
     default=True,
     metadata={"help": "If only pad tokens should be ignored. This assumes that `config.pad_token_id` is defined."},
   )
+  n_finetune: Optional[int] = field(default=-1, metadata={"help": "# train examples from the evaluation set used for"
+                                                                  "few shot transfer results. -1 means use all."})
+  
 
 @dataclass
 class AdapterTrainingArguments:

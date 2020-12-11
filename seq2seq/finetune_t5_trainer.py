@@ -217,6 +217,14 @@ def main():
     # Evaluation
     eval_results = {}
     if training_args.do_eval:
+        """ 
+        for eval_task, eval_dataset in self.eval_dataset.items():
+           # set the eval dataset.
+           trainer.eval_dataset = eval_dataset 
+           use_task_specific_params(self.model, eval_task)
+        """    
+ 
+
         config = T5Config.from_pretrained(
         training_args.output_dir,# "t5-base" for the baseline.
         cache_dir=model_args.cache_dir)

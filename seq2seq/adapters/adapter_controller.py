@@ -134,7 +134,6 @@ class MetaAdapterController(nn.Module):
     self.task_embedding_dim = config.task_embedding_dim
     self.task_embedding_dir = config.task_embedding_dir
     self.input_dim = config.input_dim
-    self.task_to_embeddings = {}
     self.set_task_embeddings(self.tasks)
     self.meta_up_sampler = HyperNetUpSampler(config)
     self.meta_down_sampler = HyperNetDownSampler(config)
@@ -153,14 +152,17 @@ class MetaAdapterController(nn.Module):
       else:
         return torch.Tensor(torch.randn(self.task_embedding_dim)).to(self.device)
 
-  def set_task_embeddings(self, tasks):
+  def set_task_embeddings(self, tasks, parametric=False):
+    self.task_to_embeddings = {} if not parametric else nn.ParameterDict(dict())
     for task in tasks:
-       self.task_to_embeddings[task] = self.load_or_init_task_embedding(task)
-  
-  def update_task_embeddings(self, tasks):
+      task_embedding = self.load_or_init_task_embedding(task)
+      self.task_to_embeddings[task] = task_embedding if not parametric else nn.Parameter(task_embedding)
+
+  def update_task_embeddings(self, tasks, parametric=False):
     for task in tasks:
       if task not in self.task_to_embeddings:
-        self.task_to_embeddings[task] = self.load_or_init_task_embedding(task)
+        task_embedding = self.load_or_init_task_embedding(task)
+        self.task_to_embeddings[task] = task_embedding if not parametric else nn.Parameter(task_embedding)
 
   def call_adapter(self, inputs, task):
     task_embedding = self.task_to_embeddings[task]
@@ -198,14 +200,14 @@ class MetaParamterizedAdapterController(MetaAdapterController):
 
   def __init__(self, config):
     super().__init__(config)
-    self.task_to_embeddings = nn.ParameterDict(dict())
     self.set_task_embeddings(self.tasks)
 
-  def set_task_embeddings(self, tasks):
+  def set_task_embeddings(self, tasks, parametric=True):
+    self.task_to_embeddings = nn.ParameterDict(dict())
     for task in tasks:
       self.task_to_embeddings[task] = nn.Parameter(self.load_or_init_task_embedding(task))
 
-  def update_task_embeddings(self, tasks):
+  def update_task_embeddings(self, tasks, parametric=True):
     for task in tasks:
       if task not in self.task_to_embeddings:
         self.task_to_embeddings[task] = nn.Parameter(self.load_or_init_task_embedding(task))

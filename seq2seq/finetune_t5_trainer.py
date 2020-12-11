@@ -39,6 +39,38 @@ def shard_data(datasets, num_replicas, rank):
         datasets[i] = sharded_dataset
     return datasets
 
+
+def freezing_params(model, training_args, model_args):
+    if training_args.train_adapters:
+        # Sets the last layer of decoder to be trained.
+        freeze_params(model)
+        for name, sub_module in model.named_modules():
+            if isinstance(sub_module, (MetaAdapterController, MetaParamterizedAdapterController)):
+                for param_name, param in sub_module.named_parameters():
+                    param.requires_grad = True
+    elif model_args.freeze_model_but_lm_head:
+        freeze_params(model)
+        for param in model.lm_head.parameters():
+            param.requires_grad = True
+    else:
+        if model_args.freeze_embeds:
+            freeze_embeds(model)
+        if model_args.freeze_encoder:
+            freeze_params(model.get_encoder())
+            assert_all_frozen(model.get_encoder())
+    if model_args.unfreeze_lm_head:
+        for param in model.lm_head.parameters():
+            param.requires_grad = True
+
+    # TODO: only works for parametric-meta-adapter.
+    if model_args.freeze_model_but_task_embeddings:
+        freeze_params(model)
+        for name, sub_module in model.named_modules():
+            if isinstance(sub_module, MetaAdapterController):
+                task_embedding_dict = sub_module.task_to_embeddings
+                for param in task_embedding_dict.parameters():
+                    param.requires_grad = True
+
 def main():
     # See all possible arguments in src/transformers/training_args.py or by passing
     # the --help flag to this script. We now keep distinct sets of args, for a cleaner
@@ -130,27 +162,8 @@ def main():
     if data_args.eval_beams is None:
         data_args.eval_beams = model.config.num_beams
 
-    if training_args.train_adapters:
-        # Sets the last layer of decoder to be trained.
-        freeze_params(model)
-        for name, sub_module in model.named_modules():
-           if isinstance(sub_module, (MetaAdapterController, MetaParamterizedAdapterController)):
-              for param_name, param in sub_module.named_parameters():
-                 param.requires_grad = True
-    elif model_args.freeze_model_but_lm_head:
-        freeze_params(model)
-        for param in model.lm_head.parameters():
-            param.requires_grad = True
-    else:
-        if model_args.freeze_embeds:
-            freeze_embeds(model)
-        if model_args.freeze_encoder:
-            freeze_params(model.get_encoder())
-            assert_all_frozen(model.get_encoder())
-
-    if model_args.unfreeze_lm_head:
-        for param in model.lm_head.parameters():
-          param.requires_grad = True
+    # freezing the parameters.
+    freezing_params(model, training_args, model_args)
 
     dataset_class = AutoTask
     if training_args.do_train:
@@ -239,8 +252,8 @@ def main():
                 if adapter_args.adapter_config_name in ["meta-adapter", "parametric-meta-adapter"]:
                     for name, sub_module in model.named_modules():
                         if isinstance(sub_module, MetaAdapterController):
-                            sub_module.update_task_embeddings([eval_task]) #data_args.eval_tasks)
-                # TODO: here we need to check if this exsits we do not redo the task-embeddings.
+                            sub_module.update_task_embeddings([eval_task], parametric=training_args.parametric_task_embedding)
+                            # TODO: needs to be a parameteric for meta-adapter too.
 
             model_config = model.config
             if training_args.do_finetune:
@@ -257,6 +270,10 @@ def main():
                 eval_data_args = copy.deepcopy(data_args)
                 eval_data_args.tasks = [eval_task]
                 eval_data_args.eval_tasks = [eval_task]
+
+                # freezing the parameters.
+                freezing_params(model, eval_training_args, model_args)
+                
                 trainer = T5Trainer(
                     model=model,
                     config=config,
@@ -268,7 +285,6 @@ def main():
                     data_args=eval_data_args,
                     dataset_sizes=dataset_sizes
                 )
-                # TODO: in case of multiple gpus would not work.
                 trainer.train(
                     model_path=training_args.output_dir if os.path.isdir(training_args.output_dir) else None
                 )
@@ -282,16 +298,14 @@ def main():
                 trainer.compute_metrics = compute_metrics_fn[eval_task]
 
             use_task_specific_params(trainer.model, eval_task)
-
             task_metric = trainer.evaluate()
             tasks_metric = {eval_task+"_"+k: v for k, v in task_metric.items()}
+            # TODO: should it be done in word_process_zero?
             result.update(tasks_metric)
             reset_config(trainer.model, model_config)
 
         #logger.info(eval_datasets)
         logger.info("*** Evaluate ***")
-
-        #result = trainer.evaluate()
         if trainer.is_world_process_zero():
             logger.info("***** Eval results *****")
             for key, value in result.items():

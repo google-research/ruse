@@ -91,8 +91,9 @@ class Seq2SeqTrainingArguments(TrainingArguments):
                                                         "value for sampling across the multiple datasets."})
   train_adapters: Optional[bool] = field(default=False, metadata={"help":
                                                           "Train an adapter instead of the full model."})
-  do_finetune: bool = field(default=False, metadata={"help": "Whether to do further finetuning on the evaluation"
-                                                             "dataset training set before final evaluation."})
+  do_finetune: bool = field(default=False, metadata={"help": "Whether to do further finetuning on the evaluation dataset training set before final evaluation."})
+  parametric_task_embedding: bool = field(default=False,
+                                                    metadata={"help": "If set, transform the task-embedding to a parameter in case of meta-adapter."})
 
 @dataclass
 class ModelArguments:
@@ -117,6 +118,8 @@ class ModelArguments:
   freeze_model_but_lm_head: bool = field(default=False, metadata={"help": "Whether to freeze the"
       "whole model and only keep the language model head as the training parameter."})
   unfreeze_lm_head: bool = field(default=False, metadata={"help": "Whether  to unfreeze the lm_head."})
+  freeze_model_but_task_embeddings: bool = field(default=False, metadata={"help": "freezes the whole model but task-embedding."})
+
 
 @dataclass
 class DataTrainingArguments:

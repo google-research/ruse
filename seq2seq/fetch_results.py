@@ -25,7 +25,7 @@ def make_name(prefix, keys, values):
     #name=name.replace('.', '')
   return name[:-1]
 
-def retrieve_results(output_dir, sweep, short_keys, job_prefix):
+def retrieve_results(output_dir, sweep, short_keys, job_prefix, order=[]):
   df = pd.DataFrame()
   keys = list(sweep.keys())
   values = list(sweep.values())
@@ -45,9 +45,15 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix):
     
 
   cols = list(df.columns.values)
-  cols.remove(keys) #'learning_rate')
-  cols = keys + cols #['learning_rate'] + cols
+  for key in keys:
+     cols.remove(key)
+  if len(order) != 0 :
+     cols = order + cols
+  else:
+     cols = keys + cols
   df = df[cols]
+  if len(order) != 0:
+     df = df.sort_values(by=order)
   #print(df.to_markdown())
   print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
 
@@ -224,7 +230,17 @@ retrieve_results(output_dir, sweep, short_keys, job_prefix)
 
 
 output_dir="outputs/mixture2/parametric-meta-adapter/task-emb/"
-job_prefix="m2-pmeta-task-updd"
+job_prefix = "m2-pmeta-task" #-updd"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100",
+                                                        "task_embeddings/n-train-1000",
+                                                        "task_embeddings/n-train-2000",
+                                                        "task_embeddings/n-train-all"]})
+order = ["task_embedding_dir", "learning_rate"]
+retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
+
+output_dir="outputs/mixture2/parametric-meta-adapter/task-emb/"
 job_prefix = "m2-pmeta-task-updd"
 short_keys = ["lr", 'emb']
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
@@ -232,4 +248,29 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                                         "task_embeddings/n-train-1000",
                                                         "task_embeddings/n-train-2000",
                                                         "task_embeddings/n-train-all"]})
-retrieve_results(output_dir, sweep, short_keys, job_prefix)
+order = ["task_embedding_dir", "learning_rate"]
+retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
+
+
+output_dir="outputs/mixture1/parametric-meta-adapter/task-emb/"
+job_prefix = "m1-pmeta-task" #-updd"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100",
+                                                        "task_embeddings/n-train-1000",
+                                                        "task_embeddings/n-train-2000",
+                                                        "task_embeddings/n-train-all"]})
+order = ["task_embedding_dir", "learning_rate"]
+retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
+
+
+output_dir="outputs/mixture1/parametric-meta-adapter/task-emb/"
+job_prefix = "m1-pmeta-task-updd"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100",
+                                                        "task_embeddings/n-train-1000",
+                                                        "task_embeddings/n-train-2000",
+                                                        "task_embeddings/n-train-all"]})
+order = ["task_embedding_dir", "learning_rate"]
+retrieve_results(output_dir, sweep, short_keys, job_prefix, order)

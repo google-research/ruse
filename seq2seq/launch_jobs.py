@@ -284,7 +284,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 # reorder task-embeddings.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
-job_prefix = "m1-meta-task-no-relu-reorder"
+job_prefix = "m1-meta-task-norel-re"
 short_keys = ["lr", 'emb']
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  'task_embedding_dir': ["task_embeddings_reordered/n-train-100"]})
@@ -292,7 +292,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 
 basic_config_path = "configs/experiments/mixture2/meta-task-emb.json"
-job_prefix = "m2-meta-task-no-relu-reorder"
+job_prefix = "m2-meta-task-norel-re"
 short_keys = ["lr", 'emb']
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  'task_embedding_dir': ["task_embeddings_reordered/n-train-100"]})

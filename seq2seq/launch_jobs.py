@@ -266,6 +266,26 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
+
+
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "m1-meta-task-no-relu"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+
+
+basic_config_path = "configs/experiments/mixture2/meta-task-emb.json"
+job_prefix = "m2-meta-task-no-relu"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+
+
+"""
+# TODO: to be completed
 # evaluation in one of our models with different fine-tuning samples, only task-embedding not freezed.
 basic_config_path = "configs/experiments/mixture1/paramteric-meta-task-emb-eval-adapter.json"
 job_prefix = "pmeta-eval-adapter"
@@ -279,3 +299,4 @@ job_prefix = "pmeta-eval-task-emb"
 short_keys = ["n-finetune"]
 sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+"""

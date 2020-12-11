@@ -56,6 +56,15 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, order=[]):
   if len(order) != 0:
      df = df.sort_values(by=order)
   #print(df.to_markdown())
+
+
+
+  def myfunc(x):
+    splits = x.split("/")
+    return splits[-1].split("-")[-1]
+  df['task_embedding_dir'] = df.apply(lambda x: myfunc(x.model), axis=1)
+
+
   print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
   print("="*100)
 

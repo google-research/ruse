@@ -62,11 +62,10 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, order=[]):
   def myfunc(x):
     splits = x.split("/")
     return splits[-1].split("-")[-1]
-  df['task_embedding_dir'] = df.apply(lambda x: myfunc(x.model), axis=1)
+  df['task_embedding_dir'] = df.apply(lambda x: myfunc(x.task_embedding_dir), axis=1)
 
 
   print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
-  print("="*100)
 
 """
 output_dir= "outputs/mixture1/meta-adapter/rand/"
@@ -241,7 +240,6 @@ retrieve_results(output_dir, sweep, short_keys, job_prefix)
 
 output_dir="outputs/mixture2/parametric-meta-adapter/task-emb/"
 job_prefix = "m2-pmeta-task" #-updd"
-print(job_prefix)
 short_keys = ["lr", 'emb']
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  'task_embedding_dir': ["task_embeddings/n-train-100",

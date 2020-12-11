@@ -335,3 +335,45 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                                         "task_embeddings/n-train-all"]})
 order = ["task_embedding_dir", "learning_rate"]
 retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
+
+
+
+
+
+
+
+
+
+
+
+basic_config_path = "outputs/mixture1/meta-adapter/task-emb/"
+job_prefix = "m1-meta-task-no-relu"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100"]})
+order = ["task_embedding_dir", "learning_rate"]
+retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
+
+
+basic_config_path = "outputs/mixture2/meta-adapter/task-emb/"
+job_prefix = "m2-meta-task-no-relu"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100"]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
+
+# reorder task-embeddings.
+basic_config_path = "outputs/mixture1/meta-adapter/task-emb/"
+job_prefix = "m1-meta-task-norel-re"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings_reordered/n-train-100"]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
+
+
+basic_config_path = "outputs/mixture2/meta-adapter/task-emb/"
+job_prefix = "m2-meta-task-norel-re"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings_reordered/n-train-100"]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix, order)

@@ -266,7 +266,9 @@ def main():
                     if training_args.predict_with_generate else None
                 )
                 eval_training_args = copy.deepcopy(training_args)
-                eval_training_args.output_dir = os.path.join(training_args.output_dir, eval_task)
+                # sets the output_dir.
+                eval_output_dir = training_args.eval_output_dir if training_args.eval_output_dir is not None else training_args.output_dir
+                eval_training_args.output_dir = os.path.join(eval_output_dir, eval_task)
                 eval_data_args = copy.deepcopy(data_args)
                 eval_data_args.tasks = [eval_task]
                 eval_data_args.eval_tasks = [eval_task]
@@ -310,7 +312,7 @@ def main():
             logger.info("***** Eval results *****")
             for key, value in result.items():
                 logger.info("  %s = %s", key, value)
-            save_json(result, os.path.join(training_args.output_dir, "eval_results.json"))
+            save_json(result, os.path.join(training_args.output_dir, "eval_results.json")) # training_args.output_dir
             eval_results.update(result)
 
             # Saves the results to a gs-bucket.

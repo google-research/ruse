@@ -94,6 +94,10 @@ class Seq2SeqTrainingArguments(TrainingArguments):
   do_finetune: bool = field(default=False, metadata={"help": "Whether to do further finetuning on the evaluation dataset training set before final evaluation."})
   parametric_task_embedding: bool = field(default=False,
                                                     metadata={"help": "If set, transform the task-embedding to a parameter in case of meta-adapter."})
+  eval_output_dir: Optional[str] = field(default=None,
+        metadata={"help": "The output directory where the evaluation of the model and checkpoints during "
+                          "evaluation will be written. Would use the original output_dir if not specified."}
+  )
 
 @dataclass
 class ModelArguments:

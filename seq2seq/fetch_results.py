@@ -5,11 +5,24 @@ import json
 import pandas as pd
 from tabulate import tabulate
 
+"""
 def make_name(prefix, keys, values):
   name = prefix+"-"
   for key, value in zip(keys, values):
     value = '{0:.0e}'.format(value)
     name = name+f"{key}-{value}-"
+  return name[:-1]
+"""
+def make_name(prefix, keys, values):
+  name = prefix+"-"
+  for key, value in zip(keys, values):
+    if isinstance(value, float):
+       value = '{0:.0e}'.format(value)
+    elif isinstance(value, str):
+       value = value.split("/")[-1]
+    #value = '{:.0e}'.format(value)
+    name = name+f"{key}-{value}-"
+    #name=name.replace('.', '')
   return name[:-1]
 
 def retrieve_results(output_dir, sweep, short_keys, job_prefix):
@@ -33,7 +46,6 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix):
   df = df[cols]
   #print(df.to_markdown())
   print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
-  #print(output.head())
 
 
 """
@@ -189,7 +201,6 @@ job_prefix = "mix2-meta-task-true-false"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]})
 retrieve_results(output_dir, sweep, short_keys, job_prefix)
-"""
 
 print("mix1-finetune")
 output_dir = "outputs/mixture1/finetune/"
@@ -203,4 +214,18 @@ output_dir = "outputs/mixture2/finetune/"
 job_prefix = "mix2-finetune"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [2e-5, 3e-3, 3e-4, 3e-5]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix)
+"""
+
+
+
+output_dir="outputs/mixture2/parametric-meta-adapter/task-emb/"
+job_prefix="m2-pmeta-task-updd"
+job_prefix = "m2-pmeta-task-updd"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100",
+                                                        "task_embeddings/n-train-1000",
+                                                        "task_embeddings/n-train-2000",
+                                                        "task_embeddings/n-train-all"]})
 retrieve_results(output_dir, sweep, short_keys, job_prefix)

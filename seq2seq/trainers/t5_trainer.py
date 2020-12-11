@@ -29,7 +29,7 @@ from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
 
 from transformers.trainer_pt_utils import reissue_pt_warnings
 
-from seq2seq.utils import use_task_specific_params, reset_config
+
 
 logger = logging.get_logger(__name__)
 
@@ -52,8 +52,7 @@ from seq2seq.utils import upload
 
 
 class T5Trainer(Trainer):
-    def __init__(self, config=None, data_args=None, dataset_sizes=None, task_to_compute_metrics=None,
-                 *args, **kwargs):
+    def __init__(self, config=None, data_args=None, dataset_sizes=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if config is None:
@@ -64,11 +63,9 @@ class T5Trainer(Trainer):
         else:
             self.config = config
 
-        self.task_to_compute_metrics = task_to_compute_metrics
         self.dataset_sizes = dataset_sizes
         self.data_args = data_args
         self.vocab_size = self.config.tgt_vocab_size if isinstance(self.config, FSMTConfig) else self.config.vocab_size
-        self.gcs_bucket=self.args.gcs_bucket
 
         if self.args.label_smoothing != 0 or (self.data_args is not None and self.data_args.ignore_pad_token_for_loss):
             assert (
@@ -159,82 +156,6 @@ class T5Trainer(Trainer):
             )
     """
 
-
-    def get_eval_dataloader(self, eval_dataset: Dataset, task:str) -> DataLoader:
-        """
-        Returns the evaluation :class:`~torch.utils.data.DataLoader`.
-
-        Subclass and override this method if you want to inject some custom behavior.
-
-        Args:
-            eval_dataset (:obj:`torch.utils.data.dataset.Dataset`, `optional`):
-                If provided, will override :obj:`self.eval_dataset`. If it is
-                an :obj:`datasets.Dataset`, columns not accepted by the ``model.forward()``
-                method are automatically removed. It must implement :obj:`__len__`.
-        """
-        if eval_dataset is None:
-            raise ValueError("Trainer: evaluation requires an eval_dataset.")
-        elif eval_dataset is not None and not isinstance(eval_dataset, collections.abc.Sized):
-            raise ValueError("eval_dataset must implement __len__")
-        eval_sampler = self._get_eval_sampler(eval_dataset)
-
-        return DataLoader(
-            dataset=eval_dataset,
-            sampler=eval_sampler,
-            batch_size=self.args.eval_batch_size,
-            collate_fn=self.data_collator,
-            drop_last=self.args.dataloader_drop_last,
-            num_workers=self.args.dataloader_num_workers,
-        )
-
-    # : Optional[Dataset] = None
-    def evaluate(self) -> Dict[str, float]: #eval_datasets, task_to_compute_metrics) -> Dict[str, float]:
-        """
-        Run evaluation and returns metrics.
-
-        The calling script will be responsible for providing a method to compute metrics, as they are task-dependent
-        (pass it to the init :obj:`compute_metrics` argument).
-
-        You can also subclass and override this method to inject custom behavior.
-
-        Args:
-            eval_dataset (:obj:`Dataset`, `optional`):
-                Pass a dataset if you wish to override :obj:`self.eval_dataset`. If it is an :obj:`datasets.Dataset`,
-                columns not accepted by the ``model.forward()`` method are automatically removed. It must implement the
-                :obj:`__len__` method.
-
-        Returns:
-            A dictionary containing the evaluation loss and the potential metrics computed from the predictions.
-        """
-
-        # TODO: make this condition for all.
-        #if eval_dataset is not None and not isinstance(eval_dataset, collections.abc.Sized):
-        #    raise ValueError("eval_dataset must implement __len__")
-        tasks_metrics = {}
-        model_config = self.model.config
-        for eval_task, eval_dataset in self.eval_dataset.items():
-            use_task_specific_params(self.model, eval_task)
-            eval_dataloader = self.get_eval_dataloader(eval_dataset, eval_task)
-            self.compute_metrics = self.task_to_compute_metrics[eval_task]
-            output = self.prediction_loop(
-                eval_dataloader,
-                description="Evaluation",
-                # No point gathering the predictions if there are no metrics, otherwise we defer to
-                # self.args.prediction_loss_only
-                prediction_loss_only=True if self.compute_metrics is None else None, # self.compute_metrics[eval_task]
-            )
-            # Prefix outputs with the tasks.
-            tasks_metric = {eval_task+"_"+k: v for k, v in output.metrics.items()}
-            tasks_metrics.update(tasks_metric)
-            self.log(tasks_metric)
-
-            if self.args.tpu_metrics_debug or self.args.debug:
-                # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
-                xm.master_print(met.metrics_report())
-            reset_config(self.model, model_config)
-        # TODO: this is not doing anything.
-        self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, output.metrics)
-        return tasks_metrics
 
     def _compute_loss(self, model, inputs, labels):
         if self.args.label_smoothing == 0:

@@ -23,7 +23,7 @@ from seq2seq.tasks import AutoTask, TaskCollator
 from seq2seq.metrics import build_compute_metrics_fn
 from seq2seq.models import T5ForConditionalGeneration
 from seq2seq.adapters import AdapterController, MetaAdapterController, MetaParamterizedAdapterController, AutoAdapterConfig
-from seq2seq.utils import upload
+from seq2seq.utils import upload, use_task_specific_params, reset_config
 
 logger = logging.getLogger(__name__)
 
@@ -198,8 +198,7 @@ def main():
         data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores),
         compute_metrics=compute_metrics_fn,
         data_args=data_args,
-        dataset_sizes=dataset_sizes if training_args.do_train else None,
-        task_to_compute_metrics = compute_metrics_fn
+        dataset_sizes=dataset_sizes if training_args.do_train else None
     )
 
     # Training
@@ -217,17 +216,11 @@ def main():
     # Evaluation
     eval_results = {}
     if training_args.do_eval:
-        """ 
-        for eval_task, eval_dataset in self.eval_dataset.items():
-           # set the eval dataset.
-           trainer.eval_dataset = eval_dataset 
-           use_task_specific_params(self.model, eval_task)
-        """    
- 
-
+        result = {}
+        # set the model here. 
         config = T5Config.from_pretrained(
-        training_args.output_dir,# "t5-base" for the baseline.
-        cache_dir=model_args.cache_dir)
+             training_args.output_dir,# "t5-base" for the baseline.
+             cache_dir=model_args.cache_dir)
         # TODO: using task-specific params, should be set globally during eval.
         model = T5ForConditionalGeneration.from_pretrained(
             training_args.output_dir, # "t5-base" for the baseline.
@@ -237,24 +230,38 @@ def main():
             adapter_config=adapter_config
         )
         trainer.model = model.to(training_args.device)
-        if training_args.train_adapters:
-            # If task to adapter is given set it in all adapter controller layers.
-            if adapter_args.adapter_config_name == "adapter" and data_args.adapters is not None:
-                for name, sub_module in model.named_modules():
+        model_config = model.config
+        for eval_task, eval_dataset in eval_datasets.items():
+           use_task_specific_params(trainer.model, eval_task)
+           # set the eval dataset.
+           trainer.eval_dataset = eval_dataset 
+           use_task_specific_params(trainer.model, eval_task)
+           trainer.compute_metrics = compute_metrics_fn[eval_task]
+ 
+           if training_args.train_adapters:
+             # If task to adapter is given set it in all adapter controller layers.
+             if adapter_args.adapter_config_name == "adapter" and data_args.adapters is not None:
+               for name, sub_module in model.named_modules():
                   task_to_adapter = {eval_task: adapter for eval_task, adapter in
                                      zip(data_args.eval_tasks, data_args.adapters)}
                   if isinstance(sub_module, AdapterController):
                        sub_module.set_task_to_adapter_map(task_to_adapter)
+             if adapter_args.adapter_config_name in ["meta-adapter", "parametric-meta-adapter"]:
+               for name, sub_module in model.named_modules():
+                 if isinstance(sub_module, MetaAdapterController):
+                   sub_module.set_task_embeddings(data_args.eval_tasks)
 
-            if adapter_args.adapter_config_name in ["meta-adapter", "parametric-meta-adapter"]:
-              for name, sub_module in model.named_modules():
-                if isinstance(sub_module, MetaAdapterController):
-                  sub_module.set_task_embeddings(data_args.eval_tasks)
+	         # call the eval here
+           task_metric = trainer.evaluate()
+           tasks_metric = {eval_task+"_"+k: v for k, v in task_metric.items()}
+           result.update(tasks_metric)
+           reset_config(trainer.model, model_config)
 
-        logger.info(eval_datasets)
+
+        #logger.info(eval_datasets)
         logger.info("*** Evaluate ***")
 
-        result = trainer.evaluate()
+        #result = trainer.evaluate()
         if trainer.is_world_process_zero():
             logger.info("***** Eval results *****")
             for key, value in result.items():

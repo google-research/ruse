@@ -45,7 +45,8 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix):
     
 
   cols = list(df.columns.values)
-  cols.remove(keys) #'learning_rate')
+  for key in keys:
+     cols.remove(key) #'learning_rate')
   cols = keys + cols #['learning_rate'] + cols
   df = df[cols]
   #print(df.to_markdown())
@@ -226,6 +227,18 @@ retrieve_results(output_dir, sweep, short_keys, job_prefix)
 output_dir="outputs/mixture2/parametric-meta-adapter/task-emb/"
 job_prefix="m2-pmeta-task-updd"
 job_prefix = "m2-pmeta-task-updd"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100",
+                                                        "task_embeddings/n-train-1000",
+                                                        "task_embeddings/n-train-2000",
+                                                        "task_embeddings/n-train-all"]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix)
+
+
+output_dir="outputs/mixture1/parametric-meta-adapter/task-emb/"
+job_prefix="m1-pmeta-task-updd"
+job_prefix = "m1-pmeta-task-updd"
 short_keys = ["lr", 'emb']
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  'task_embedding_dir': ["task_embeddings/n-train-100",

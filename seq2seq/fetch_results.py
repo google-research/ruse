@@ -32,13 +32,17 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix):
   for option in list(itertools.product(*values)):
     name = make_name(job_prefix, short_keys, option)
     experiment_output_dir = os.path.join(output_dir, name)
-    with open(os.path.join(experiment_output_dir, 'eval_results.json'), "r") as infile:
-      results = json.loads(infile.read())
-
-    # remove losses
-    results = {key: value for key, value in results.items() if "acc" in key}
-    results.update({key: value for key, value in zip(keys, option)})
-    df = df.append(results, ignore_index=True)
+    eval_path=os.path.join(experiment_output_dir, 'eval_results.json')
+    try:
+      with open(eval_path, "r") as infile:
+        results = json.loads(infile.read())
+      # remove losses
+      results = {key: value for key, value in results.items() if "acc" in key}
+      results.update({key: value for key, value in zip(keys, option)})
+      df = df.append(results, ignore_index=True)
+    except FileNotFoundError:
+      print("File not found ", eval_path)
+    
 
   cols = list(df.columns.values)
   cols.remove('learning_rate')

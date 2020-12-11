@@ -219,7 +219,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 
 basic_config_path = "configs/experiments/mixture2/paramteric-meta-task-emb.json"
-job_prefix = "m2-pmeta-task-upd"
+job_prefix = "m2-pmeta-task-updd"
 short_keys = ["lr", 'emb']
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  'task_embedding_dir': ["task_embeddings/n-train-100",
@@ -228,9 +228,8 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                                         "task_embeddings/n-train-all"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
-"""
 basic_config_path = "configs/experiments/mixture2/meta-task-emb.json"
-job_prefix = "m2-meta-task"
+job_prefix = "m2-meta-task-updd"
 short_keys = ["lr", 'emb']
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  'task_embedding_dir': ["task_embeddings/n-train-100",
@@ -244,7 +243,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 
 basic_config_path = "configs/experiments/mixture1/paramteric-meta-task-emb.json"
-job_prefix = "m1-pmeta-task"
+job_prefix = "m1-pmeta-task-updd"
 short_keys = ["lr", 'emb']
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  'task_embedding_dir': ["task_embeddings/n-train-100",
@@ -255,7 +254,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
-job_prefix = "m1-meta-task"
+job_prefix = "m1-meta-task-updd"
 short_keys = ["lr", 'emb']
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  'task_embedding_dir': ["task_embeddings/n-train-100",
@@ -263,4 +262,3 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                                         "task_embeddings/n-train-2000",
                                                         "task_embeddings/n-train-all"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-"""

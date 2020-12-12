@@ -322,7 +322,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1-ftune-adapter"
 short_keys = ["n", "lr", "e"]
-sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000, 2000, 4000],
+sweep = collections.OrderedDict({'n_finetune': [100], #, 500, 1000, 2000, 4000],
                                  'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  "num_train_epochs": [2000, 10000, 20000],
                                  "do_finetune": [True],

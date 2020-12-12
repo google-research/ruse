@@ -17,8 +17,9 @@ import torch.nn as nn
 
 from .adapter_utils import Activations, linear_layer
 
+
 class Adapter(nn.Module):
-  """Convetional Adapter layer, in which the weights of up and down sampler modules
+  """Conventional Adapter layer, in which the weights of up and down sampler modules
   are parameters and are optimized."""
 
   def __init__(self, config):

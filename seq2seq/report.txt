@@ -11,7 +11,7 @@ removed nonlinearities, and task-embeddings are now fixed
 
 #m2-meta-task-no-relu
 removed nonlinearities and task-embeddings are now fixed 
-
+# results on cola can even get better 
 |   task_embedding_dir |   learning_rate |   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
 |---------------------:|----------------:|----------------:|----------------:|-------------------------:|
 |                  100 |          0.0003 |        0.736084 |        0.768277 |                 0.906471 |

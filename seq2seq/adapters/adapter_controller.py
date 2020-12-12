@@ -19,12 +19,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from transformers.activations import get_activation
 
 from .adapter_configuration import AdapterConfig, MetaAdapterConfig, ParametricMetaAdapterConfig
 from .adapter_modeling import Adapter
 from .adapter_utils import HyperNetUpSampler, HyperNetDownSampler
+
 
 class AdapterController(nn.Module):
   """Implements Adapter controller module which controls the logics of
@@ -75,8 +75,7 @@ class AdapterController(nn.Module):
   def convert_to_list(self, tasks):
     if isinstance(tasks, list):
       return tasks
-    else:
-      return [tasks]
+    return [tasks]
 
   def enable_adapters(self, tasks):
     """
@@ -146,11 +145,11 @@ class MetaAdapterController(nn.Module):
       self.pre_layer_norm = nn.LayerNorm(self.input_dim)
 
   def load_or_init_task_embedding(self, task):
-      if self.task_embedding_dir is not None:
-        task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
-        return torch.Tensor(np.load(task_embedding_path)).to(self.device)
-      else:
-        return torch.Tensor(torch.randn(self.task_embedding_dim)).to(self.device)
+    if self.task_embedding_dir is not None:
+      task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
+      return torch.Tensor(np.load(task_embedding_path)).to(self.device)
+    else:
+      return torch.Tensor(torch.randn(self.task_embedding_dim)).to(self.device)
 
   def set_task_embeddings(self, tasks, parametric=False):
     self.task_to_embeddings = {} if not parametric else nn.ParameterDict(dict())
@@ -211,6 +210,7 @@ class MetaParamterizedAdapterController(MetaAdapterController):
     for task in tasks:
       if task not in self.task_to_embeddings:
         self.task_to_embeddings[task] = nn.Parameter(self.load_or_init_task_embedding(task))
+
 
 class AutoAdapterController(nn.Module):
   """Generic adapter controller class to instantiate different adapter

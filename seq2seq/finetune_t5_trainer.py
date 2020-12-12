@@ -60,6 +60,7 @@ def freezing_params(model, training_args, model_args):
     if model_args.freeze_encoder:
       freeze_params(model.get_encoder())
       assert_all_frozen(model.get_encoder())
+
   if model_args.unfreeze_lm_head:
     for param in model.lm_head.parameters():
       param.requires_grad = True

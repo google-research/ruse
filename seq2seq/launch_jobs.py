@@ -27,6 +27,7 @@ def make_name(prefix, keys, values):
     elif isinstance(value, str):
        value = value.split("/")[-1]
     name = name+f"{key}-{value}-"
+    name = name.lower()
   return name[:-1]
 
 

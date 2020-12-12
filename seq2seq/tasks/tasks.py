@@ -215,7 +215,8 @@ class WMT16ENFITaskDataset(AbstractTaskDataset):
     return datasets.load_dataset("wmt16", self.pair, split=split)
 
   def preprocessor(self, example):
-    return {"src_texts": "Translate English to Finnish:  {}".format(example['translation']["en"]),
+    return {"src_texts": "Translate English to Finnish:  {}".format(
+      example['translation']["en"]),
             "tgt_texts": str(example['translation']["fi"]), "task": self.task.name}
 
 
@@ -243,7 +244,8 @@ class TRECTaskDataset(AbstractTaskDataset):
     return datasets.load_dataset("trec", split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix("sentence :  {}".format(example['text']), "Trec", add_prefix),
+    return {"src_texts": self.add_prefix("sentence :  {}".format(example['text']),
+                                         "Trec", add_prefix),
             "tgt_texts": str(example['label-coarse']), "task": self.task.name}
 
 
@@ -257,7 +259,8 @@ class YelpPolarityTaskDataset(AbstractTaskDataset):
     return datasets.load_dataset("yelp_polarity", split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix("sentence :  {}".format(example['text']), "Yelp Polarity", add_prefix),
+    return {"src_texts": self.add_prefix("sentence :  {}".format(example['text']),
+                                         "Yelp Polarity", add_prefix),
             "tgt_texts": str(example['label']), "task": self.task.name}
 
 
@@ -272,7 +275,8 @@ class ScitailTaskDataset(AbstractTaskDataset):
 
   def preprocessor(self, example, add_prefix=True):
     return {
-      "src_texts": self.add_prefix("sentence1: {} sentence2: {}".format(example['sentence1'], example['sentence2']),
+      "src_texts": self.add_prefix("sentence1: {} sentence2: {}".format(example['sentence1'],
+                                    example['sentence2']),
                                    "Scitail", add_prefix),
       "tgt_texts": str(example['gold_label']), "task": self.task.name}
 
@@ -302,7 +306,8 @@ class COLATaskDataset(AbstractTaskDataset):
     return datasets.load_dataset('glue', 'cola', split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix("sentence : {}".format(example['sentence']), "COLA", add_prefix),
+    return {"src_texts": self.add_prefix("sentence : {}".format(example['sentence']),
+                                         "COLA", add_prefix),
             "tgt_texts": str(example['label']), "task": self.task.name}
 
 
@@ -315,7 +320,8 @@ class SST2TaskDataset(AbstractTaskDataset):
     return datasets.load_dataset('glue', 'sst2', split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix("sentence : {}".format(example['sentence']), "SST2", add_prefix),
+    return {"src_texts": self.add_prefix("sentence : {}".format(example['sentence']),
+                                         "SST2", add_prefix),
             "tgt_texts": str(example['label']), "task": self.task.name}
 
 
@@ -329,8 +335,8 @@ class QQPTaskDataset(AbstractTaskDataset):
 
   def preprocessor(self, example, add_prefix=True):
     return {
-      "src_texts": self.add_prefix("question1 : {} question2: {}".format(example['question1'], example['question2']),
-                                   "QQP", add_prefix),
+      "src_texts": self.add_prefix("question1 : {} question2: {}".format(
+        example['question1'], example['question2']), "QQP", add_prefix),
       "tgt_texts": str(example['label']), "task": self.task.name}
 
 
@@ -441,7 +447,7 @@ class AutoTask:
 
 
 class TaskCollator:
-  def __init__(self, tokenizer, data_args, tpu_num_cores=None, return_targets=False, task=None):
+  def __init__(self, tokenizer, data_args, tpu_num_cores=None):
     self.tokenizer = tokenizer
     self.pad_token_id = tokenizer.pad_token_id
     assert (
@@ -449,16 +455,6 @@ class TaskCollator:
     ), f"pad_token_id is not defined for ({self.tokenizer.__class__.__name__}), it must be defined."
     self.data_args = data_args
     self.tpu_num_cores = tpu_num_cores
-    ######### this is for contrastive loss.
-    # TODO: here we need to think how to define the labels for translation, ... tasks and
-    # TODO: Also how we can get it to work with multiple datasets.
-    self.return_targets = return_targets
-    if self.return_targets:
-      self.task = task
-      TaskDataset = AutoTask.get(task)
-      if TaskDataset.task.category != "classification":
-        raise NotImplementedError("We can only return the targets for a classification task.")
-      self.label_to_id = {v: i for i, v in enumerate(TaskDataset.label_list)}
 
   def __call__(self, batch) -> Dict[str, torch.Tensor]:
     # because of padding="longest" this does not work to be done in dataset part.
@@ -475,8 +471,6 @@ class TaskCollator:
       "decoder_input_ids": decoder_input_ids,
       "labels": labels,
     }
-    if self.return_targets:
-      output_batch["targets"] = batch["targets"]
     output_batch["task"] = batch["task"]
     return output_batch
 
@@ -496,8 +490,6 @@ class TaskCollator:
       padding="max_length" if self.tpu_num_cores is not None else "longest",  # TPU hack
       return_tensors="pt"
     )
-    if self.return_targets:
-      batch_encoding["targets"] = torch.tensor([self.label_to_id[x["tgt_texts"]] for x in batch])
     tasks = [x["task"] for x in batch]
     # There should be only one task per batch.
     assert (len(set(tasks)) == 1)

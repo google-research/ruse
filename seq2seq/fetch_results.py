@@ -42,7 +42,7 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, order=[]):
       results.update({key: value for key, value in zip(keys, option)})
       df = df.append(results, ignore_index=True)
     except FileNotFoundError:
-      pass #print("File not found ", eval_path)
+      print("File not found ", eval_path)
     
 
   cols = list(df.columns.values)
@@ -237,7 +237,7 @@ retrieve_results(output_dir, sweep, short_keys, job_prefix)
 """
 
 
-
+"""
 output_dir="outputs/mixture2/parametric-meta-adapter/task-emb/"
 job_prefix = "m2-pmeta-task" #-updd"
 short_keys = ["lr", 'emb']
@@ -334,4 +334,51 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                                         "task_embeddings/n-train-2000",
                                                         "task_embeddings/n-train-all"]})
 order = ["task_embedding_dir", "learning_rate"]
+retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
+"""
+
+
+
+
+
+
+
+
+
+
+output_dir = "outputs/mixture1/meta-adapter/task-emb/"
+job_prefix = "m1-meta-task-no-relu"
+#os.system("gsutil -m cp -r gs://ruse-xcloud-bucket/outputs/mixture1/meta-adapter/task-emb/"+job_prefix+"* ." )
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100"]})
+order = ["task_embedding_dir", "learning_rate"]
+retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
+
+
+
+os.system("mkdir -p outputs/mixture2/meta-adapter/task-emb/")
+job_prefix = "m2-meta-task-no-relu"
+#os.system("gsutil -m cp -r gs://ruse-xcloud-bucket/outputs/mixture2/meta-adapter/task-emb/"+job_prefix+"* outputs/mixture2/meta-adapter/task-emb/" )
+output_dir = "outputs/mixture2/meta-adapter/task-emb/"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100"]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
+
+# reorder task-embeddings.
+output_dir  = "outputs/mixture1/meta-adapter/task-emb/"
+job_prefix = "m1-meta-task-no-relu-reorder"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings_reordered/n-train-100"]})
+retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
+
+
+
+output_dir = "outputs/mixture2/meta-adapter/task-emb/"
+job_prefix = "m2-meta-task-no-relu-reorder"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings_reordered/n-train-100"]})
 retrieve_results(output_dir, sweep, short_keys, job_prefix, order)

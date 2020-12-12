@@ -41,7 +41,6 @@ def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name=
     config.update({key: value for key, value in zip(keys, option)})
     name = make_name(job_prefix, short_keys, option)
     print("### name ", name)
-    print(config)
     if output_dir_name in parent_config:
       parent_output_dir = parent_config[output_dir_name]
     else:

@@ -52,5 +52,9 @@ setting lm-head to true
 
 # train our model with lm_heads not freezed
 # finetune both our models and t5 with the proper number of steps 
+12/12/2020 22:47:37 - INFO - __main__ -     snli_eval_loss = 311.7092590332031
+12/12/2020 22:47:37 - INFO - __main__ -     snli_eval_acc = 0.7328732873287329
+12/12/2020 22:47:37 - INFO - __main__ -     snli_epoch = 800.0
+
 
 

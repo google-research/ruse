@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from transformers import TrainingArguments
 from transformers import AutoTokenizer, HfArgumentParser, set_seed
 from seq2seq.models import T5ForConditionalGeneration, T5Config
-from seq2seq.tasks import AutoTask, TaskCollator
+from seq2seq.data import AutoTask, TaskCollator
 from torch.utils.data.dataloader import DataLoader
 
 logger = logging.getLogger(__name__)

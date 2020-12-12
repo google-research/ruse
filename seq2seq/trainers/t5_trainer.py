@@ -7,7 +7,7 @@ import os
 import torch
 from torch import nn
 from torch.utils.data.dataset import Dataset
-from seq2seq.samplers import MultiTaskBatchSampler
+from seq2seq.data import MultiTaskBatchSampler
 from torch.utils.data import DistributedSampler, RandomSampler
 from transformers import PreTrainedModel, logging
 from .trainer  import Trainer

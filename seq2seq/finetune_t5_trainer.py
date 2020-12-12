@@ -278,10 +278,7 @@ def main():
         eval_data_args = copy.deepcopy(data_args)
         eval_data_args.tasks = [eval_task]
         eval_data_args.eval_tasks = [eval_task]
-
-        # freezing the parameters.
         freezing_params(model, eval_training_args, model_args)
-
         trainer = T5Trainer(
           model=model,
           config=config,

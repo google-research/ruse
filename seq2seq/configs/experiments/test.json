@@ -24,7 +24,7 @@
 "logging_steps": 200,
 "save_total_limit": 1,
 "train_adapters": true,
-"adapter_config_name":"parametric-meta-adapter",
+"adapter_config_name":"meta-adapter",
 "temperature": 10,
 "do_eval": true,
 "predict_with_generate": true,
@@ -36,8 +36,6 @@
 "add_layer_norm_after_adapter": false,
 "do_finetune": true,
 "n_finetune": 100,
-"parametric_task_embedding": true,
-"freeze_model_but_task_embeddings": true,
 "eval_output_dir": "outputs/eval_test"
 }
 

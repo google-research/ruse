@@ -42,8 +42,6 @@ def do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="
     config_path = "temp.json"
     with open(config_path, 'w') as f:
       json.dump(config, f)
-    print(config)
-    print(config["output_dir"])
     run_jobs(config_path, name)
 
 """
@@ -306,6 +304,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
 
+"""
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "test"
 short_keys = ["n", "lr", "e"]
@@ -318,8 +317,8 @@ sweep = collections.OrderedDict({'n_finetune': [1], #, 500, 1000, 2000, 4000],
                                  "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
                                  "eval_output_dir": ["outputs/finetune-adapter/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
-
 """
+
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1-ftune-adapter"
 short_keys = ["n", "lr", "e"]
@@ -332,9 +331,7 @@ sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000, 2000, 4000],
                                  "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
                                  "eval_output_dir": ["outputs/finetune-adapter/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
-"""
 
-"""
 basic_config_path = "configs/experiments/mixture2/meta-task-emb.json"
 job_prefix = "m2-ftune-adapter"
 short_keys = ["n", "lr", "e"]
@@ -347,4 +344,3 @@ sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000, 2000, 4000],
                                  "output_dir": ["m2-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
                                  "eval_output_dir": ["outputs/finetune-adapter/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
-"""

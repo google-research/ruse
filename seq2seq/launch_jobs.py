@@ -303,19 +303,19 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
-
 """
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
-job_prefix = "test"
+job_prefix = "test1"
 short_keys = ["n", "lr", "e"]
 sweep = collections.OrderedDict({'n_finetune': [1], #, 500, 1000, 2000, 4000],
                                  'learning_rate': [1e-2], #, 3e-1, 3e-2, 3e-3, 3e-4],
-                                 "num_train_epochs": [20], #, 100, 200],
+                                 "num_train_epochs": [2], #, 100, 200],
                                  "do_finetune": [True],
-                                 "do_train":[False],
+                                 "do_train":[True],
+                                 "n_train": [10],
                                  "task_embedding_dir": ["task_embeddings/n-train-100"],
-                                 "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
-                                 "eval_output_dir": ["outputs/finetune-adapter/"]})
+                                 "output_dir": ["outputs/test"],
+                                 "eval_output_dir": ["outputs/test/eval/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
 """
 

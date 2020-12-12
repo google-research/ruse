@@ -10,6 +10,15 @@ def run_jobs(config_path, job_name):
     config_path, job_name)
   os.system(command)
 
+def flatten(output):
+  flatten = []
+  for a in output:
+    if type(a) == tuple:
+      flatten.extend(list(a))
+    else:
+      flatten.append(a)
+  return flatten
+
 def make_name(prefix, keys, values):
   name = prefix+"-"
   for key, value in zip(keys, values):
@@ -17,20 +26,19 @@ def make_name(prefix, keys, values):
        value = '{0:.0e}'.format(value)
     elif isinstance(value, str):
        value = value.split("/")[-1]
-    #value = '{:.0e}'.format(value)
     name = name+f"{key}-{value}-"
-    #name=name.replace('.', '')
   return name[:-1]
 
-def do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="output_dir"):
-  with open(basic_config_path, "r") as infile:
+
+def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name="output_dir"):
+  with open(parent_config_path, "r") as infile:
     parent_config = json.loads(infile.read())
   values = list(sweep.values())
-  keys = list(sweep.keys())
-  for option in list(itertools.product(*values)):
+  keys = flatten(list(sweep.keys()))
+  options = [flatten(option) for option in list(itertools.product(*values))]
+  for option in options:
     config = copy.deepcopy(parent_config)
-    updates = {key: value for key, value in zip(keys, option)}
-    config.update(updates)
+    config.update({key: value for key, value in zip(keys, option)})
     name = make_name(job_prefix, short_keys, option)
     print("### name ", name)
     if output_dir_name in parent_config:
@@ -43,6 +51,7 @@ def do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="
     with open(config_path, 'w') as f:
       json.dump(config, f)
     run_jobs(config_path, name)
+
 
 """
 basic_config_path="configs/experiments/mixture1/test.json"
@@ -319,6 +328,7 @@ sweep = collections.OrderedDict({'n_finetune': [1], #, 500, 1000, 2000, 4000],
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
 """
 
+"""
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1-ftune-adapter"
 short_keys = ["n", "lr", "e"]
@@ -333,7 +343,6 @@ sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000, 2000, 4000],
                                  "eval_output_dir": ["outputs/finetune-adapter/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
 
-"""
 basic_config_path = "configs/experiments/mixture2/meta-task-emb.json"
 job_prefix = "m2-ftune-adapter"
 short_keys = ["n", "lr", "e"]
@@ -348,3 +357,17 @@ sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000, 2000, 4000],
                                  "eval_output_dir": ["outputs/finetune-adapter/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
 """
+
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "m1-ftune-adapter"
+short_keys = ["n", "lr", "e"]
+sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000, 2000, 4000],
+                                 'learning_rate-num-train-epochs': zip([1e-2, 3e-1, 3e-2, 3e-3, 3e-4], [2000, 10000, 20000, 20000, 20000]), 
+                                 "do_finetune": [True],
+                                 "do_train":[False],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["task_embeddings/n-train-100"],
+                                 "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
+                                 "eval_output_dir": ["outputs/finetune-adapter/"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
+

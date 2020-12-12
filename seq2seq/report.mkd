@@ -1,4 +1,6 @@
-m1-meta-task-no-relu
+# m1-meta-task-no-relu
+removed nonlinearities, and task-embeddings are now fixed 
+
 |   task_embedding_dir |   learning_rate |   boolq_eval_acc |   qnli_eval_acc |   scitail_eval_acc |
 |---------------------:|----------------:|-----------------:|----------------:|-------------------:|
 |                  100 |          0.0003 |         0.731416 |        0.849872 |           0.883346 |
@@ -6,7 +8,10 @@ m1-meta-task-no-relu
 |                  100 |          0.01   |         0.731416 |        0.87587  |           0.902533 |
 |                  100 |          0.03   |         0.736311 |        0.877517 |           0.916347 |
 |                  100 |          0.3    |         0.738146 |        0.878067 |           0.9033   |
-m2-meta-task-no-relu
+
+#m2-meta-task-no-relu
+removed nonlinearities and task-embeddings are now fixed 
+
 |   task_embedding_dir |   learning_rate |   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
 |---------------------:|----------------:|----------------:|----------------:|-------------------------:|
 |                  100 |          0.0003 |        0.736084 |        0.768277 |                 0.906471 |
@@ -14,7 +19,9 @@ m2-meta-task-no-relu
 |                  100 |          0.01   |        0.767754 |        0.785479 |                 0.908945 |
 |                  100 |          0.03   |        0.768714 |        0.786879 |                 0.908419 |
 |                  100 |          0.3    |        0.753359 |        0.786679 |                 0.908813 |
-m1-meta-task-no-relu-reorder
+
+# m1-meta-task-no-relu-reorder
+
 |   task_embedding_dir |   learning_rate |   boolq_eval_acc |   qnli_eval_acc |   scitail_eval_acc |
 |---------------------:|----------------:|-----------------:|----------------:|-------------------:|
 |                  100 |          0.0003 |         0.723769 |        0.85152  |           0.894091 |

@@ -304,12 +304,16 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 # TODO: to be completed
 # evaluation in one of our models with different fine-tuning samples, only task-embedding not freezed.
-basic_config_path = "configs/experiments/mixture1/paramteric-meta-task-emb-eval-adapter.json"
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "pmeta-eval-adapter"
-short_keys = ["n-finetune"]
-sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000],
+short_keys = ["n", "lr", "epoch"]
+sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000, 2000, 4000],
                                  'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
-                                 "num_train_epochs": [20, 100, 1000]})
+                                 "num_train_epochs": [20, 100, 200],
+                                 "do_finetune": "true",
+                                 "do_train":"false",
+                                 "output_dir": , 
+                                 "eval_output_dir": })
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 

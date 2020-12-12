@@ -41,6 +41,7 @@ def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name=
     config.update({key: value for key, value in zip(keys, option)})
     name = make_name(job_prefix, short_keys, option)
     print("### name ", name)
+    print(config)
     if output_dir_name in parent_config:
       parent_output_dir = parent_config[output_dir_name]
     else:
@@ -213,7 +214,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
-"""
+
 # finetune.
 basic_config_path="configs/experiments/mixture1/finetune.json"
 job_prefix = "mix1-finetune"
@@ -226,7 +227,7 @@ job_prefix = "mix2-finetune"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [2e-5, 3e-3, 3e-4, 3e-5]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-"""
+
 
 
 """
@@ -358,16 +359,37 @@ sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000, 2000, 4000],
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
 """
 
+
+
+
+# finetuning both models with different number of samples for steps=140000.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
-job_prefix = "m1-ftune-adapter"
-short_keys = ["n", "lr", "e"]
-sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000, 2000, 4000],
-                                 'learning_rate-num-train-epochs': zip([1e-2, 3e-1, 3e-2, 3e-3, 3e-4], [2000, 10000, 20000, 20000, 20000]), 
+job_prefix = "m1-adp"
+short_keys = ["lr", "n", "e", "h"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [89600, 17920, 8960, 4480, 2240]),
+                                 "unfreeze_lm_head": [True, False],
                                  "do_finetune": [True],
-                                 "do_train":[False],
+                                 "do_train": [False],
                                  "eval_tasks": [["yelp_polarity", "cola", "snli"]],
                                  "task_embedding_dir": ["task_embeddings/n-train-100"],
                                  "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
-                                 "eval_output_dir": ["outputs/finetune-adapter/"]})
+                                 "eval_output_dir": ["outputs/eval/finetune-adapter/"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
+
+
+
+basic_config_path = "configs/experiments/mixture1/finetune.json"
+job_prefix = "m1-t5"
+short_keys = ["lr", "n", "e"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [89600, 17920, 8960, 4480, 2240]),
+                                 "do_finetune": [True],
+                                 "do_train": [False],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "output_dir": ["mix1-finetune-lr-3e-04"],
+                                 "eval_output_dir": ["outputs/eval/finetune-t5/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
 

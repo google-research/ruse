@@ -1,0 +1,15 @@
+import torch 
+inputs = torch.randn(1000, 200)
+normalized_shape=(200, )
+weight = torch.randn(200)
+bias = torch.randn(200)
+layer = torch.nn.functional.layer_norm(inputs, normalized_shape, weight=weight, bias=bias, eps=1e-05)
+print("a" ,layer.shape)
+
+a = torch.nn.LayerNorm(200)
+print(dir(a))
+print(a.normalized_shape)
+print(a.weight.shape)
+print(a.bias.shape)
+b = a(inputs)
+print(b.shape)

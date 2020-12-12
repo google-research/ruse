@@ -1,18 +1,33 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Defines pooling layers for pooling encoder hidden states."""
 
-import math
 import abc
+import math
+from collections import OrderedDict
 
 import torch
 from torch import nn
-from collections import OrderedDict
+
 
 class Pooling(nn.Module, metaclass=abc.ABCMeta):
   """Pooling Layer Abstract Base class."""
 
   def __init__(self, config, *args, **kwargs):
-        super().__init__()
-        self.config = config
+    super().__init__()
+    self.config = config
 
   @abc.abstractmethod
   def forward(self):
@@ -24,15 +39,17 @@ class Pooling(nn.Module, metaclass=abc.ABCMeta):
 
 class MeanPooling(Pooling):
   """Applies mean pooling on the hidden_states."""
+
   def forward(self, hidden_states, attention_mask):
     attention_mask_expanded = attention_mask.unsqueeze(-1).expand(hidden_states.size()).float()
     sum_hidden_states = torch.sum(hidden_states * attention_mask_expanded, 1)
     sum_attention_mask = torch.clamp(attention_mask_expanded.sum(1), min=1e-9)
-    return (sum_hidden_states/ sum_attention_mask).unsqueeze(-1)
+    return (sum_hidden_states / sum_attention_mask).unsqueeze(-1)
 
 
 class MaxPooling(Pooling):
   """Applied max pooling on the hidden_states."""
+
   # TODO(rabeeh): we do not need attention_mask here.
   def forward(self, hidden_states, attention_mask):
     return hidden_states.max(dim=1, keepdim=True)[0].transpose(1, 2)
@@ -45,8 +62,8 @@ class AttentivePooling(Pooling):
     super(AttentivePooling, self).__init__(config)
     if config.hidden_size % config.num_heads != 0:
       raise ValueError(
-          "The d_model size (%d) is not a multiple of the number of attention "
-          "heads (%d)" % (config.d_model, config.num_heads))
+        "The d_model size (%d) is not a multiple of the number of attention "
+        "heads (%d)" % (config.d_model, config.num_heads))
     self.num_heads = config.num_heads
     self.attention_head_size = int(config.d_model / config.num_heads)
     self.all_head_size = self.num_heads * self.attention_head_size
@@ -94,13 +111,15 @@ POOLING_MAPPING = OrderedDict([("mean", MeanPooling),
                                ("max", MaxPooling),
                                ("attentive", AttentivePooling)])
 
+
 class AutoPooling(nn.Module):
   """Generic pooling class to instantiate different pooling classes."""
+
   @classmethod
-  def get(cls, pooling_type:str, config, *args, **kwargs):
+  def get(cls, pooling_type: str, config, *args, **kwargs):
     if pooling_type in POOLING_MAPPING:
       pooling_class = POOLING_MAPPING[pooling_type]
       return pooling_class(config, *args, **kwargs)
     raise ValueError(
-        "Unrecognized pooling type identifier: {}. Should contain one of {}"
+      "Unrecognized pooling type identifier: {}. Should contain one of {}"
         .format(pooling_type, ", ".join(POOLING_MAPPING.keys())))

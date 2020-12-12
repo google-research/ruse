@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Implements task-collator to collate the samples in each batch."""
-import torch
 from typing import Dict
+
+import torch
+
 
 class TaskCollator:
   def __init__(self, tokenizer, data_args, tpu_num_cores=None):

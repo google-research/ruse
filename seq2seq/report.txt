@@ -42,3 +42,15 @@ reorder the task embeddings
 |                  100 |          0.03   |        0.769674 |        0.787479 |                 0.910498 |
 |                  100 |          0.3    |        0.743762 |        0.785779 |                 0.909971 |
 
+
+#
+1000 samples - 800 epochs => we need at least around 12500 steps 
+setting lm-head to true
+12/12/2020 22:16:11 - INFO - __main__ -     snli_eval_loss = 308.1576232910156
+12/12/2020 22:16:11 - INFO - __main__ -     snli_eval_acc = 0.7222722272227222
+12/12/2020 22:16:11 - INFO - __main__ -     snli_epoch = 800.0
+
+# train our model with lm_heads not freezed
+# finetune both our models and t5 with the proper number of steps 
+
+

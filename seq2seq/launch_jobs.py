@@ -215,6 +215,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
 
+"""
 # finetune.
 basic_config_path="configs/experiments/mixture1/finetune.json"
 job_prefix = "mix1-finetune"
@@ -227,8 +228,7 @@ job_prefix = "mix2-finetune"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({'learning_rate': [2e-5, 3e-3, 3e-4, 3e-5]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-
-
+"""
 
 """
 basic_config_path = "configs/experiments/mixture2/paramteric-meta-task-emb.json"

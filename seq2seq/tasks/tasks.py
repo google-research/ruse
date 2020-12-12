@@ -1,12 +1,25 @@
-from collections import OrderedDict
-
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import abc
-import datasets
 import functools
-import torch
+from collections import OrderedDict
 from dataclasses import dataclass
-from transformers import T5Tokenizer
 from typing import Callable, Dict, Mapping
+
+import datasets
+import torch
+from transformers import T5Tokenizer
 
 
 def compute_task_max_decoding_length(word_list):
@@ -32,7 +45,6 @@ class Task:
   category: str
 
 
-# TODO: max length per task needs to be corrected
 class AbstractTaskDataset(abc.ABC):
   task_specific_config: Dict = NotImplemented
   task: Task = NotImplemented
@@ -121,8 +133,6 @@ class MNLITaskDataset(AbstractTaskDataset):
             "tgt_texts": str(example["label"]), "task": self.task.name}
 
 
-# TODO: the class should get the name of pairs as a argument.
-# and register each class with its own arguments.
 class IWSLT2017RONL(AbstractTaskDataset):
   task = Task(name="iwslt2017-ro-nl", category="translation")
   task_specific_config = {'max_length': 300, 'num_beams': 4}
@@ -328,15 +338,16 @@ class MNLITaskDataset(AbstractTaskDataset):
   task = Task(name="mnli", category="classification")
   label_list = ["0", "1", "2"]
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
-  split_to_data_split = {"train": "train", "validation": "validation_mismatched", "test": "validation_matched"}
+  split_to_data_split = {"train": "train", "validation": "validation_mismatched",
+                         "test": "validation_matched"}
 
   def load_dataset(self, split):
     return datasets.load_dataset('glue', 'mnli', split=split)
 
   def preprocessor(self, example, add_prefix=True):
     return {"src_texts":
-              self.add_prefix("premise : {} hypothesis : {}".format(example['premise'], example['hypothesis']), "MNLI",
-                              add_prefix),
+              self.add_prefix("premise : {} hypothesis : {}".format(
+                example['premise'], example['hypothesis']), "MNLI", add_prefix),
             "tgt_texts": str(example['label']), "task": self.task.name}
 
 
@@ -381,8 +392,8 @@ class WNLITaskDataset(AbstractTaskDataset):
 
   def preprocessor(self, example, add_prefix=True):
     return {"src_texts":
-              self.add_prefix("sentence1 : {} sentence2 : {}".format(example['sentence1'], example['sentence2']),
-                              "WNLI", add_prefix),
+              self.add_prefix("sentence1 : {} sentence2 : {}".format(
+                example['sentence1'], example['sentence2']), "WNLI", add_prefix),
             "tgt_texts": str(example['label']), "task": self.task.name}
 
 

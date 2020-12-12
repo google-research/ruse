@@ -37,7 +37,8 @@
 "do_finetune": true,
 "n_finetune": 100,
 "parametric_task_embedding": true,
-"freeze_model_but_task_embeddings": true
+"freeze_model_but_task_embeddings": true,
+"eval_output_dir": "outputs/eval_test"
 }
 
 

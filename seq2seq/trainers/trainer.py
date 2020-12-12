@@ -26,7 +26,7 @@ import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from seq2seq.samplers import MultiTaskBatchSampler
+from seq2seq.data import MultiTaskBatchSampler
 
 
 # Integrations must be imported before ML frameworks:

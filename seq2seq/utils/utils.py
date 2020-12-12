@@ -17,7 +17,7 @@ from torch.utils.data import Dataset, Sampler
 
 from transformers import BartTokenizer, EvalPrediction, PreTrainedTokenizer, T5Tokenizer
 from transformers.file_utils import cached_property
-from seq2seq.tasks import TASK_MAPPING
+from seq2seq.data import TASK_MAPPING
 from logging import getLogger
 
 try:

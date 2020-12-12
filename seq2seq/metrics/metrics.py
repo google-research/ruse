@@ -3,7 +3,7 @@ from seq2seq.utils import lmap
 from transformers import EvalPrediction, PreTrainedTokenizer
 from typing import Callable, Dict, List, Tuple
 from collections import OrderedDict
-from tasks import TASK_MAPPING
+from seq2seq.data import TASK_MAPPING
 from rouge_score import rouge_scorer, scoring
 from sacrebleu import corpus_bleu
 from .sentence_splitter import add_newline_to_end_of_each_sentence

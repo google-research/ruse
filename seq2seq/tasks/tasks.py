@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Implements different tasks and task-collator."""
 import abc
 import functools
 from collections import OrderedDict
@@ -217,7 +218,7 @@ class WMT16ENFITaskDataset(AbstractTaskDataset):
   def preprocessor(self, example):
     return {"src_texts": "Translate English to Finnish:  {}".format(
       example['translation']["en"]),
-            "tgt_texts": str(example['translation']["fi"]), "task": self.task.name}
+      "tgt_texts": str(example['translation']["fi"]), "task": self.task.name}
 
 
 class WMT14HIENTaskDataset(AbstractTaskDataset):
@@ -276,7 +277,7 @@ class ScitailTaskDataset(AbstractTaskDataset):
   def preprocessor(self, example, add_prefix=True):
     return {
       "src_texts": self.add_prefix("sentence1: {} sentence2: {}".format(example['sentence1'],
-                                    example['sentence2']),
+                                                                        example['sentence2']),
                                    "Scitail", add_prefix),
       "tgt_texts": str(example['gold_label']), "task": self.task.name}
 
@@ -352,9 +353,9 @@ class MNLITaskDataset(AbstractTaskDataset):
 
   def preprocessor(self, example, add_prefix=True):
     return {"src_texts":
-              self.add_prefix("premise : {} hypothesis : {}".format(
-                example['premise'], example['hypothesis']), "MNLI", add_prefix),
-            "tgt_texts": str(example['label']), "task": self.task.name}
+      self.add_prefix("premise : {} hypothesis : {}".format(
+        example['premise'], example['hypothesis']), "MNLI", add_prefix),
+      "tgt_texts": str(example['label']), "task": self.task.name}
 
 
 class QNLITaskDataset(AbstractTaskDataset):
@@ -398,9 +399,9 @@ class WNLITaskDataset(AbstractTaskDataset):
 
   def preprocessor(self, example, add_prefix=True):
     return {"src_texts":
-              self.add_prefix("sentence1 : {} sentence2 : {}".format(
-                example['sentence1'], example['sentence2']), "WNLI", add_prefix),
-            "tgt_texts": str(example['label']), "task": self.task.name}
+      self.add_prefix("sentence1 : {} sentence2 : {}".format(
+        example['sentence1'], example['sentence2']), "WNLI", add_prefix),
+      "tgt_texts": str(example['label']), "task": self.task.name}
 
 
 TASK_MAPPING = OrderedDict([

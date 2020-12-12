@@ -22,7 +22,7 @@ def make_name(prefix, keys, values):
     #name=name.replace('.', '')
   return name[:-1]
 
-def do_sweep(basic_config_path, sweep, short_keys, job_prefix, update_output=True):
+def do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="output_dir"):
   with open(basic_config_path, "r") as infile:
     parent_config = json.loads(infile.read())
   values = list(sweep.values())
@@ -33,12 +33,17 @@ def do_sweep(basic_config_path, sweep, short_keys, job_prefix, update_output=Tru
     config.update(updates)
     name = make_name(job_prefix, short_keys, option)
     print("### name ", name)
-    if update_output:
-       output_dir = os.path.join(parent_config['output_dir'], name)
-       config.update({'output_dir': output_dir})
+    if output_dir_name in parent_config:
+      parent_output_dir = parent_config[output_dir_name]
+    else:
+      parent_output_dir = sweep[output_dir_name][0]
+    output_dir = os.path.join(parent_output_dir, name)
+    config.update({output_dir_name: output_dir})
     config_path = "temp.json"
     with open(config_path, 'w') as f:
       json.dump(config, f)
+    print(config)
+    print(config["output_dir"])
     run_jobs(config_path, name)
 
 """
@@ -264,7 +269,6 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
-
 """
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1-meta-task-no-relu"
@@ -272,8 +276,9 @@ short_keys = ["lr", 'emb']
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  'task_embedding_dir': ["task_embeddings/n-train-100"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+"""
 
-
+"""
 basic_config_path = "configs/experiments/mixture2/meta-task-emb.json"
 job_prefix = "m2-meta-task-no-relu"
 short_keys = ["lr", 'emb']
@@ -302,26 +307,29 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 
 
-# TODO: to be completed
-# evaluation in one of our models with different fine-tuning samples, only task-embedding not freezed.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
-job_prefix = "pmeta-eval-adapter"
-short_keys = ["n", "lr", "epoch"]
+job_prefix = "m1-ftune-adapter"
+short_keys = ["n", "lr", "e"]
 sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000, 2000, 4000],
                                  'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  "num_train_epochs": [20, 100, 200],
-                                 "do_finetune": "true",
-                                 "do_train":"false",
-                                 "output_dir": , 
-                                 "eval_output_dir": })
-do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+                                 "do_finetune": [True],
+                                 "do_train":[False],
+                                 "task_embedding_dir": ["task_embeddings_reordered/n-train-100"],
+                                 "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
+                                 "eval_output_dir": ["outputs/finetune-adapter/"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
 
 
-"""
-basic_config_path = "configs/experiments/mixture1/paramteric-meta-task-emb-eval-only-task.json"
-job_prefix = "pmeta-eval-task-emb"
-short_keys = ["n-finetune"]
-sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000]})
-sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],"num_train_epochs": [20, 100, 1000]
-do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-"""
+basic_config_path = "configs/experiments/mixture2/meta-task-emb.json"
+job_prefix = "m2-ftune-adapter"
+short_keys = ["n", "lr", "e"]
+sweep = collections.OrderedDict({'n_finetune': [100, 500, 1000, 2000, 4000],
+                                 'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 "num_train_epochs": [20, 100, 200],
+                                 "do_finetune": [True],
+                                 "do_train":[False],
+                                 "task_embedding_dir": ["task_embeddings_reordered/n-train-100"],
+                                 "output_dir": ["m2-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
+                                 "eval_output_dir": ["outputs/finetune-adapter/"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")

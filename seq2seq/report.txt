@@ -57,4 +57,5 @@ setting lm-head to true
 12/12/2020 22:47:37 - INFO - __main__ -     snli_epoch = 800.0
 
 
-
+# I ran t5-finetune and mixture1 evaluated on mixture2 for 140000 steps 
+# for different number of samples 

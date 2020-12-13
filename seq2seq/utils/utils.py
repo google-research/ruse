@@ -37,7 +37,7 @@ def upload(upload_dir: str, gcs_bucket: str) -> None:
 """
 
 
-def upload(upload_dir: str, gcs_bucket: str, gcs_path: str = None) -> None:
+def upload(upload_dir: str, gcs_bucket: str) -> None:
   #Upload files to GCS.
   gcs_path = upload_dir
   storage_client = storage.Client()

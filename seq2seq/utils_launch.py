@@ -115,3 +115,11 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
     df = df.sort_values(by=params)
   #df['task_embedding_dir'] = df.apply(lambda x: myfunc(x.task_embedding_dir), axis=1)
   print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
+
+
+  # computing the maximum.
+  params_max = [p  for p in params if p !="learning_rate"]
+  df = df.loc[df.groupby(params_max)['cola_eval_acc'].idxmax()][params+['cola_eval_acc']]
+  if len(params) != 0:
+    df = df.sort_values(by=params)
+  print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))

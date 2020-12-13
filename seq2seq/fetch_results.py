@@ -344,3 +344,4 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 #download_all_evals(sweep, job_prefix, short_keys, output_dir)
 params= ["n_finetune", "learning_rate"]
 retrieve_results(output_dir, sweep, short_keys, job_prefix, params)
+

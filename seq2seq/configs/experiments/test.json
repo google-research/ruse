@@ -34,6 +34,7 @@
 "n_val": 10,
 "add_layer_norm_before_adapter":  false,
 "add_layer_norm_after_adapter": false,
+"do_train": true,
 "do_finetune": true,
 "n_finetune": 100,
 "eval_output_dir": "outputs/eval_test"

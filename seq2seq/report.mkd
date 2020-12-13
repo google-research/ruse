@@ -60,7 +60,7 @@ Zero-Shot Translation
 - BERT and PALs: Projected Attention Layers for
 Efficient Adaptation in Multi-Task Learning
 - dynamic convolution: attention over convolution kernels 
-- flexible few-shot learning of contextual similarity 
+- flexible few-shot learning of contextual similarity  and its related work 
 
 # TODO:
 - get the current results 
@@ -72,7 +72,7 @@ Efficient Adaptation in Multi-Task Learning
 
 - how do they do zero-shot in CPG paper?
 - references in the few-shot paper, the most important ones 
-- read dapter experiments, do they have zero-shot results? 
+- read udapter experiments, do they have zero-shot results? 
 
 # m1-meta-task-no-relu
 removed nonlinearities, and task-embeddings are now fixed 

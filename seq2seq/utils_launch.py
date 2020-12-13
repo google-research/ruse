@@ -54,8 +54,12 @@ def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name=
       json.dump(config, f)
     run_jobs(config_path, name)
 
+def myfunc(x):
+    splits = x.split("/")
+    return splits[-1].split("-")[-1]
 
-def retrieve_results(output_dir, sweep, short_keys, job_prefix, order=[]):
+acc_cols = ['cola_eval_acc',   'snli_eval_acc', 'yelp_polarity_eval_acc']
+def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
   print(job_prefix)
   df = pd.DataFrame()
   keys = flatten(list(sweep.keys()))
@@ -68,26 +72,12 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, order=[]):
     try:
       with open(eval_path, "r") as infile:
         results = json.loads(infile.read())
-      # remove losses
-      results = {key: value for key, value in results.items() if "acc" in key}
       results.update({key: value for key, value in zip(keys, option)})
       df = df.append(results, ignore_index=True)
     except FileNotFoundError:
       print("File not found ", eval_path)
-
-  cols = list(df.columns.values)
-  for key in keys:
-    cols.remove(key)
-  if len(order) != 0:
-    cols = order + cols
-  else:
-    cols = keys + cols
-  df = df[cols]
-  if len(order) != 0:
-    df = df.sort_values(by=order)
-  # print(df.to_markdown())
-  def myfunc(x):
-    splits = x.split("/")
-    return splits[-1].split("-")[-1]
-  df['task_embedding_dir'] = df.apply(lambda x: myfunc(x.task_embedding_dir), axis=1)
+  df = df[params+acc_cols]
+  if len(params) != 0:
+    df = df.sort_values(by=params)
+  #df['task_embedding_dir'] = df.apply(lambda x: myfunc(x.task_embedding_dir), axis=1)
   print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))

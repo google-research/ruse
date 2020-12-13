@@ -1,5 +1,5 @@
 import collections
-from utils import do_sweep
+from utils_launch import do_sweep
 
 """
 basic_config_path="configs/experiments/mixture1/test.json"

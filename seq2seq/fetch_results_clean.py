@@ -1,5 +1,5 @@
 import collections 
-from utils import retrieve_results
+from utils_launch import retrieve_results
 
 """
 output_dir= "outputs/mixture1/meta-adapter/rand/"
@@ -310,9 +310,10 @@ retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
 
 
 # finetuning both models with different number of samples for steps=140000.
-output_dir = "outputs/eval-v/finetune-adapter/"
 job_prefix = "m1-adp-v"
 short_keys = ["lr", "n", "e", "h"]
+# os.system(f"gsutil rsync -r outputs gs://ruse-xcloud-bucket/{output_dir}")
+params= ["unfreeze_lm_head", "n_finetune", "learning_rate"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
                                                                          [8960, 1792, 896, 448, 224]),
@@ -323,5 +324,5 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "task_embedding_dir": ["task_embeddings/n-train-100"],
                                  "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-adapter/"]})
-retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
-
+output_dir = "outputs/finetune-adapter/"
+retrieve_results(output_dir, sweep, short_keys, job_prefix, params)

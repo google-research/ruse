@@ -44,6 +44,7 @@ def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name=
   for option in options:
     config = copy.deepcopy(parent_config)
     config.update({key: value for key, value in zip(keys, option)})
+    print(config)
     name = make_name(job_prefix, short_keys, option)
     print("### name ", name)
     if output_dir_name in parent_config:

@@ -342,7 +342,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 
 
 
-
+"""
 # let finetune the lm-head
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1-meta-task-no-relu-lm"
@@ -360,3 +360,4 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "unfreeze_lm_head": [True],
                                  'task_embedding_dir': ["task_embeddings/n-train-100"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+"""

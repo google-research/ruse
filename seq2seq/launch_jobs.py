@@ -1,58 +1,5 @@
-import os
-import json
 import collections
-import itertools
-import copy
-
-
-def run_jobs(config_path, job_name):
-  command = "/google/bin/releases/cloud-alphabetcloud-xcloud/xcloud_cli/xcloud_cli.par google/launch_xla_clean1.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(
-    config_path, job_name)
-  os.system(command)
-
-def flatten(output):
-  flatten = []
-  for a in output:
-    if type(a) == tuple:
-      flatten.extend(list(a))
-    else:
-      flatten.append(a)
-  return flatten
-
-def make_name(prefix, keys, values):
-  name = prefix+"-"
-  for key, value in zip(keys, values):
-    if isinstance(value, float):
-       value = '{0:.0e}'.format(value)
-    elif isinstance(value, str):
-       value = value.split("/")[-1]
-    name = name+f"{key}-{value}-"
-    name = name.lower()
-  return name[:-1]
-
-
-def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name="output_dir"):
-  with open(parent_config_path, "r") as infile:
-    parent_config = json.loads(infile.read())
-  values = list(sweep.values())
-  keys = flatten(list(sweep.keys()))
-  options = [flatten(option) for option in list(itertools.product(*values))]
-  for option in options:
-    config = copy.deepcopy(parent_config)
-    config.update({key: value for key, value in zip(keys, option)})
-    name = make_name(job_prefix, short_keys, option)
-    print("### name ", name)
-    if output_dir_name in parent_config:
-      parent_output_dir = parent_config[output_dir_name]
-    else:
-      parent_output_dir = sweep[output_dir_name][0]
-    output_dir = os.path.join(parent_output_dir, name)
-    config.update({output_dir_name: output_dir})
-    config_path = "temp.json"
-    with open(config_path, 'w') as f:
-      json.dump(config, f)
-    run_jobs(config_path, name)
-
+from utils import do_sweep
 
 """
 basic_config_path="configs/experiments/mixture1/test.json"

@@ -27,8 +27,8 @@ from transformers.utils import logging
 
 from seq2seq.adapters import AutoAdapterController
 from .modeling_outputs import RuseBaseModelOutputWithPastAndCrossAttentions, RuseSeq2SeqLMOutput
-from .poolings import AutoPooling
-from .projections import AutoProjection
+from seq2seq.models.poolings import AutoPooling
+from seq2seq.models.projections import AutoProjection
 
 logger = logging.get_logger(__name__)
 

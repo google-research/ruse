@@ -4,7 +4,10 @@ import os
 import json
 import pandas as pd
 from tabulate import tabulate
-
+import sys
+import subprocess
+import os
+import time
 
 def run_jobs(config_path, job_name):
   command = "/google/bin/releases/cloud-alphabetcloud-xcloud/xcloud_cli/xcloud_cli.par google/launch_xla_clean1.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(
@@ -57,6 +60,37 @@ def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name=
 def myfunc(x):
     splits = x.split("/")
     return splits[-1].split("-")[-1]
+
+
+def copy_in_parallel(commands):
+  processes = set()
+  max_processes = 8
+  for name in commands:
+    processes.add(subprocess.Popen(name))
+    if len(processes) >= max_processes:
+        os.wait()
+        processes.difference_update(
+            [p for p in processes if p.poll() is not None])
+  #Check if all the child processes were closed
+  for p in processes:
+    if p.poll() is None:
+        p.wait()
+
+
+def download_all_evals(sweep, job_prefix, short_keys, output_dir):
+  values = list(sweep.values())
+  options = [flatten(option) for option in list(itertools.product(*values))]
+  bucket = "gs://ruse-xcloud-bucket"
+  copy_commands = []
+  for option in options:
+    name = make_name(job_prefix, short_keys, option)
+    experiment_output_dir = os.path.join(output_dir, name)
+    eval_path = os.path.join(experiment_output_dir, 'eval_results.json')
+    if not os.path.exists(experiment_output_dir):
+      os.makedirs(experiment_output_dir)
+    if not os.path.exists(eval_path):
+      copy_commands.append(["gsutil", "cp", f"{bucket}/{eval_path}", f"{experiment_output_dir}/eval_results.json"])
+  copy_in_parallel(copy_commands)
 
 acc_cols = ['cola_eval_acc',   'snli_eval_acc', 'yelp_polarity_eval_acc']
 def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):

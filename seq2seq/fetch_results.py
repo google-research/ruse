@@ -1,71 +1,5 @@
 import collections 
-import itertools
-import os
-import json
-import pandas as pd
-from tabulate import tabulate
-
-"""
-def make_name(prefix, keys, values):
-  name = prefix+"-"
-  for key, value in zip(keys, values):
-    value = '{0:.0e}'.format(value)
-    name = name+f"{key}-{value}-"
-  return name[:-1]
-"""
-def make_name(prefix, keys, values):
-  name = prefix+"-"
-  for key, value in zip(keys, values):
-    if isinstance(value, float):
-       value = '{0:.0e}'.format(value)
-    elif isinstance(value, str):
-       value = value.split("/")[-1]
-    #value = '{:.0e}'.format(value)
-    name = name+f"{key}-{value}-"
-    #name=name.replace('.', '')
-  return name[:-1]
-
-def retrieve_results(output_dir, sweep, short_keys, job_prefix, order=[]):
-  print(job_prefix)
-  df = pd.DataFrame()
-  keys = list(sweep.keys())
-  values = list(sweep.values())
-  for option in list(itertools.product(*values)):
-    name = make_name(job_prefix, short_keys, option)
-    experiment_output_dir = os.path.join(output_dir, name)
-    eval_path=os.path.join(experiment_output_dir, 'eval_results.json')
-    try:
-      with open(eval_path, "r") as infile:
-        results = json.loads(infile.read())
-      # remove losses
-      results = {key: value for key, value in results.items() if "acc" in key}
-      results.update({key: value for key, value in zip(keys, option)})
-      df = df.append(results, ignore_index=True)
-    except FileNotFoundError:
-      print("File not found ", eval_path)
-    
-
-  cols = list(df.columns.values)
-  for key in keys:
-     cols.remove(key)
-  if len(order) != 0 :
-     cols = order + cols
-  else:
-     cols = keys + cols
-  df = df[cols]
-  if len(order) != 0:
-     df = df.sort_values(by=order)
-  #print(df.to_markdown())
-
-
-
-  def myfunc(x):
-    splits = x.split("/")
-    return splits[-1].split("-")[-1]
-  df['task_embedding_dir'] = df.apply(lambda x: myfunc(x.task_embedding_dir), axis=1)
-
-
-  print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
+from utils_launch import retrieve_results, download_all_evals
 
 """
 output_dir= "outputs/mixture1/meta-adapter/rand/"
@@ -376,9 +310,10 @@ retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
 
 
 # finetuning both models with different number of samples for steps=140000.
-output_dir = "outputs/eval-v/finetune-adapter/"
+# os.system(f"gsutil rsync -r outputs gs://ruse-xcloud-bucket/{output_dir}")
 job_prefix = "m1-adp-v"
 short_keys = ["lr", "n", "e", "h"]
+params= ["unfreeze_lm_head", "n_finetune", "learning_rate"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
                                                                          [8960, 1792, 896, 448, 224]),
@@ -389,5 +324,23 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "task_embedding_dir": ["task_embeddings/n-train-100"],
                                  "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-adapter/"]})
-retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
+output_dir = "outputs/eval-v/finetune-adapter/" #outputs/finetune-adapter/"
+#download_all_evals(sweep, job_prefix, short_keys, output_dir)
+retrieve_results(output_dir, sweep, short_keys, job_prefix, params)
 
+
+
+job_prefix = "m1-t5-v"
+short_keys = ["lr", "n", "e"]
+output_dir = "outputs/eval-v/finetune-t5/"
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [8960, 1792, 896, 448, 224]),
+                                 "do_finetune": [True],
+                                 "do_train": [False],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "output_dir": ["mix1-finetune-lr-3e-04"],
+                                 "eval_output_dir": ["outputs/eval-v/finetune-t5/"]})
+#download_all_evals(sweep, job_prefix, short_keys, output_dir)
+params= ["n_finetune", "learning_rate"]
+retrieve_results(output_dir, sweep, short_keys, job_prefix, params)

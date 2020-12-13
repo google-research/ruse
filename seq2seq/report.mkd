@@ -36,6 +36,8 @@ model for all language pairs.
     inference to speed up 
 
 # related work TODO list:
+- udapter in details
+- cgp in details 
 - The Adapter-Bot: All-In-One Controllable Conversational Model
 - MinTL: Minimalist Transfer Learning for Task-Oriented
 Dialogue Systems

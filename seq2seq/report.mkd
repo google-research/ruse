@@ -23,10 +23,20 @@ model for all language pairs.
   - for the new language they learn embedding of the language + word embedding,
     fixing the parameters shared between the languages, and they obtain
     zero-shot performance as well  
+- * Language to Network: Conditional Parameter Adaptation with Natural Language Descriptions
+  - they generate the parameters of the network given input task description
+    from wikipedia, and a pretrained model, they argue that this is important to
+    generate all parameters of the network, they show some zero-shot
+    performance, which was not promising but better than a handful of baselines 
+  - they argue for generating classifier layer from input descriptions   
 
 # TODO:
-- how do they do zero-shot in CPG paper?
+- based on *
+  - generating weight of classifier based on input task-embeddings ?
+  - making all parameters including layer-norms task-embeding generated? 
 
+- how do they do zero-shot in CPG paper?
+- references in the few-shot paper, the most important ones 
 
 # m1-meta-task-no-relu
 removed nonlinearities, and task-embeddings are now fixed 

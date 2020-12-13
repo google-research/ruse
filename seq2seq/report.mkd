@@ -33,7 +33,13 @@ model for all language pairs.
   - they argue for generating classifier layer from input descriptions   
 - AdapterDrop: On the Efficiency of Adapters in Transformers
   - removing adapter layers from lower-transformer layers during training and
-    inference to speed up 
+    inference to speed up
+
+# related work, not directly related to ours 
+- Common Sense or World Knowledge? Investigating Adapter-Based
+Knowledge Injection into Pretrained Transformers
+  -  learning adapter layers to capture knowledge from ConceptNet and its corresponding Open Mind Common Sense (OMCS) corpus 
+  - very similar to k-adapter so I skip
 
 # related work TODO list:
 - udapter in details
@@ -51,8 +57,6 @@ Convolutions for Efficient Inference
 - improving Massively Multilingual Neural Machine Translation and
 Zero-Shot Translation
 - K-ADAPTER: INFUSING KNOWLEDGE INTO PRETRAINED MODELS WITH ADAPTERS
-- Common Sense or World Knowledge? Investigating Adapter-Based
-Knowledge Injection into Pretrained Transformers
 - BERT and PALs: Projected Attention Layers for
 Efficient Adaptation in Multi-Task Learning
 - dynamic convolution: attention over convolution kernels 

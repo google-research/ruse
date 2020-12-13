@@ -60,6 +60,7 @@ PROJECTION_MAPPING = OrderedDict(
   ]
 )
 
+
 class AutoProjection(nn.Module):
   """A generic projection class to instantiate projection classes."""
 

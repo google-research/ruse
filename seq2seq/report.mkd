@@ -1,3 +1,8 @@
+# related work 
+- Exploring Versatile Generative Language Model Via Parameter-Efficient
+Transfer Learning https://arxiv.org/pdf/2004.03829.pdf
+
+
 # m1-meta-task-no-relu
 removed nonlinearities, and task-embeddings are now fixed 
 

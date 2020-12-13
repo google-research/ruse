@@ -10,7 +10,7 @@ from transformers.trainer_utils import EvaluationStrategy
 
 from seq2seq.adapters import AdapterController, MetaAdapterController, MetaParamterizedAdapterController, \
   AutoAdapterConfig
-from seq2seq.metrics import build_compute_metrics_fn
+from third_party.metrics import build_compute_metrics_fn
 from third_party.models import T5Config, T5ForConditionalGeneration
 from seq2seq.data import AutoTask, TaskCollator
 from seq2seq.trainers import T5Trainer

@@ -13,7 +13,7 @@ from seq2seq.adapters import AdapterController, MetaAdapterController, MetaParam
 from third_party.metrics import build_compute_metrics_fn
 from third_party.models import T5Config, T5ForConditionalGeneration
 from seq2seq.data import AutoTask, TaskCollator
-from seq2seq.trainers import T5Trainer
+from third_party.trainers import T5Trainer
 from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments, \
   AdapterTrainingArguments
 from seq2seq.utils import (

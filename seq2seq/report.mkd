@@ -42,6 +42,7 @@ Knowledge Injection into Pretrained Transformers
   - very similar to k-adapter so I skip
 
 # related work TODO list:
+- Conditionally Adaptive Multi-Task Learning: Improving Transfer Learning in NLP Using Fewer Parameters & Less Data
 - udapter in details
 - cgp in details 
 - The Adapter-Bot: All-In-One Controllable Conversational Model

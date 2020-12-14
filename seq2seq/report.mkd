@@ -135,8 +135,10 @@ Efficient Adaptation in Multi-Task Learning
 
 
 
-# m1-meta-task-no-relu-reorder
-reorder the task embeddings 
+# Reordering the task-embeddings 
+- reorder the task embeddings to assign different task-embeddings to each task. 
+- still using the model without nonlinearities 
+## mixture 1
 
 |   task_embedding_dir |   learning_rate |   boolq_eval_acc |   qnli_eval_acc |   scitail_eval_acc |
 |---------------------:|----------------:|-----------------:|----------------:|-------------------:|
@@ -146,8 +148,7 @@ reorder the task embeddings
 |                  100 |          0.03   |         0.738758 |        0.878982 |           0.896393 |
 |                  100 |          0.3    |         0.731416 |        0.885573 |           0.91251  |
 
-# m2-meta-task-no-relu-reorder
-reorder the task embeddings 
+## mixture 2
 
 |   task_embedding_dir |   learning_rate |   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
 |---------------------:|----------------:|----------------:|----------------:|-------------------------:|
@@ -157,6 +158,8 @@ reorder the task embeddings
 |                  100 |          0.03   |        0.769674 |        0.787479 |                 0.910498 |
 |                  100 |          0.3    |        0.743762 |        0.785779 |                 0.909971 |
 
+- observation
+  - 
 
 #
 1000 samples - 800 epochs => we need at least around 12500 steps 

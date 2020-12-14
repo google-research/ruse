@@ -307,8 +307,8 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 """
 
 
-
-"""
+# we not loading with load we are loading.
+# today jobs
 # finetuning both models with different number of samples for steps=140000.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1-adp-v"
@@ -323,8 +323,8 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "task_embedding_dir": ["task_embeddings/n-train-100"],
                                  "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-adapter/"]})
+                                 #"eval_output_dir": ["outputs/eval-v-load/finetune-adapter/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
-"""
 
 
 basic_config_path = "configs/experiments/mixture1/finetune.json"
@@ -338,9 +338,8 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "eval_tasks": [["yelp_polarity", "cola", "snli"]],
                                  "output_dir": ["mix1-finetune-lr-3e-04"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-t5/"]})
+                                 #"eval_output_dir": ["outputs/eval-v-load/finetune-t5/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
-
-
 
 """
 # let finetune the lm-head
@@ -361,3 +360,6 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  'task_embedding_dir': ["task_embeddings/n-train-100"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
+
+
+

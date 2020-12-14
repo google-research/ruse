@@ -323,8 +323,8 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "eval_tasks": [["yelp_polarity", "cola", "snli"]],
                                  "task_embedding_dir": ["task_embeddings/n-train-100"],
                                  "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
-                                 "eval_output_dir": ["outputs/eval-v/finetune-adapter/"]})
-output_dir = "outputs/eval-v/finetune-adapter/" #outputs/finetune-adapter/"
+                                 "eval_output_dir": ["outputs/eval-v-load/finetune-adapter/"]})
+output_dir = "outputs/eval-v-load/finetune-adapter/" #outputs/finetune-adapter/"
 #download_all_evals(sweep, job_prefix, short_keys, output_dir)
 retrieve_results(output_dir, sweep, short_keys, job_prefix, params)
 
@@ -332,7 +332,7 @@ retrieve_results(output_dir, sweep, short_keys, job_prefix, params)
 
 job_prefix = "m1-t5-v"
 short_keys = ["lr", "n", "e"]
-output_dir = "outputs/eval-v/finetune-t5/"
+output_dir = "outputs/eval-v-load/finetune-t5/"
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
                                                                          [8960, 1792, 896, 448, 224]),
@@ -340,7 +340,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "do_train": [False],
                                  "eval_tasks": [["yelp_polarity", "cola", "snli"]],
                                  "output_dir": ["mix1-finetune-lr-3e-04"],
-                                 "eval_output_dir": ["outputs/eval-v/finetune-t5/"]})
+                                 "eval_output_dir": ["outputs/eval-v-load/finetune-t5/"]})
 #download_all_evals(sweep, job_prefix, short_keys, output_dir)
 params= ["n_finetune", "learning_rate"]
 retrieve_results(output_dir, sweep, short_keys, job_prefix, params)

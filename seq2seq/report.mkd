@@ -153,7 +153,7 @@ Efficient Adaptation in Multi-Task Learning
 |                  100 |          0.3    |        0.743762 |        0.785779 |                 0.909971 |
 
 - observation
-  - without reordering task-embeddings  
+   - without reordering task-embeddings  
 
 |   task_embedding_dir |   learning_rate |   boolq_eval_acc |   qnli_eval_acc |   scitail_eval_acc |
 |---------------------:|----------------:|-----------------:|----------------:|-------------------:|
@@ -164,7 +164,7 @@ Efficient Adaptation in Multi-Task Learning
 |---------------------:|----------------:|----------------:|----------------:|-------------------------:|
 |                  100 |          0.03   |        0.768714 |        0.786879 |                 0.908419 | 
 
-  - with reordering task-embeddings 
+   - with reordering task-embeddings 
 
 |   task_embedding_dir |   learning_rate |   boolq_eval_acc |   qnli_eval_acc |   scitail_eval_acc |
 |---------------------:|----------------:|-----------------:|----------------:|-------------------:|

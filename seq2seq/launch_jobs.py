@@ -311,7 +311,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 # today jobs
 # finetuning both models with different number of samples for steps=140000.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
-job_prefix = "m1-load-v" #"m1-adp-v"
+job_prefix = "m1-load-v-c" #"m1-adp-v"
 short_keys = ["lr", "n", "e", "h"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2], #, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
@@ -347,7 +347,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 """
 
 basic_config_path = "configs/experiments/mixture1/finetune.json"
-job_prefix = "m1-load-t5" #"m1-t5-v" #-p added 
+job_prefix = "m1-load-t5-c" #"m1-t5-v" #-p added 
 short_keys = ["lr", "n", "e"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2], #, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],

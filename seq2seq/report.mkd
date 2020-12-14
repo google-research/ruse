@@ -83,6 +83,7 @@ Efficient Adaptation in Multi-Task Learning
 - Removing all the nonlinearities from the hyper-network.
 - each hyper-network is only a MLP layer which can be converted to one linear layer 
 - task embeddings are now fixed and initialized by computing the average encoder representation over 100 samples from training set 
+
 |   task_embedding_dir |   learning_rate |   boolq_eval_acc |   qnli_eval_acc |   scitail_eval_acc |
 |---------------------:|----------------:|-----------------:|----------------:|-------------------:|
 |                  100 |          0.0003 |         0.731416 |        0.849872 |           0.883346 |
@@ -103,6 +104,7 @@ Efficient Adaptation in Multi-Task Learning
 #m2-meta-task-no-relu
 removed nonlinearities and task-embeddings are now fixed 
 # results on cola can even get better 
+
 |   task_embedding_dir |   learning_rate |   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
 |---------------------:|----------------:|----------------:|----------------:|-------------------------:|
 |                  100 |          0.0003 |        0.736084 |        0.768277 |                 0.906471 |

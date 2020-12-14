@@ -108,16 +108,31 @@ Efficient Adaptation in Multi-Task Learning
 
 
 #m2-meta-task-no-relu
-removed nonlinearities and task-embeddings are now fixed 
-# results on cola can even get better 
+- the same experiment as above on mixture 2 with removing nonlinearities and task-embeddings are now fixed 
 
 |   task_embedding_dir |   learning_rate |   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
 |---------------------:|----------------:|----------------:|----------------:|-------------------------:|
 |                  100 |          0.0003 |        0.736084 |        0.768277 |                 0.906471 |
 |                  100 |          0.003  |        0.75048  |        0.785179 |                 0.908655 |
 |                  100 |          0.01   |        0.767754 |        0.785479 |                 0.908945 |
-|                  100 |          0.03   |        0.768714 |        0.786879 |                 0.908419 |  **
+|                  100 |          0.03   |        0.768714 |        0.786879 |                 0.908419 | 
 |                  100 |          0.3    |        0.753359 |        0.786679 |                 0.908813 |
+
+- observation, comparing these results with the model with nonlinearities:
+- this model:
+
+|   task_embedding_dir |   learning_rate |   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
+|---------------------:|----------------:|----------------:|----------------:|-------------------------:|
+|                  100 |          0.03   |        0.768714 |        0.786879 |                 0.908419 | 
+
+- model with nonlinerity:
+
+|   task_embedding_dir |   learning_rate |   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
+|---------------------:|----------------:|----------------:|----------------:|-------------------------:|
+|                  100 |          0.03   |        0.761036 |        0.78857 |                 0.910366  | 
+
+
+
 
 # m1-meta-task-no-relu-reorder
 reorder the task embeddings 

@@ -1,3 +1,6 @@
+# running jobs
+m1-task-on
+
 # related work 
 - Exploring Versatile Generative Language Model Via Parameter-Efficient
 Transfer Learning https://arxiv.org/pdf/2004.03829.pdf
@@ -189,3 +192,31 @@ m1-t5-v
 |         1000 |        0.690979 |        0.726873 |                 0.874207 |
 |         2000 |        0.723608 |        0.749875 |                 0.886155 |
 |         4000 |        0.744722 |        0.776178 |                 0.901418 |
+
+
+# lm head set to true
+m1-meta-task-no-relu-lm
+|   learning_rate |   qnli_eval_acc |   scitail_eval_acc |   boolq_eval_acc |
+|----------------:|----------------:|-------------------:|-----------------:|
+|          0.0003 |        0.855731 |           0.879509 |         0.731416 |
+|          0.003  |        0.874039 |           0.90637  |         0.729275 |
+|          0.01   |        0.877151 |           0.902533 |         0.732028 |
+|          0.03   |        0.873123 |           0.902533 |         0.721016 |
+|          0.3    |        0.803918 |           0.808903 |         0.697767 |
+qnli_eval_acc    0.877151
+scitail_eval_acc    0.90637
+boolq_eval_acc    0.732028
+
+
+m2-meta-task-no-relu-lm
+|   learning_rate |   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
+|----------------:|----------------:|----------------:|-------------------------:|
+|          0.0003 |        0.730326 |        0.768677 |                 0.907182 |
+|          0.003  |        0.770633 |        0.778978 |                 0.90834  |
+|          0.01   |        0.767754 |        0.786579 |                 0.904813 |
+|          0.03   |        0.760077 |        0.775278 |                 0.889997 |
+|          0.3    |        0.682342 |        0.721572 |                 0.862838 |
+cola_eval_acc    0.770633
+snli_eval_acc    0.786579
+yelp_polarity_eval_acc    0.90834
+

@@ -93,6 +93,7 @@ def download_all_evals(sweep, job_prefix, short_keys, output_dir):
   copy_in_parallel(copy_commands)
 
 acc_cols = ['cola_eval_acc',   'snli_eval_acc', 'yelp_polarity_eval_acc']
+#acc_cols = ["qnli_eval_acc", "scitail_eval_acc", "boolq_eval_acc"]
 def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
   print(job_prefix)
   df = pd.DataFrame()
@@ -119,19 +120,21 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
   #
   dfs = []
   for acc_col in acc_cols:
-     #print(acc_col)
      params_max = [p  for p in params if p !="learning_rate"]
-     df1 = df.loc[df.groupby(params_max)[acc_col].idxmax()][params_max+[acc_col]]
-     if len(params_max) != 0:
-      df1 = df1.sort_values(by=params_max)
-     #print(tabulate(df1, headers='keys', tablefmt='pipe', showindex=False))
-     dfs.append(df1)
- 
+     if len(params_max) == 0:
+        df1 = df.loc[df[acc_col].idxmax()][params_max+[acc_col]]
+        print(df1) 
+     else:
+        df1 = df.loc[df.groupby(params_max)[acc_col].idxmax()][params_max+[acc_col]]
+        if len(params_max) != 0:
+           df1 = df1.sort_values(by=params_max)
+        print(tabulate(df1, headers='keys', tablefmt='pipe', showindex=False))
+        dfs.append(df1)
+
+  """
   left = dfs[0]
   for i in range(1, len(dfs)):
       right = dfs[i]
       left = pd.merge(left, right, on=params_max)
   print(tabulate(left, headers='keys', tablefmt='pipe', showindex=False))
-  #table = pd.concat(dfs, axis=1)
-  #print(tabulate(table, headers='keys', tablefmt='pipe', showindex=False))
-
+  """

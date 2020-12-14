@@ -308,7 +308,6 @@ retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
 """
 
 
-
 # finetuning both models with different number of samples for steps=140000.
 # os.system(f"gsutil rsync -r outputs gs://ruse-xcloud-bucket/{output_dir}")
 job_prefix = "m1-adp-v"
@@ -345,3 +344,24 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 params= ["n_finetune", "learning_rate"]
 retrieve_results(output_dir, sweep, short_keys, job_prefix, params)
 
+"""
+output_dir= "outputs/mixture1/meta-adapter/task-emb/"
+job_prefix = "m1-meta-task-no-relu-lm"
+short_keys = ["lr", 'emb']
+params= ["learning_rate"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 "unfreeze_lm_head": [True],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100"]})
+#download_all_evals(sweep, job_prefix, short_keys, output_dir)
+retrieve_results(output_dir, sweep, short_keys, job_prefix, params)
+
+output_dir= "outputs/mixture2/meta-adapter/task-emb/"
+job_prefix = "m2-meta-task-no-relu-lm"
+short_keys = ["lr", 'emb']
+params= ["learning_rate"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 "unfreeze_lm_head": [True],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100"]})
+#download_all_evals(sweep, job_prefix, short_keys, output_dir)
+retrieve_results(output_dir, sweep, short_keys, job_prefix, params)
+"""

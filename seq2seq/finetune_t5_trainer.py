@@ -4,16 +4,16 @@ import os
 import sys
 
 import datasets
+from third_party.metrics import build_compute_metrics_fn
+from third_party.models import T5Config, T5ForConditionalGeneration
+from third_party.trainers import T5Trainer
 from transformers import AutoTokenizer, HfArgumentParser, set_seed
 from transformers.file_utils import is_torch_tpu_available
 from transformers.trainer_utils import EvaluationStrategy
 
 from seq2seq.adapters import AdapterController, MetaAdapterController, MetaParamterizedAdapterController, \
   AutoAdapterConfig
-from third_party.metrics import build_compute_metrics_fn
-from third_party.models import T5Config, T5ForConditionalGeneration
 from seq2seq.data import AutoTask, TaskCollator
-from third_party.trainers import T5Trainer
 from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments, \
   AdapterTrainingArguments
 from seq2seq.utils import (
@@ -291,7 +291,7 @@ def main():
           dataset_sizes=dataset_sizes
         )
         trainer.train(
-          model_path=training_args.output_dir if os.path.isdir(training_args.output_dir) else None
+          model_path=eval_training_args.output_dir if os.path.isdir(eval_training_args.output_dir) else None
         )
         trainer.save_model()
         if trainer.is_world_process_zero():

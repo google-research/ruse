@@ -76,6 +76,9 @@ Efficient Adaptation in Multi-Task Learning
 - flexible few-shot learning of contextual similarity  and its related work 
 
 # 14/12/2020
+- solved the bug with sentencepiece
+- dealing currently with a lot of failure on job manager system 
+
 # Removing nonlinearities 
 ## mixture 1
 - Removing all the nonlinearities from the hyper-network.
@@ -176,19 +179,20 @@ Efficient Adaptation in Multi-Task Learning
 |                  100 |          0.01   |        0.772553 |        0.782078 |                 0.90905  |
 
 
-#
+# Making finetuning work
+- I observe at least 12500 steps are needed 
+``` 
 1000 samples - 800 epochs => we need at least around 12500 steps 
-setting lm-head to true
+- our model with setting last linear layer to trainable
 12/12/2020 22:16:11 - INFO - __main__ -     snli_eval_loss = 308.1576232910156
 12/12/2020 22:16:11 - INFO - __main__ -     snli_eval_acc = 0.7222722272227222
 12/12/2020 22:16:11 - INFO - __main__ -     snli_epoch = 800.0
 
-# train our model with lm_heads not freezed
-# finetune both our models and t5 with the proper number of steps 
+# train our model with last linear layer set as trainable 
 12/12/2020 22:47:37 - INFO - __main__ -     snli_eval_loss = 311.7092590332031
 12/12/2020 22:47:37 - INFO - __main__ -     snli_eval_acc = 0.7328732873287329
 12/12/2020 22:47:37 - INFO - __main__ -     snli_epoch = 800.0
-
+```
 
 # I ran t5-finetune and mixture1 evaluated on mixture2 for 140000 steps 
 # for different number of samples

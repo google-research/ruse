@@ -94,11 +94,17 @@ Efficient Adaptation in Multi-Task Learning
 
 - observation: 
    - comparing the best results of this model with the model with nonlinearities
+   - this model
 
 |   task_embedding_dir |   learning_rate |   boolq_eval_acc |   qnli_eval_acc |   scitail_eval_acc |
 |---------------------:|----------------:|-----------------:|----------------:|-------------------:|
-|                  100 |          0.03   |         0.736311 |        0.877517 |           0.916347 |  **
+|                  100 |          0.03   |         0.736311 |        0.877517 |           0.916347 | 
 
+- model with nonlinearities 
+
+|   task_embedding_dir |   learning_rate |   boolq_eval_acc |   qnli_eval_acc |   scitail_eval_acc |
+|---------------------:|----------------:|-----------------:|----------------:|-------------------:|
+|                  100 |          0.03   |         0.741205 |        0.883742 |           0.889486 |  
 
 
 #m2-meta-task-no-relu

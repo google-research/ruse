@@ -66,21 +66,23 @@ Efficient Adaptation in Multi-Task Learning
 - dynamic convolution: attention over convolution kernels 
 - flexible few-shot learning of contextual similarity  and its related work 
 
+# 14/12/2020
 # TODO:
+- alternative updated of task, hyper-net
+- input based architecture of the model 
 - get the current results 
-- failed ones rerun 
 - send the results to neil also 
 - based on *
   - generating weight of classifier based on input task-embeddings ?
   - making all parameters including layer-norms task-embeding generated? 
-
 - how do they do zero-shot in CPG paper?
 - references in the few-shot paper, the most important ones 
 - read udapter experiments, do they have zero-shot results? 
 
 # m1-meta-task-no-relu
-removed nonlinearities, and task-embeddings are now fixed 
-
+- Removing all the nonlinearities from the hyper-network.
+- each hyper-network is only a MLP layer which can be converted to one linear layer 
+- task embeddings are now fixed and initialized by computing the average encoder representation over 100 samples from training set 
 |   task_embedding_dir |   learning_rate |   boolq_eval_acc |   qnli_eval_acc |   scitail_eval_acc |
 |---------------------:|----------------:|-----------------:|----------------:|-------------------:|
 |                  100 |          0.0003 |         0.731416 |        0.849872 |           0.883346 |
@@ -88,6 +90,12 @@ removed nonlinearities, and task-embeddings are now fixed
 |                  100 |          0.01   |         0.731416 |        0.87587  |           0.902533 |
 |                  100 |          0.03   |         0.736311 |        0.877517 |           0.916347 |  **
 |                  100 |          0.3    |         0.738146 |        0.878067 |           0.9033   |
+
+- observation: 
+   - comparing the best results of this model with the model with nonlinearities
+   |                  100 |          0.03   |         0.736311 |        0.877517 |           0.916347 |  **
+
+
 
 #m2-meta-task-no-relu
 removed nonlinearities and task-embeddings are now fixed 

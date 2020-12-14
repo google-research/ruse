@@ -271,11 +271,18 @@ Efficient Adaptation in Multi-Task Learning
 |          0.03   |        0.873123 |           0.902533 |         0.721016 |
 |          0.3    |        0.803918 |           0.808903 |         0.697767 |
 
-```
-qnli_eval_acc    0.877151
-scitail_eval_acc    0.90637
-boolq_eval_acc    0.732028
-```
+- best results with making linear layer trainable 
+
+|   qnli_eval_acc |   scitail_eval_acc |   boolq_eval_acc |
+|----------------:|-------------------:|-----------------:|
+|        0.877151 |           0.90637  |         0.732028 |
+
+- best result without making it trainable 
+
+|   qnli_eval_acc |   scitail_eval_acc |   boolq_eval_acc |
+|-----------------:|----------------:|-------------------:|
+|         0.877517 |       0.916347  |        0.736311    |
+
 ## mixture 2
 
 |   learning_rate |   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
@@ -286,8 +293,15 @@ boolq_eval_acc    0.732028
 |          0.03   |        0.760077 |        0.775278 |                 0.889997 |
 |          0.3    |        0.682342 |        0.721572 |                 0.862838 |
 
-```
-cola_eval_acc    0.770633
-snli_eval_acc    0.786579
-yelp_polarity_eval_acc    0.90834
-```
+- best results with making linear layer trainable  
+
+|   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
+|----------------:|----------------:|-------------------------:|
+|        0.770633 |        0.786579 |                0.90834   |
+
+- best result of not making it trainable
+
+|   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
+|----------------:|----------------:|-------------------------:|
+|        0.768714 |        0.786879 |                 0.908419 | 
+

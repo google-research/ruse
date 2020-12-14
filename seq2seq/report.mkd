@@ -79,7 +79,8 @@ Efficient Adaptation in Multi-Task Learning
 - references in the few-shot paper, the most important ones 
 - read udapter experiments, do they have zero-shot results? 
 
-# m1-meta-task-no-relu
+# Removing nonlinearities 
+## mixture 1
 - Removing all the nonlinearities from the hyper-network.
 - each hyper-network is only a MLP layer which can be converted to one linear layer 
 - task embeddings are now fixed and initialized by computing the average encoder representation over 100 samples from training set 
@@ -107,7 +108,7 @@ Efficient Adaptation in Multi-Task Learning
 |                  100 |          0.03   |         0.741205 |        0.883742 |           0.889486 |  
 
 
-#m2-meta-task-no-relu
+## mixture 2
 - the same experiment as above on mixture 2 with removing nonlinearities and task-embeddings are now fixed 
 
 |   task_embedding_dir |   learning_rate |   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |

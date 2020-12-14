@@ -44,7 +44,6 @@ def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name=
   for option in options:
     config = copy.deepcopy(parent_config)
     config.update({key: value for key, value in zip(keys, option)})
-    print(config)
     name = make_name(job_prefix, short_keys, option)
     print("### name ", name)
     if output_dir_name in parent_config:
@@ -116,11 +115,23 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
     df = df.sort_values(by=params)
   #df['task_embedding_dir'] = df.apply(lambda x: myfunc(x.task_embedding_dir), axis=1)
   print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
-
-
   # computing the maximum.
-  params_max = [p  for p in params if p !="learning_rate"]
-  df = df.loc[df.groupby(params_max)['cola_eval_acc'].idxmax()][params+['cola_eval_acc']]
-  if len(params) != 0:
-    df = df.sort_values(by=params)
-  print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
+  #
+  dfs = []
+  for acc_col in acc_cols:
+     #print(acc_col)
+     params_max = [p  for p in params if p !="learning_rate"]
+     df1 = df.loc[df.groupby(params_max)[acc_col].idxmax()][params_max+[acc_col]]
+     if len(params_max) != 0:
+      df1 = df1.sort_values(by=params_max)
+     #print(tabulate(df1, headers='keys', tablefmt='pipe', showindex=False))
+     dfs.append(df1)
+ 
+  left = dfs[0]
+  for i in range(1, len(dfs)):
+      right = dfs[i]
+      left = pd.merge(left, right, on=params_max)
+  print(tabulate(left, headers='keys', tablefmt='pipe', showindex=False))
+  #table = pd.concat(dfs, axis=1)
+  #print(tabulate(table, headers='keys', tablefmt='pipe', showindex=False))
+

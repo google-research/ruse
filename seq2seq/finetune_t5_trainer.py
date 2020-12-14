@@ -291,7 +291,7 @@ def main():
           dataset_sizes=dataset_sizes
         )
         trainer.train(
-          model_path=eval_training_args.output_dir if os.path.isdir(eval_training_args.output_dir) else None
+          model_path=training_args.output_dir if os.path.isdir(training_args.output_dir) else None
         )
         trainer.save_model()
         if trainer.is_world_process_zero():

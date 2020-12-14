@@ -11,6 +11,5 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from .tasks import TASK_MAPPING, AutoTask
-from .multitask_sampler import MultiTaskBatchSampler
-from .task_collator import TaskCollator
+from .projections import AutoProjection, PROJECTION_MAPPING
+from .poolings import AutoPooling, POOLING_MAPPING

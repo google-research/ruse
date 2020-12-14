@@ -1,5 +1,14 @@
-# running jobs
-m1-task-on
+# TODO:
+- alternative updated of task, hyper-net
+- input based architecture of the model 
+- get the current results 
+- send the results to neil also 
+- based on *
+  - generating weight of classifier based on input task-embeddings ?
+  - making all parameters including layer-norms task-embeding generated? 
+- how do they do zero-shot in CPG paper?
+- references in the few-shot paper, the most important ones 
+- read udapter experiments, do they have zero-shot results? 
 
 # related work 
 - Exploring Versatile Generative Language Model Via Parameter-Efficient
@@ -67,18 +76,6 @@ Efficient Adaptation in Multi-Task Learning
 - flexible few-shot learning of contextual similarity  and its related work 
 
 # 14/12/2020
-# TODO:
-- alternative updated of task, hyper-net
-- input based architecture of the model 
-- get the current results 
-- send the results to neil also 
-- based on *
-  - generating weight of classifier based on input task-embeddings ?
-  - making all parameters including layer-norms task-embeding generated? 
-- how do they do zero-shot in CPG paper?
-- references in the few-shot paper, the most important ones 
-- read udapter experiments, do they have zero-shot results? 
-
 # Removing nonlinearities 
 ## mixture 1
 - Removing all the nonlinearities from the hyper-network.
@@ -132,9 +129,6 @@ Efficient Adaptation in Multi-Task Learning
 |---------------------:|----------------:|----------------:|----------------:|-------------------------:|
 |                  100 |          0.03   |        0.761036 |        0.78857 |                 0.910366  | 
 
-
-
-
 # Reordering the task-embeddings 
 - reorder the task embeddings to assign different task-embeddings to each task. 
 - still using the model without nonlinearities 
@@ -159,7 +153,28 @@ Efficient Adaptation in Multi-Task Learning
 |                  100 |          0.3    |        0.743762 |        0.785779 |                 0.909971 |
 
 - observation
-  - 
+  - without reordering task-embeddings  
+
+|   task_embedding_dir |   learning_rate |   boolq_eval_acc |   qnli_eval_acc |   scitail_eval_acc |
+|---------------------:|----------------:|-----------------:|----------------:|-------------------:|
+|                  100 |          0.03   |         0.736311 |        0.877517 |           0.916347 | 
+
+
+|   task_embedding_dir |   learning_rate |   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
+|---------------------:|----------------:|----------------:|----------------:|-------------------------:|
+|                  100 |          0.03   |        0.768714 |        0.786879 |                 0.908419 | 
+
+  - with reordering task-embeddings 
+
+|   task_embedding_dir |   learning_rate |   boolq_eval_acc |   qnli_eval_acc |   scitail_eval_acc |
+|---------------------:|----------------:|-----------------:|----------------:|-------------------:|
+|                  100 |          0.01   |         0.741817 |        0.879348 |           0.916347 |
+
+
+|   task_embedding_dir |   learning_rate |   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
+|---------------------:|----------------:|----------------:|----------------:|-------------------------:|
+|                  100 |          0.01   |        0.772553 |        0.782078 |                 0.90905  |
+
 
 #
 1000 samples - 800 epochs => we need at least around 12500 steps 

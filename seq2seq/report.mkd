@@ -260,8 +260,9 @@ Efficient Adaptation in Multi-Task Learning
 |         4000 |        0.744722 |        0.776178 |                 0.901418 |
 
 
-# lm head set to true
-m1-meta-task-no-relu-lm
+# Setting linear layer to trainable without nonlinearities 
+## mixture 1
+ 
 |   learning_rate |   qnli_eval_acc |   scitail_eval_acc |   boolq_eval_acc |
 |----------------:|----------------:|-------------------:|-----------------:|
 |          0.0003 |        0.855731 |           0.879509 |         0.731416 |
@@ -269,12 +270,14 @@ m1-meta-task-no-relu-lm
 |          0.01   |        0.877151 |           0.902533 |         0.732028 |
 |          0.03   |        0.873123 |           0.902533 |         0.721016 |
 |          0.3    |        0.803918 |           0.808903 |         0.697767 |
+
+```
 qnli_eval_acc    0.877151
 scitail_eval_acc    0.90637
 boolq_eval_acc    0.732028
+```
+## mixture 2
 
-
-m2-meta-task-no-relu-lm
 |   learning_rate |   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
 |----------------:|----------------:|----------------:|-------------------------:|
 |          0.0003 |        0.730326 |        0.768677 |                 0.907182 |
@@ -282,7 +285,9 @@ m2-meta-task-no-relu-lm
 |          0.01   |        0.767754 |        0.786579 |                 0.904813 |
 |          0.03   |        0.760077 |        0.775278 |                 0.889997 |
 |          0.3    |        0.682342 |        0.721572 |                 0.862838 |
+
+```
 cola_eval_acc    0.770633
 snli_eval_acc    0.786579
 yelp_polarity_eval_acc    0.90834
-
+```

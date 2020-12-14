@@ -166,7 +166,8 @@ def main():
     data_args.eval_beams = model.config.num_beams
 
   # freezing the parameters.
-  freezing_params(model, training_args, model_args)
+  if training_args.do_train:
+    freezing_params(model, training_args, model_args)
 
   dataset_class = AutoTask
   if training_args.do_train:
@@ -257,7 +258,6 @@ def main():
             if isinstance(sub_module, MetaAdapterController):
               sub_module.update_task_embeddings([eval_task],
                                                 parametric=training_args.parametric_task_embedding)
-              # TODO: needs to be a parameteric for meta-adapter too.
 
       # if training_args.eval_output_dir is not None:
       #    training_args.output_dir = training_args.eval_output_dir
@@ -278,7 +278,11 @@ def main():
         eval_data_args = copy.deepcopy(data_args)
         eval_data_args.tasks = [eval_task]
         eval_data_args.eval_tasks = [eval_task]
+
+
         freezing_params(model, eval_training_args, model_args)
+
+
         trainer = T5Trainer(
           model=model,
           config=config,

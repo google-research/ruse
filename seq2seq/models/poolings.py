@@ -70,7 +70,6 @@ class AttentivePooling(Pooling):
     self.query = nn.Parameter(torch.zeros(1, 1, config.d_model))
     self.key = nn.Linear(config.d_model, self.all_head_size)
     self.value = nn.Linear(config.d_model, self.all_head_size)
-    # TODO(rabeeh): shall we add a dropout here.
     self.dropout = nn.Dropout(config.dropout_rate)
 
   def transpose_for_scores(self, x):
@@ -78,7 +77,6 @@ class AttentivePooling(Pooling):
     x = x.view(*new_x_shape)
     return x.permute(0, 2, 1, 3)
 
-  # TODO(rabeeh): fix using attention mask here.
   def forward(self, hidden_states, attention_mask):
     batch_size = hidden_states.shape[0]
     mixed_key_layer = self.key(hidden_states)
@@ -93,7 +91,6 @@ class AttentivePooling(Pooling):
     # scores.
     attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
     attention_scores = attention_scores / math.sqrt(self.attention_head_size)
-    # TODO(rabeeh): do we need something like BERT selfOutput Layer?
     # Normalize the attention scores to probabilities.
     attention_probs = nn.Softmax(dim=-1)(attention_scores)
 

@@ -158,10 +158,11 @@ class MetaAdapterController(nn.Module):
       self.task_to_embeddings[task] = task_embedding if not parametric else nn.Parameter(task_embedding)
 
   def update_task_embeddings(self, tasks, parametric=False):
+    self.task_to_embeddings = {} if not parametric else nn.ParameterDict(dict())
     for task in tasks:
-      if task not in self.task_to_embeddings:
-        task_embedding = self.load_or_init_task_embedding(task)
-        self.task_to_embeddings[task] = task_embedding if not parametric else nn.Parameter(task_embedding)
+      #if task not in self.task_to_embeddings:
+      task_embedding = self.load_or_init_task_embedding(task)
+      self.task_to_embeddings[task] = task_embedding if not parametric else nn.Parameter(task_embedding)
 
   def call_adapter(self, inputs, task):
     task_embedding = self.task_to_embeddings[task]

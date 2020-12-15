@@ -392,9 +392,10 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 
 
 # 15 dec 2020
-failed_names=[m1-adp-noload-lr-3e-04-n-2000-e-448-h-true, m1-adp-noload-lr-3e-04-n-1000-e-896-h-false, m1-t5-noload-lr-1e-02-n-4000-e-224, 
-              m1-adp-noload-lr-3e-04-n-1000-e-896-h-true, m1-adp-noload-lr-3e-02-n-2000-e-448-h-false, m1-adp-noload-lr-3e-02-n-2000-e-448-h-true, 
-              m1-adp-noload-lr-3e-02-n-1000-e-896-h-false, m1-adp-noload-lr-3e-02-n-1000-e-896-h-true]
+failed_names= ['m1-t5-noload-lr-1e-02-n-4000-e-224', 'm1-adp-noload-lr-3e-04-n-2000-e-448-h-true', 'm1-adp-noload-lr-3e-04-n-1000-e-896-h-false', 'm1-adp-noload-lr-3e-04-n-1000-e-896-h-true', 'm1-adp-noload-lr-3e-03-n-100-e-8960-h-false', 'm1-adp-noload-lr-3e-03-n-100-e-8960-h-true', 'm1-adp-noload-lr-3e-02-n-4000-e-224-h-false', 'm1-adp-noload-lr-3e-02-n-4000-e-224-h-true', 'm1-adp-noload-lr-3e-02-n-2000-e-448-h-false', 'm1-adp-noload-lr-3e-02-n-2000-e-448-h-true', 'm1-adp-noload-lr-3e-02-n-1000-e-896-h-false', 'm1-adp-noload-lr-3e-02-n-1000-e-896-h-true', 'm1-adp-noload-lr-3e-02-n-500-e-1792-h-true', 'm1-adp-noload-lr-3e-02-n-100-e-8960-h-true', 'm1-adp-noload-lr-3e-01-n-4000-e-224-h-false', 'm1-adp-noload-lr-3e-01-n-2000-e-448-h-false', 'm1-adp-noload-lr-3e-01-n-100-e-8960-h-true', 'm1-adp-noload-lr-1e-02-n-4000-e-224-h-false', 'm1-adp-noload-lr-1e-02-n-4000-e-224-h-true', 'm1-adp-noload-lr-1e-02-n-2000-e-448-h-false', 'm1-adp-noload-lr-1e-02-n-2000-e-448-h-true', 'm1-adp-noload-lr-1e-02-n-1000-e-896-h-false', 'm1-adp-noload-lr-1e-02-n-1000-e-896-h-true', 'm1-adp-noload-lr-1e-02-n-500-e-1792-h-false', 'm1-adp-noload-lr-1e-02-n-500-e-1792-h-true', 'm1-adp-noload-lr-1e-02-n-100-e-8960-h-false', 'm1-adp-noload-lr-1e-02-n-100-e-8960-h-true', 'm1-adp-noload-lr-1e-02-n-1000-e-896-h-true', 'm1-adp-noload-lr-1e-02-n-500-e-1792-h-false', 'm1-adp-noload-lr-1e-02-n-500-e-1792-h-true', 'm1-adp-noload-lr-1e-02-n-100-e-8960-h-false', 'm1-adp-noload-lr-1e-02-n-100-e-8960-h-true', 'm1-adp-v-lr-3e-04-n-4000-e-224-h-false', 'm1-t5-noload-lr-3e-04-n-2000-e-448', 'm1-t5-noload-lr-1e-02-n-4000-e-224', 'm1-adp-v-lr-3e-04-n-100-e-8960-h-true', 'm1-t5-v-lr-3e-03-n-2000-e-448', 'm1-adp-v-lr-3e-03-n-1000-e-896-h-false', 'm1-adp-v-lr-3e-02-n-500-e-1792-h-false', 'm1-adp-v-lr-3e-02-n-100-e-8960-h-false', 'm1-adp-v-lr-3e-02-n-100-e-8960-h-true', 'm1-adp-v-lr-1e-02-n-1000-e-896-h-false', 'm1-adp-v-lr-1e-02-n-1000-e-896-h-true', 'm1-adp-v-lr-1e-02-n-500-e-1792-h-false', 'm1-adp-v-lr-1e-02-n-500-e-1792-h-true', 'm1-adp-v-lr-1e-02-n-100-e-8960-h-false', 'm1-adp-v-lr-1e-02-n-100-e-8960-h-true', 'm1-load-v-c-lr-1e-02-n-1000-e-896-h-false', 'm1-load-v-c-lr-1e-02-n-1000-e-896-h-true', 'm1-load-v-c-lr-1e-02-n-500-e-1792-h-false', 'm1-load-v-c-lr-1e-02-n-500-e-1792-h-true', 'm1-load-v-c-lr-1e-02-n-100-e-8960-h-false', 'm1-load-v-c-lr-1e-02-n-100-e-8960-h-true']
+
+print(failed_names)
+
 # our model without loading.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1-adp-noload"
@@ -410,7 +411,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "task_embedding_dir": ["task_embeddings/n-train-100"],
                                  "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-adapter/"]})
-do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir", failed_jobs=failed_names)
 
 # t5 without loading.
 basic_config_path = "configs/experiments/mixture1/finetune.json"
@@ -425,4 +426,4 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "eval_tasks": [["yelp_polarity", "cola", "snli"]],
                                  "output_dir": ["mix1-finetune-lr-3e-04"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-t5/"]})
-do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir", failed_jobs=failed_names)

@@ -6,7 +6,9 @@ status_ind = 20
 failed_jobs = []
 for line in lines:
     splits = line.split()
-    job_id = splits[0].rstrip()[9:]
+    print(splits[0].rstrip().split('.'))
+    job_id = splits[0].rstrip().split('.')[1]
+    print(job_id)
     status = splits[-1].rstrip()
     date = splits[2].rstrip()
     if status == "FAILED" and date == "2020-12-15":

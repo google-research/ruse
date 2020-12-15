@@ -40,7 +40,7 @@ def make_name(prefix, keys, values):
   return name[:-1]
 
 
-def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name="output_dir"):
+def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name="output_dir", failed_jobs = []):
   temp_configs_dir = "temp_configs"
   if not os.path.exists(temp_configs_dir):
      os.makedirs(temp_configs_dir)
@@ -66,7 +66,8 @@ def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name=
     with open(config_path, 'w') as f:
       json.dump(config, f)
        #commands.append(get_run_command(config_path, name))
-    get_run_command(config_path, name)
+    if (len(failed_jobs) != 0 and name in failed_jobs) or len(failed_jobs) == 0:
+       get_run_command(config_path, name)
     #print(commands)
     #run_in_parallel(commands)
 

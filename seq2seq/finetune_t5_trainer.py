@@ -73,7 +73,7 @@ def freezing_params(model, training_args, model_args):
         for param in task_embedding_dict.parameters():
           param.requires_grad = True
 
-  if training_args.freeze_model_but_task_embeddings_and_lm_head:
+  if model_args.freeze_model_but_task_embeddings_and_lm_head:
     for param in model.lm_head.parameters():
       param.requires_grad = True
 

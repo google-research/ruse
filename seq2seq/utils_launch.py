@@ -9,13 +9,13 @@ import subprocess
 import os
 import time
 
-def run_jobs(config_path, job_name):
+def get_run_command(config_path, job_name):
   with open('google/launch_command', 'r') as f:
     launch_command = f.read()
   launch_command = launch_command.rstrip()
   command = "{2} google/launch_xla_clean1.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(
     config_path, job_name, launch_command)
-  os.system(command)
+  return command
 
 def flatten(output):
   flatten = []
@@ -39,11 +39,16 @@ def make_name(prefix, keys, values):
 
 
 def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name="output_dir"):
+  temp_configs_dir = "temp_configs"
+  if not os.path.exists(temp_configs_dir):
+     os.makedirs(temp_configs_dir)
   with open(parent_config_path, "r") as infile:
     parent_config = json.loads(infile.read())
   values = list(sweep.values())
   keys = flatten(list(sweep.keys()))
   options = [flatten(option) for option in list(itertools.product(*values))]
+
+  commands = []
   for option in options:
     config = copy.deepcopy(parent_config)
     config.update({key: value for key, value in zip(keys, option)})
@@ -55,17 +60,21 @@ def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name=
       parent_output_dir = sweep[output_dir_name][0]
     output_dir = os.path.join(parent_output_dir, name)
     config.update({output_dir_name: output_dir})
-    config_path = "temp.json"
+    config_path = "{0}/{1}.json".format(temp_configs_dir, name)
     with open(config_path, 'w') as f:
       json.dump(config, f)
-    run_jobs(config_path, name)
+    commands.append(get_run_command(config_path, name))
+  print(commands)
+  run_in_parallel(commands)
+
+  
 
 def myfunc(x):
     splits = x.split("/")
     return splits[-1].split("-")[-1]
 
 
-def copy_in_parallel(commands):
+def run_in_parallel(commands):
   processes = set()
   max_processes = 8
   for name in commands:
@@ -93,7 +102,7 @@ def download_all_evals(sweep, job_prefix, short_keys, output_dir):
       os.makedirs(experiment_output_dir)
     if not os.path.exists(eval_path):
       copy_commands.append(["gsutil", "cp", f"{bucket}/{eval_path}", f"{experiment_output_dir}/eval_results.json"])
-  copy_in_parallel(copy_commands)
+  run_in_parallel(copy_commands)
 
 acc_cols = ['cola_eval_acc',   'snli_eval_acc', 'yelp_polarity_eval_acc']
 #acc_cols = ["qnli_eval_acc", "scitail_eval_acc", "boolq_eval_acc"]

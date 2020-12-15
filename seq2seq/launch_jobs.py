@@ -388,6 +388,11 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2], #, 3e-1, 3e-2, 3e-3, 3
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
 """
 
+
+
+
+
+
 """
 # our model without loading.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
@@ -408,7 +413,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 
 # t5 without loading.
 basic_config_path = "configs/experiments/mixture1/finetune.json"
-job_prefix = "m1-t5-v" #-p added
+job_prefix = "m1-t5-noload-c" #-p added
 short_keys = ["lr", "n", "e"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],

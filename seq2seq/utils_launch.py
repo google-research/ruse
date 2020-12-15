@@ -12,6 +12,7 @@ import time
 def run_jobs(config_path, job_name):
   with open('google/launch_command', 'r') as f:
     launch_command = f.read()
+  launch_command = launch_command.rstrip()
   command = "{2} google/launch_xla_clean1.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(
     config_path, job_name, launch_command)
   os.system(command)

@@ -1,3 +1,7 @@
+# Questions
+- how to assign a bug to two people
+- what can be done with xlcoud issues 
+
 # Running
 - running task-embeddings + lm-head not freezed
 - rerunning the experiments for t5 and our model - without loading optimizers  

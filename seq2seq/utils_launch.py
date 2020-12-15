@@ -114,6 +114,7 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
       df = df.append(results, ignore_index=True)
     except FileNotFoundError:
       print("File not found ", eval_path)
+  print("##### df ", df)
   df = df[params+acc_cols]
   if len(params) != 0:
     df = df.sort_values(by=params)

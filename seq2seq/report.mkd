@@ -311,6 +311,8 @@ Efficient Adaptation in Multi-Task Learning
 |----------------:|----------------:|-------------------------:|
 |        0.768714 |        0.786879 |                 0.908419 | 
 
+# 15/12/2020
+
 # updating only task-embeddings
 |   n_finetune |   learning_rate |   cola_eval_acc |   snli_eval_acc |   yelp_polarity_eval_acc |
 |-------------:|----------------:|----------------:|----------------:|-------------------------:|

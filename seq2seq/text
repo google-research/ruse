@@ -1,6 +1,3 @@
-Listing all jobs, including unstarted, running, and finished ones
---------------------------------------------------------------  ---------  --------------------------  ---------------  --------------
-JobName                                                         Allotment  Created at                  Scheduler State  Observed State
 20201215.m1-t5-noload-lr-3e-04-n-4000-e-224.e2bde.0             rabeeh     2020-12-15 06:13:53 -08:00  SCHEDULED        RUNNING
 20201215.m1-t5-noload-lr-3e-04-n-2000-e-448.e7fd5.0             rabeeh     2020-12-15 06:12:39 -08:00  SCHEDULED        RUNNING
 20201215.m1-t5-noload-lr-3e-04-n-1000-e-896.f90f2.0             rabeeh     2020-12-15 06:11:25 -08:00  SCHEDULED        RUNNING
@@ -1869,4 +1866,3 @@ JobName                                                         Allotment  Creat
 20201030.mnist-tf-tpu.99234.5                                   rabeeh     2020-10-30 09:29:38 -07:00  DELETED          FAILED
 20201030.mnist-tf-tpu.99234.6                                   rabeeh     2020-10-30 09:29:38 -07:00  DELETED          SUCCEEDED
 20201030.mnist-tf-tpu.99234.7                                   rabeeh     2020-10-30 09:29:38 -07:00  DELETED          SUCCEEDED
---------------------------------------------------------------  ---------  --------------------------  ---------------  --------------

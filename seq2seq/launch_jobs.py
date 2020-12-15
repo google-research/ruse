@@ -367,8 +367,8 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 
 
-"""
 # we not loading with load we are loading.
+"""
 # today jobs
 # finetuning both models with different number of samples for steps=140000.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
@@ -391,12 +391,11 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 
 
 
+# 15 dec 2020
 
-
-"""
 # our model without loading.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
-job_prefix = "m1-adp-v"
+job_prefix = "m1-adp-noload"
 short_keys = ["lr", "n", "e", "h"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
@@ -409,11 +408,10 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-adapter/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
-"""
 
 # t5 without loading.
 basic_config_path = "configs/experiments/mixture1/finetune.json"
-job_prefix = "m1-t5-noload-c" #-p added
+job_prefix = "m1-t5-noload" #-p added
 short_keys = ["lr", "n", "e"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],

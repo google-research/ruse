@@ -392,7 +392,9 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 
 
 # 15 dec 2020
-
+failed_names=[m1-adp-noload-lr-3e-04-n-2000-e-448-h-true, m1-adp-noload-lr-3e-04-n-1000-e-896-h-false, m1-t5-noload-lr-1e-02-n-4000-e-224, 
+              m1-adp-noload-lr-3e-04-n-1000-e-896-h-true, m1-adp-noload-lr-3e-02-n-2000-e-448-h-false, m1-adp-noload-lr-3e-02-n-2000-e-448-h-true, 
+              m1-adp-noload-lr-3e-02-n-1000-e-896-h-false, m1-adp-noload-lr-3e-02-n-1000-e-896-h-true]
 # our model without loading.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1-adp-noload"
@@ -403,6 +405,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "unfreeze_lm_head": [True, False],
                                  "do_finetune": [True],
                                  "do_train": [False],
+                                 "save_steps": [1000],
                                  "eval_tasks": [["yelp_polarity", "cola", "snli"]],
                                  "task_embedding_dir": ["task_embeddings/n-train-100"],
                                  "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
@@ -418,6 +421,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                                                          [8960, 1792, 896, 448, 224]),
                                  "do_finetune": [True],
                                  "do_train": [False],
+                                 "save_steps": [1000],
                                  "eval_tasks": [["yelp_polarity", "cola", "snli"]],
                                  "output_dir": ["mix1-finetune-lr-3e-04"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-t5/"]})

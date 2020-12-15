@@ -368,7 +368,7 @@ retrieve_results(output_dir, sweep, short_keys, job_prefix, params)
 """
 
 
-
+"""
 # only training task-embeddings - this is without loading optimizers.
 output_dir = "outputs/eval-v/finetune-only-task-embeddings/"
 job_prefix = "m1-task-on"
@@ -388,3 +388,44 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 #download_all_evals(sweep, job_prefix, short_keys, output_dir)
 params= ["n_finetune", "learning_rate"]
 retrieve_results(output_dir, sweep, short_keys, job_prefix, params)
+"""
+
+"""
+# loading t5 optimizers.
+output_dir="outputs/eval-v-load/finetune-t5/"
+job_prefix = "m1-load-t5-c" #"m1-t5-v" #-p added 
+short_keys = ["lr", "n", "e"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2], #, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [8960, 1792, 896, 448, 224]),
+                                 "do_finetune": [True],
+                                 "do_train": [False],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "output_dir": ["mix1-finetune-lr-3e-04"],
+                                 "eval_output_dir": ["outputs/eval-v-load/finetune-t5/"]})
+#download_all_evals(sweep, job_prefix, short_keys, output_dir)
+params= ["n_finetune", "learning_rate"]
+retrieve_results(output_dir, sweep, short_keys, job_prefix, params)
+"""
+
+
+# we not loading with load we are loading.
+# today jobs
+# finetuning both models with different number of samples for steps=140000.
+job_prefix = "m1-load-v-c" #"m1-adp-v"
+short_keys = ["lr", "n", "e", "h"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2], #, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [8960, 1792, 896, 448, 224]),
+                                 "unfreeze_lm_head": [True, False],
+                                 "do_finetune": [True],
+                                 "do_train": [False],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["task_embeddings/n-train-100"],
+                                 "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
+                                 #"eval_output_dir": ["outputs/eval-v/finetune-adapter/"]})
+                                 "eval_output_dir": ["outputs/eval-v-load/finetune-adapter/"]})
+#download_all_evals(sweep, job_prefix, short_keys, sweep['eval_output_dir'][0])
+params= ["n_finetune", "learning_rate"]
+retrieve_results(sweep['eval_output_dir'][0], sweep, short_keys, job_prefix, params)
+

@@ -12,8 +12,8 @@ import time
 def run_jobs(config_path, job_name):
   with open('google/launch_command', 'r') as f:
     launch_command = f.read()
-  command = "{2} google/launch_xla_clean1.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(
-    config_path, job_name, launch_command)
+  command = "/google/bin/releases/cloud-alphabetcloud-xcloud/xcloud_cli/xcloud_cli.par google/launch_xla_clean1.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(
+    config_path, job_name)
   os.system(command)
 
 def flatten(output):

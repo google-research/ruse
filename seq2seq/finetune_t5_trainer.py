@@ -65,13 +65,18 @@ def freezing_params(model, training_args, model_args):
       param.requires_grad = True
 
   # TODO: only works for parametric-meta-adapter.
-  if model_args.freeze_model_but_task_embeddings:
+  if model_args.freeze_model_but_task_embeddings or model_args.freeze_model_but_task_embeddings_and_lm_head:
     freeze_params(model)
     for name, sub_module in model.named_modules():
       if isinstance(sub_module, MetaAdapterController):
         task_embedding_dict = sub_module.task_to_embeddings
         for param in task_embedding_dict.parameters():
           param.requires_grad = True
+
+  if training_args.freeze_model_but_task_embeddings_and_lm_head:
+    for param in model.lm_head.parameters():
+      param.requires_grad = True
+
 
 
 def main():

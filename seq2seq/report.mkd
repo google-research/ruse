@@ -1,3 +1,7 @@
+# Running
+- running task-embeddings + lm-head not freezed
+- rerunning the experiments for t5 and our model - without loading optimizers  
+
 # TODO:
 - alternative updated of task, hyper-net
 - input based architecture of the model 

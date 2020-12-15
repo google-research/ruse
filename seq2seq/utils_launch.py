@@ -13,8 +13,8 @@ def get_run_command(config_path, job_name):
   with open('google/launch_command', 'r') as f:
     launch_command = f.read()
   launch_command = launch_command.rstrip()
-  os.system("{2} google/launch_xla_clean1.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(config_path, job_name, launch_command))
-  # return ["{0}".format(launch_command), "google/launch_xla_clean1.py", "--", "--config_path {0}".format(config_path), "--job_name {0}".format(job_name), "--num_gpus 1"]
+  #os.system("{2} google/launch_xla_clean1.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(config_path, job_name, launch_command))
+  return "{0} google/launch_xla_clean1.py -- --config_path {1} --job_name {2} --num_gpus 1 --norun_copybara".format(launch_command, config_path, job_name)
   #opy_commands.append(["gsutil", "cp", f"{bucket}/{eval_path}", f"{experiment_output_dir}/eval_results.json"])
   #return [command]
   
@@ -65,11 +65,11 @@ def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name=
     config_path = "{0}/{1}.json".format(temp_configs_dir, name)
     with open(config_path, 'w') as f:
       json.dump(config, f)
-       #commands.append(get_run_command(config_path, name))
+    commands.append(get_run_command(config_path, name))
     if (len(failed_jobs) != 0 and name in failed_jobs) or len(failed_jobs) == 0:
        get_run_command(config_path, name)
-    #print(commands)
-    #run_in_parallel(commands)
+  print(commands)
+  run_in_parallel(commands)
 
   
 

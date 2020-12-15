@@ -453,7 +453,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 
 # running ours and t5 for much less steps.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
-job_prefix = "m1-adp-noload-half"
+job_prefix = "test" #"m1-adp-noload-half"
 short_keys = ["lr", "n", "e", "h"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
@@ -468,6 +468,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "eval_output_dir": ["outputs/eval-v/finetune-adapter/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir") #, failed_jobs=failed_names)
 
+"""
 # t5 without loading.
 basic_config_path = "configs/experiments/mixture1/finetune.json"
 job_prefix = "m1-t5-noload-half" #-p added
@@ -482,3 +483,4 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "output_dir": ["mix1-finetune-lr-3e-04"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-t5/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir") #, failed_jobs=failed_names)
+"""

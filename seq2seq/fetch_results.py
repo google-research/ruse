@@ -307,7 +307,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 retrieve_results(output_dir, sweep, short_keys, job_prefix, order)
 """
 
-
+"""
 # finetuning both models with different number of samples for steps=140000.
 # os.system(f"gsutil rsync -r outputs gs://ruse-xcloud-bucket/{output_dir}")
 job_prefix = "m1-adp-v"
@@ -343,6 +343,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 #download_all_evals(sweep, job_prefix, short_keys, output_dir)
 params= ["n_finetune", "learning_rate"]
 retrieve_results(output_dir, sweep, short_keys, job_prefix, params)
+"""
 
 """
 output_dir= "outputs/mixture1/meta-adapter/task-emb/"
@@ -365,3 +366,25 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 #download_all_evals(sweep, job_prefix, short_keys, output_dir)
 retrieve_results(output_dir, sweep, short_keys, job_prefix, params)
 """
+
+
+
+# only training task-embeddings - this is without loading optimizers.
+output_dir = "outputs/eval-v/finetune-only-task-embeddings/"
+job_prefix = "m1-task-on"
+short_keys = ["lr", "n", "e"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [8960, 1792, 896, 448, 224]),
+                                 "unfreeze_lm_head": [False],
+                                 "do_finetune": [True],
+                                 "do_train": [False],
+                                 "parametric_task_embedding": [True],
+                                 "freeze_model_but_task_embeddings": [True],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["task_embeddings/n-train-100"],
+                                 "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
+                                 "eval_output_dir": ["outputs/eval-v/finetune-only-task-embeddings/"]})
+#download_all_evals(sweep, job_prefix, short_keys, output_dir)
+params= ["n_finetune", "learning_rate"]
+retrieve_results(output_dir, sweep, short_keys, job_prefix, params)

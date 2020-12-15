@@ -130,13 +130,11 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
         df1 = df.loc[df.groupby(params_max)[acc_col].idxmax()][params_max+[acc_col]]
         if len(params_max) != 0:
            df1 = df1.sort_values(by=params_max)
-        print(tabulate(df1, headers='keys', tablefmt='pipe', showindex=False))
+        #print(tabulate(df1, headers='keys', tablefmt='pipe', showindex=False))
         dfs.append(df1)
 
-  """
   left = dfs[0]
   for i in range(1, len(dfs)):
       right = dfs[i]
       left = pd.merge(left, right, on=params_max)
   print(tabulate(left, headers='keys', tablefmt='pipe', showindex=False))
-  """

@@ -23,7 +23,7 @@ from transformers.activations import get_activation
 
 from .adapter_configuration import AdapterConfig, MetaAdapterConfig, ParametricMetaAdapterConfig
 from .adapter_modeling import Adapter
-from .adapter_utils import HyperNetUpSampler, HyperNetDownSampler
+from .adapter_utils import HyperNetUpSampler, HyperNetDownSampler, TaskHyperNet
 
 
 class AdapterController(nn.Module):
@@ -134,6 +134,9 @@ class MetaAdapterController(nn.Module):
     self.task_embedding_dir = config.task_embedding_dir
     self.input_dim = config.input_dim
     self.set_task_embeddings(self.tasks)
+    self.train_task_embeddings = config.train_task_embeddings
+    if self.train_task_embeddings:
+      self.task_hyper_net = TaskHyperNet(config)
     self.meta_up_sampler = HyperNetUpSampler(config)
     self.meta_down_sampler = HyperNetDownSampler(config)
     self.activation_type = config.non_linearity.lower()
@@ -164,8 +167,14 @@ class MetaAdapterController(nn.Module):
       task_embedding = self.load_or_init_task_embedding(task)
       self.task_to_embeddings[task] = task_embedding if not parametric else nn.Parameter(task_embedding)
 
-  def call_adapter(self, inputs, task):
+  def get_task_embeddings(self, task):
     task_embedding = self.task_to_embeddings[task]
+    if self.train_task_embeddings:
+      return self.task_hyper_net(task_embedding)
+    return task_embedding
+
+  def call_adapter(self, inputs, task):
+    task_embedding = self.get_task_embeddings(task)
     weight_up, bias_up = self.meta_up_sampler(task_embedding)
     weight_down, bias_down = self.meta_down_sampler(task_embedding)
     down = F.linear(inputs, weight=weight_down, bias=bias_down)

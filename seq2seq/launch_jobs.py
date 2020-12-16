@@ -556,16 +556,16 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 
 # do the search also on the adapter layers 
 failed_jobs = ['m1-lr-3e-03-h-false-r-16-n-gelu', 'm1-lr-3e-03-h-false-r-2-n-sigmoid', 'm1-lr-3e-03-h-true-r-2-n-gelu', 'm1-lr-3e-02-h-false-r-2-n-relu', 'm1-lr-3e-02-h-true-r-4-n-sigmoid', 'm1-lr-3e-02-h-true-r-2-n-sigmoid', 'm1-lr-3e-02-h-true-r-2-n-gelu', 'm1-lr-3e-02-h-true-r-2-n-tanh', 'm1-lr-3e-02-h-true-r-2-n-swish', 'm1-lr-3e-02-h-true-r-2-n-relu', 'm1-lr-3e-01-h-false-r-16-n-swish', 'm1-lr-3e-01-h-false-r-4-n-swish', 'm1-lr-3e-01-h-false-r-2-n-tanh', 'm1-lr-3e-01-h-true-r-4-n-gelu', 'm1-lr-3e-01-h-true-r-2-n-sigmoid', 'm1-lr-3e-01-h-true-r-2-n-relu', 'm1-lr-1e-02-h-false-r-8-n-relu', 'm1-lr-1e-02-h-true-r-16-n-swish', 'm1-lr-3e-01-h-false-r-2-n-sigmoid', 'm1-lr-3e-01-h-true-r-2-n-sigmoid', 'm1-lr-3e-01-h-true-r-2-n-tanh', 'm1-lr-3e-01-h-true-r-2-n-swish', 'm1-lr-3e-01-h-true-r-2-n-relu', 'm1-lr-1e-02-h-false-r-2-n-sigmoid', 'm1-lr-1e-02-h-false-r-2-n-gelu', 'm1-lr-1e-02-h-false-r-2-n-tanh', 'm1-lr-1e-02-h-false-r-2-n-swish', 'm1-lr-1e-02-h-true-r-2-n-swish', 'm1-lr-1e-02-h-true-r-2-n-tanh', 'm1-lr-1e-02-h-true-r-2-n-relu', 'm1-lr-1e-02-h-true-r-2-n-sigmoid', 'm1-lr-1e-02-h-true-r-2-n-gelu', 'm1-adp-lr-1e-02-n-100-e-7200-h-true-r-2-n-sig', 'm1-adp-lr-1e-02-n-100-e-7200-h-true-r-4-n-rel', 'm1-adp-lr-1e-02-n-100-e-7200-h-true-r-4-n-tan', 'm1-adp-lr-1e-02-n-100-e-7200-h-true-r-4-n-swi', 'm1-adp-lr-1e-02-n-100-e-7200-h-true-r-2-n-swi', 'm1-adp-lr-1e-02-n-100-e-7200-h-true-r-2-n-gel']
-print("@@@@ failed ", len(failed_jobs))
+
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
-job_prefix = "m1"
+job_prefix = "m1-c"
 short_keys = ["lr", "h", "r", "n"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  "unfreeze_lm_head": [True, False],
                                  "reduction_factor": [2, 4, 8, 16],
                                  "non_linearity": ["relu", "swish", "tanh", "gelu", "sigmoid"],
-                                 "save_steps": [1000],
+                                 "save_steps": [2000],
                                  "per_device_train_batch_size": [16],
                                  "task_embedding_dir": ["task_embeddings/n-train-100"],
-                                 "output_dir": ["outputs/mixture1/finetune-adapter-tune-hyper-params/"]})
-do_sweep(basic_config_path, sweep, short_keys, job_prefix, failed_jobs=failed_jobs)
+                                 "output_dir": ["outputs/mixture1/finetune-adapter-tune-hyper-params-copy/"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix) #, failed_jobs=failed_jobs)

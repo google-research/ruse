@@ -150,7 +150,9 @@ def main():
                           "non_linearity",
                           "train_task_embeddings")
   for p in extra_adapter_params:
+    print(p)
     if hasattr(adapter_args, p):
+        print("inside")
         assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"
         setattr(adapter_config, p, getattr(adapter_args, p))
   adapter_config.device = training_args.device

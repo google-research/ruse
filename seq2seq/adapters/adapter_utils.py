@@ -86,6 +86,8 @@ class HyperNetUpSampler(nn.Module):
     weight = self.weight_generator(task_embedding).view(self.input_dim, self.down_sample_size)
     bias = self.bias_generator(task_embedding).view(-1)
     return weight, bias
+
+
 class TaskHyperNet(nn.Module):
   """This module generates the task-embeddings from the initial feeded task embeddings."""
 
@@ -99,6 +101,5 @@ class TaskHyperNet(nn.Module):
       linear_layer(self.hidden_dim, self.projected_task_embedding_dim))
 
   def forward(self, task_embedding):
-    print(self.task_embeding_generator)
     task_embedding = task_embedding.view(-1)
     return self.task_embeding_generator(task_embedding).view(-1)

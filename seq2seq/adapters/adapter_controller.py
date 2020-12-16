@@ -172,6 +172,7 @@ class MetaAdapterController(nn.Module):
     if self.train_task_embeddings:
       return self.task_hyper_net(task_embedding)
     return task_embedding
+
   def call_adapter(self, inputs, task):
     task_embedding = self.get_task_embeddings(task)
     weight_up, bias_up = self.meta_up_sampler(task_embedding)

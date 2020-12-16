@@ -65,10 +65,9 @@ def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name=
     config_path = "{0}/{1}.json".format(temp_configs_dir, name)
     with open(config_path, 'w') as f:
       json.dump(config, f)
-    commands.append(get_run_command(config_path, name))
     if (len(failed_jobs) != 0 and name in failed_jobs) or len(failed_jobs) == 0:
-       get_run_command(config_path, name)
-  print(commands)
+      commands.append(get_run_command(config_path, name))
+  print(len(commands))
   run_in_parallel(commands)
 
   

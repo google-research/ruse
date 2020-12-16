@@ -430,9 +430,9 @@ params= ["n_finetune", "learning_rate"]
 retrieve_results(sweep['eval_output_dir'][0], sweep, short_keys, job_prefix, params)
 """
 
-
+"""
 # t5 without load
-job_prefix = "m1-t5-v" #-p added
+job_prefix = "m1-t5-v100" #"m1-t5-v" #-p added
 short_keys = ["lr", "n", "e"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
@@ -449,7 +449,7 @@ retrieve_results(sweep['eval_output_dir'][0], sweep, short_keys, job_prefix, par
 
 
 
-job_prefix = "m1-adp-v"
+job_prefix = "m1-adp-v100" #"m1-adp-v"
 short_keys = ["lr", "n", "e", "h"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
@@ -462,5 +462,41 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-adapter/"]})
 #download_all_evals(sweep, job_prefix, short_keys, sweep['eval_output_dir'][0])
+params= ["unfreeze_lm_head", "n_finetune", "learning_rate"]
+retrieve_results(sweep['eval_output_dir'][0], sweep, short_keys, job_prefix, params)
+"""
+
+# results with less number of iterations.
+# running ours and t5 for much less steps.
+job_prefix = "m1-adp-half"
+short_keys = ["lr", "n", "e", "h"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [7200, 1440, 720, 360, 180]),
+                                 "unfreeze_lm_head": [True, False],
+                                 "do_finetune": [True],
+                                 "do_train": [False],
+                                 "save_steps": [1000],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["task_embeddings/n-train-100"],
+                                 "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
+                                 "eval_output_dir": ["outputs/eval-v/finetune-adapter/"]})
+#download_all_evals(sweep, job_prefix, short_keys, sweep['eval_output_dir'][0])
+params= ["unfreeze_lm_head", "n_finetune", "learning_rate"]
+retrieve_results(sweep['eval_output_dir'][0], sweep, short_keys, job_prefix, params)
+
+# t5 without loading.
+job_prefix = "m1-t5-half" #-p added
+short_keys = ["lr", "n", "e"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [7200, 1440, 720, 360, 180]),
+                                 "do_finetune": [True],
+                                 "do_train": [False],
+                                 "save_steps": [1000],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "output_dir": ["mix1-finetune-lr-3e-04"],
+                                 "eval_output_dir": ["outputs/eval-v/finetune-t5/"]})
 params= ["n_finetune", "learning_rate"]
+#download_all_evals(sweep, job_prefix, short_keys, sweep['eval_output_dir'][0])
 retrieve_results(sweep['eval_output_dir'][0], sweep, short_keys, job_prefix, params)

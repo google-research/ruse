@@ -105,7 +105,9 @@ def download_all_evals(sweep, job_prefix, short_keys, output_dir):
     if not os.path.exists(experiment_output_dir):
       os.makedirs(experiment_output_dir)
     if not os.path.exists(eval_path):
-      copy_commands.append(["gsutil", "cp", f"{bucket}/{eval_path}", f"{experiment_output_dir}/eval_results.json"])
+      #copy_commands.append(["gsutil", "cp", f"{bucket}/{eval_path}", f"{experiment_output_dir}/eval_results.json"])
+      copy_commands.append(f"gsutil cp {bucket}/{eval_path} {experiment_output_dir}/eval_results.json")
+  print(copy_commands)
   run_in_parallel(copy_commands)
 
 acc_cols = ['cola_eval_acc',   'snli_eval_acc', 'yelp_polarity_eval_acc']
@@ -127,7 +129,7 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
       df = df.append(results, ignore_index=True)
     except FileNotFoundError:
       print("File not found ", eval_path)
-  print("##### df ", df)
+  #print("##### df ", df)
   df = df[params+acc_cols]
   if len(params) != 0:
     df = df.sort_values(by=params)

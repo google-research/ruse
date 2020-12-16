@@ -466,6 +466,7 @@ params= ["unfreeze_lm_head", "n_finetune", "learning_rate"]
 retrieve_results(sweep['eval_output_dir'][0], sweep, short_keys, job_prefix, params)
 """
 
+"""
 # results with less number of iterations.
 # running ours and t5 for much less steps.
 job_prefix = "m1-adp-half"
@@ -499,4 +500,23 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "eval_output_dir": ["outputs/eval-v/finetune-t5/"]})
 params= ["n_finetune", "learning_rate"]
 #download_all_evals(sweep, job_prefix, short_keys, sweep['eval_output_dir'][0])
+retrieve_results(sweep['eval_output_dir'][0], sweep, short_keys, job_prefix, params)
+"""
+
+# only fine-tune task-embeddings with lm-head.
+job_prefix = "m1-task-on-lmhead"
+short_keys = ["lr", "n", "e"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [8960, 1792, 896, 448, 224]),
+                                 "do_finetune": [True],
+                                 "do_train": [False],
+                                 "parametric_task_embedding": [True],
+                                 "freeze_model_but_task_embeddings_and_lm_head": [True],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["task_embeddings/n-train-100"],
+                                 "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
+                                 "eval_output_dir": ["outputs/eval-v/finetune-only-task-embeddings-lm-head/"]})
+#download_all_evals(sweep, job_prefix, short_keys, sweep['eval_output_dir'][0])
+params= ["n_finetune", "learning_rate"]
 retrieve_results(sweep['eval_output_dir'][0], sweep, short_keys, job_prefix, params)

@@ -37,6 +37,9 @@ class MetaAdapterConfig(AdapterConfig):
   task_embedding_dim = 512
   task_embedding_dir = None
   hidden_dim = 128
+  train_task_embeddings = False
+  projected_task_embedding_dim = 64
+
 
 
 class ParametricMetaAdapterConfig(AdapterConfig):
@@ -45,6 +48,9 @@ class ParametricMetaAdapterConfig(AdapterConfig):
   hidden_dim = 128
   task_embedding_dir = None
   task_embedding_dim = 64
+  train_task_embeddings = False
+  projected_task_embedding_dim = 64
+
 
 
 ADAPTER_CONFFIG_MAPPING = OrderedDict(

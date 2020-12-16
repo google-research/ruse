@@ -49,11 +49,12 @@ class HyperNetDownSampler(nn.Module):
     self.hidden_dim = config.hidden_dim
     self.input_dim = config.input_dim
     self.down_sample_size = self.input_dim // config.reduction_factor
+    self.task_embedding_dim = config.projected_task_embedding_dim if config.train_task_embeddings else config.task_embedding_dim
     self.weight_generator = nn.Sequential(
-      linear_layer(config.task_embedding_dim, self.hidden_dim),
+      linear_layer(self.task_embedding_dim, self.hidden_dim),
       linear_layer(self.hidden_dim, self.input_dim * self.down_sample_size))
     self.bias_generator = nn.Sequential(
-      linear_layer(config.task_embedding_dim, self.hidden_dim),
+      linear_layer(self.task_embedding_dim, self.hidden_dim),
       linear_layer(self.hidden_dim, self.down_sample_size))
 
   def forward(self, task_embedding):
@@ -71,11 +72,13 @@ class HyperNetUpSampler(nn.Module):
     self.hidden_dim = config.hidden_dim
     self.input_dim = config.input_dim
     self.down_sample_size = self.input_dim // config.reduction_factor
+    self.train_task_embeddings = config.train_task_embeddings
+    self.task_embedding_dim = config.projected_task_embedding_dim if config.train_task_embeddings else config.task_embedding_dim
     self.weight_generator = nn.Sequential(
-      linear_layer(config.task_embedding_dim, self.hidden_dim),
+      linear_layer(self.task_embedding_dim, self.hidden_dim),
       linear_layer(self.hidden_dim, self.input_dim * self.down_sample_size))
     self.bias_generator = nn.Sequential(
-      linear_layer(config.task_embedding_dim, self.hidden_dim),
+      linear_layer(self.task_embedding_dim, self.hidden_dim),
       linear_layer(self.hidden_dim, self.input_dim))
 
   def forward(self, task_embedding):
@@ -83,3 +86,19 @@ class HyperNetUpSampler(nn.Module):
     weight = self.weight_generator(task_embedding).view(self.input_dim, self.down_sample_size)
     bias = self.bias_generator(task_embedding).view(-1)
     return weight, bias
+class TaskHyperNet(nn.Module):
+  """This module generates the task-embeddings from the initial feeded task embeddings."""
+
+  def __init__(self, config):
+    super(TaskHyperNet, self).__init__()
+    self.hidden_dim = config.hidden_dim
+    self.projected_task_embedding_dim = config.projected_task_embedding_dim
+    self.task_embeding_generator = nn.Sequential(
+      linear_layer(config.task_embedding_dim, self.hidden_dim),
+      nn.ReLU(),
+      linear_layer(self.hidden_dim, self.projected_task_embedding_dim))
+
+  def forward(self, task_embedding):
+    print(self.task_embeding_generator)
+    task_embedding = task_embedding.view(-1)
+    return self.task_embeding_generator(task_embedding).view(-1)

@@ -205,4 +205,7 @@ class AdapterTrainingArguments:
                                                                     "adapter layers."})
   reduction_factor: Optional[int] = field(default=16, metadata={"help": "defines the default reduction factor for "
                                                                     "adapter layers."})
+  train_task_embeddings: Optional[bool] = field(default=False, metadata={"help": "If specified learns the tasks "
+                                                                                  "embeddings from given task seedings."})
+
   non_linearity: Optional[str] = field(default="swish", metadata={"help": "Defines nonlinearity for adapter layers."})

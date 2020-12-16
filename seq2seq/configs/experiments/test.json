@@ -32,15 +32,15 @@
 "task_embedding_dir":"task_embeddings/n-train-all",
 "task_embedding_dim": 512,
 "n_val": 10,
-"add_layer_norm_before_adapter":  false,
-"add_layer_norm_after_adapter": false,
 "do_finetune": true,
 "n_finetune": 100,
 "eval_output_dir": "outputs/eval_test",
 "do_train": true,
-"reduction_factor": 8,
-"non_linearity": "gelu_fast", 
-"train_task_embeddings": true
+"reduction_factor": 16,
+"non_linearity": "relu", 
+"train_task_embeddings": true,
+"projected_task_embedding_dim": 512,
+"freeze_model_but_task_embeddings": true
 }
 
 

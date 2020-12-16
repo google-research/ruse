@@ -2,8 +2,8 @@ import copy
 import logging
 import os
 import sys
-#sys.path.append("/usr/local/google/home/rabeeh/Desktop/ruse/seq2seq")
 
+import torch.nn as nn
 import datasets
 from third_party.metrics import build_compute_metrics_fn
 from third_party.models import T5Config, T5ForConditionalGeneration
@@ -42,7 +42,7 @@ def shard_data(datasets, num_replicas, rank):
   return datasets
 
 
-def freezing_params(model, training_args, model_args):
+def freezing_params(model, training_args, model_args, adapter_args):
   if training_args.train_adapters:
     # Sets the last layer of decoder to be trained.
     freeze_params(model)
@@ -71,8 +71,12 @@ def freezing_params(model, training_args, model_args):
     for name, sub_module in model.named_modules():
       if isinstance(sub_module, MetaAdapterController):
         task_embedding_dict = sub_module.task_to_embeddings
-        for param in task_embedding_dict.parameters():
-          param.requires_grad = True
+        if isinstance(task_embedding_dict, nn.ParameterDict):
+          for param in task_embedding_dict.parameters():
+            param.requires_grad = True
+        if adapter_args.train_task_embeddings:
+          for param in sub_module.task_hyper_net.parameters():
+            param.requires_grad = True
 
   if model_args.freeze_model_but_task_embeddings_and_lm_head:
     for param in model.lm_head.parameters():
@@ -177,7 +181,8 @@ def main():
 
   # freezing the parameters.
   if training_args.do_train:
-    freezing_params(model, training_args, model_args)
+    freezing_params(model, training_args, model_args, adapter_args)
+
 
   dataset_class = AutoTask
   if training_args.do_train:
@@ -289,7 +294,7 @@ def main():
         eval_data_args.eval_tasks = [eval_task]
 
 
-        freezing_params(model, eval_training_args, model_args)
+        freezing_params(model, eval_training_args, model_args, adapter_args)
 
 
         trainer = T5Trainer(

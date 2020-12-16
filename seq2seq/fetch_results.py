@@ -502,7 +502,7 @@ params= ["n_finetune", "learning_rate"]
 #download_all_evals(sweep, job_prefix, short_keys, sweep['eval_output_dir'][0])
 retrieve_results(sweep['eval_output_dir'][0], sweep, short_keys, job_prefix, params)
 """
-
+"""
 # only fine-tune task-embeddings with lm-head.
 job_prefix = "m1-task-on-lmhead"
 short_keys = ["lr", "n", "e"]
@@ -520,3 +520,29 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 #download_all_evals(sweep, job_prefix, short_keys, sweep['eval_output_dir'][0])
 params= ["n_finetune", "learning_rate"]
 retrieve_results(sweep['eval_output_dir'][0], sweep, short_keys, job_prefix, params)
+"""
+
+
+output_dir = "outputs/mixture1/parametric-meta-adapter/task-emb/"
+job_prefix = "m1-pmeta-task-norelu" #"m1-pmeta-task-updd"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100"]})#,
+                                                       # "task_embeddings/n-train-1000",
+                                                       # "task_embeddings/n-train-2000",
+                                                       # "task_embeddings/n-train-all"]})
+params = ["learning_rate"]
+download_all_evals(sweep, job_prefix, short_keys, output_dir)
+#retrieve_results(output_dir, sweep, short_keys, job_prefix, params)
+
+output_dir = "outputs/mixture2/parametric-meta-adapter/task-emb/"
+job_prefix = "m2-pmeta-task-norelu" #"m1-pmeta-task-updd"
+short_keys = ["lr", 'emb']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100"]})#,
+                                                       # "task_embeddings/n-train-1000",
+                                                       # "task_embeddings/n-train-2000",
+                                                       # "task_embeddings/n-train-all"]})
+params = ["learning_rate"]
+download_all_evals(sweep, job_prefix, short_keys, output_dir)
+#retrieve_results(output_dir, sweep, short_keys, job_prefix, params)

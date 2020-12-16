@@ -189,6 +189,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
 # 16 Dec
+"""
 basic_config_path = "configs/experiments/mixture2/paramteric-meta-task-emb.json" #meta-task-emb.json"
 job_prefix = "m2-pmeta-task-norelu" #"m2-meta-task-updd"
 short_keys = ["lr", 'emb']
@@ -198,7 +199,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                                         #"task_embeddings/n-train-2000",
                                                         #"task_embeddings/n-train-all"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-
+"""
 
 # 16 Dec
 """
@@ -418,7 +419,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "eval_output_dir": ["outputs/eval-v/finetune-adapter/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir") #, failed_jobs=failed_names)
 """
-
+"""
 # t5 without loading.
 basic_config_path = "configs/experiments/mixture1/finetune.json"
 job_prefix = "m1-t5-v100" 
@@ -435,7 +436,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "output_dir": ["mix1-finetune-lr-3e-04"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-t5/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir") #, failed_jobs=failed_names)
-
+"""
 
 """
 # only fine-tune task-embeddings with lm-head.
@@ -454,16 +455,15 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-only-task-embeddings-lm-head/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
-"""
 
-"""
+
 # running ours and t5 for much less steps.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1-adp-half"
 short_keys = ["lr", "n", "e", "h"]
-sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
-                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
-                                                                         [7200, 1440, 720, 360, 180]),
+sweep = collections.OrderedDict({'learning_rate': [1e-2], #, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([1000, 4000], #100, 500, 1000, 2000, 4000],
+                                                                         [720,  180]),            #7200, 1440, 720, 360, 180]),
                                  "unfreeze_lm_head": [True, False],
                                  "do_finetune": [True],
                                  "do_train": [False],
@@ -473,7 +473,9 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "output_dir": ["m1-meta-task-no-relu-lr-3e-02-emb-n-train-100"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-adapter/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir") #, failed_jobs=failed_names)
+"""
 
+"""
 # t5 without loading.
 basic_config_path = "configs/experiments/mixture1/finetune.json"
 job_prefix = "m1-t5-half" #-p added
@@ -508,3 +510,24 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "eval_output_dir": ["outputs/eval-v/finetune-adapter/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir") #, failed_jobs=failed_names)
 """
+
+
+# testing only task-embeddings with parameteric version with smaller number of
+# steps.
+# best modle:gs://ruse-xcloud-bucket/outputs/mixture1/parametric-meta-adapter/task-emb/m1-pmeta-task-norelu-lr-3e-01-emb-n-train-100
+basic_config_path = "configs/experiments/mixture1/paramteric-meta-task-emb.json"
+job_prefix = "m1-pmeta-task-on"
+short_keys = ["lr", "n", "e"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [7200, 1440, 720, 360, 180]),
+                                 "unfreeze_lm_head": [False],
+                                 "do_finetune": [True],
+                                 "do_train": [False],
+                                 "parametric_task_embedding": [True],
+                                 "freeze_model_but_task_embeddings": [True],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["task_embeddings/n-train-100"],
+                                 "output_dir": ["m1-pmeta-task-norelu-lr-3e-01-emb-n-train-100"],
+                                 "eval_output_dir": ["outputs/eval-v/finetune-only-task-embeddings/"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")

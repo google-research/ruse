@@ -144,12 +144,16 @@ def main():
   extra_adapter_params = ("task_embedding_dir",
                           "task_embedding_dim",
                           "add_layer_norm_before_adapter",
-                          "add_layer_norm_after_adapter")
+                          "add_layer_norm_after_adapter",
+                          "reduction_factor",
+                          "hidden_dim",
+                          "non_linearity")
   for p in extra_adapter_params:
     if hasattr(adapter_args, p):
-      assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"
-      setattr(adapter_config, p, getattr(adapter_args, p))
+        assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"
+        setattr(adapter_config, p, getattr(adapter_args, p))
   adapter_config.device = training_args.device
+  print("##### adapter_config ", adapter_config)
 
   tokenizer = AutoTokenizer.from_pretrained(
     model_args.tokenizer_name if model_args.tokenizer_name else \

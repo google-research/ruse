@@ -201,3 +201,8 @@ class AdapterTrainingArguments:
         metadata={"help": "whether to have layer-norm before adapter."})
   add_layer_norm_after_adapter: Optional[bool] = field(default=True,
         metadata={"help": "whether to have layer-norm after adapter."})
+  hidden_dim: Optional[int] = field(default=128, metadata={"help": "defines the default hidden dimension for "
+                                                                    "adapter layers."})
+  reduction_factor: Optional[int] = field(default=16, metadata={"help": "defines the default reduction factor for "
+                                                                    "adapter layers."})
+  non_linearity: Optional[str] = field(default="swish", metadata={"help": "Defines nonlinearity for adapter layers."})

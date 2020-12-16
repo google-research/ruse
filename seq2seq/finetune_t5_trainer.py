@@ -231,6 +231,12 @@ def main():
     dataset_sizes=dataset_sizes if training_args.do_train else None
   )
 
+  for name, param in model.named_parameters():
+    if param.requires_grad:
+      print(name)
+  import sys
+  sys.exit(0)
+
   # Training
   if training_args.do_train:
     trainer.train(

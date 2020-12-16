@@ -522,7 +522,7 @@ params= ["n_finetune", "learning_rate"]
 retrieve_results(sweep['eval_output_dir'][0], sweep, short_keys, job_prefix, params)
 """
 
-
+"""
 output_dir = "outputs/mixture1/parametric-meta-adapter/task-emb/"
 job_prefix = "m1-pmeta-task-norelu" #"m1-pmeta-task-updd"
 short_keys = ["lr", 'emb']
@@ -546,3 +546,40 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 params = ["learning_rate"]
 download_all_evals(sweep, job_prefix, short_keys, output_dir)
 #retrieve_results(output_dir, sweep, short_keys, job_prefix, params)
+
+
+
+job_prefix = "m1-pmeta-task-on"
+short_keys = ["lr", "n", "e"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [7200, 1440, 720, 360, 180]),
+                                 "unfreeze_lm_head": [False],
+                                 "do_finetune": [True],
+                                 "do_train": [False],
+                                 "parametric_task_embedding": [True],
+                                 "freeze_model_but_task_embeddings": [True],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["task_embeddings/n-train-100"],
+                                 "output_dir": ["m1-pmeta-task-norelu-lr-3e-01-emb-n-train-100"],
+                                 "eval_output_dir": ["outputs/eval-v/finetune-only-task-embeddings/"]})
+params = ["learning_rate", "n_finetune"]
+#download_all_evals(sweep, job_prefix, short_keys, sweep["eval_output_dir"][0])
+retrieve_results(sweep["eval_output_dir"][0], sweep, short_keys, job_prefix, params)
+"""
+
+
+job_prefix = "m1"
+short_keys = ["lr", "h", "r", "n"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 "unfreeze_lm_head": [True, False],
+                                 "reduction_factor": [2, 4, 8, 16],
+                                 "non_linearity": ["relu", "swish", "tanh", "gelu", "sigmoid"],
+                                 "save_steps": [1000],
+                                 "per_device_train_batch_size": [16],
+                                 "task_embedding_dir": ["task_embeddings/n-train-100"],
+                                 "output_dir": ["outputs/mixture1/meta-adapter/task-emb/"]})
+#download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+params = ["learning_rate", "unfreeze_lm_head", "reduction_factor", "non_linearity"]
+retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+

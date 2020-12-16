@@ -150,9 +150,7 @@ def main():
                           "non_linearity",
                           "train_task_embeddings")
   for p in extra_adapter_params:
-    print(p)
     if hasattr(adapter_args, p):
-        print("inside")
         assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"
         setattr(adapter_config, p, getattr(adapter_args, p))
   adapter_config.device = training_args.device
@@ -230,13 +228,6 @@ def main():
     data_args=data_args,
     dataset_sizes=dataset_sizes if training_args.do_train else None
   )
-
-  for name, param in model.named_parameters():
-    if param.requires_grad:
-      print(name)
-  import sys
-  sys.exit(0)
-
   # Training
   if training_args.do_train:
     trainer.train(

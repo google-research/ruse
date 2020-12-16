@@ -29,6 +29,7 @@ class AdapterConfig(object):
   non_linearity: str = "swish"
   reduction_factor: int = 16
   weight_init_range = 1e-2
+  train_task_embeddings = False
 
 
 class MetaAdapterConfig(AdapterConfig):

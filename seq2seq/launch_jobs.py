@@ -511,7 +511,8 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir") #, failed_jobs=failed_names)
 """
 
-
+# Dec 16.
+"""
 # testing only task-embeddings with parameteric version with smaller number of
 # steps.
 # best modle:gs://ruse-xcloud-bucket/outputs/mixture1/parametric-meta-adapter/task-emb/m1-pmeta-task-norelu-lr-3e-01-emb-n-train-100
@@ -531,3 +532,18 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "output_dir": ["m1-pmeta-task-norelu-lr-3e-01-emb-n-train-100"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-only-task-embeddings/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
+"""
+
+# do the search also on the adapter layers 
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "m1"
+short_keys = ["lr", "h", "r", "n"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 "unfreeze_lm_head": [True, False],
+                                 "reduction_factor": [2, 4, 8, 16],
+                                 "non_linearity": ["relu", "swish", "tanh", "gelu", "sigmoid"],
+                                 "save_steps": [1000],
+                                 "per_device_train_batch_size": [32],
+                                 "task_embedding_dir": ["task_embeddings/n-train-100"],
+                                 "output_dir": ["outputs/mixture1/finetune-adapter-tune-hyper-params/"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)

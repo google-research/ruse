@@ -1,3 +1,4 @@
+# xcloud listjobs --alljobs  &> text
 with open("text") as f:
     lines = f.readlines()
 
@@ -11,6 +12,6 @@ for line in lines:
     print(job_id)
     status = splits[-1].rstrip()
     date = splits[2].rstrip()
-    if status == "FAILED" and date == "2020-12-15":
+    if status == "FAILED" and date == "2020-12-16":
         failed_jobs.append(job_id)
 print(failed_jobs)

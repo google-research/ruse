@@ -582,7 +582,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                 'projected_task_embedding_dim': [64, 128, 512],
                                  "reduction_factor": [8, 16],
                                  'task_embedding_dir': ["task_embeddings/n-train-100"],
-                                 "train_task_embeddings": ["true"],
+                                 "train_task_embeddings": [True],
                                  "output_dir": ["outputs/mixture1/meta-adapters-projected-task-embedding"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
@@ -593,7 +593,7 @@ short_keys = ["lr", 'emb', 'r']
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                 'projected_task_embedding_dim': [64, 128, 512],
                                  "reduction_factor": [8, 16],
-                                 "train_task_embeddings": ["true"],
+                                 "train_task_embeddings": [True],
                                  'task_embedding_dir': ["task_embeddings/n-train-100"],
                                  "output_dir": ["outputs/mixture1/parametric-meta-adapters-projected-task-embedding"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
@@ -602,18 +602,18 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 # finetune the best trained models on the new sets.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1-task"
-short_keys = ["lr", "n", "e","l", "t"]
+short_keys = ["lr", "n", "e","ul", "t"]
 # gsutil cp outputs/mixture1/meta-adapters-projected-task-embedding/m1-task-lr-3e-03-emb-128-r-16
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
                                                                          [7200, 1440, 720, 360, 180]),
-                                 "unfreeze_lm_head": ["true", "false"],
-                                 "freeze_model_but_task_embeddings": ["true", "false"],
+                                 "unfreeze_lm_head": [True, False],
+                                 "freeze_model_but_task_embeddings": [True, False],
                                  'projected_task_embedding_dim': [128],
                                  "reduction_factor": [16],
-                                 "do_finetune": ["true"],
-                                 "train_task_embeddings": ["true"],
-                                 "do_train": ["false"],
+                                 "do_finetune": [True],
+                                 "train_task_embeddings": [True],
+                                 "do_train": [False],
                                  "eval_tasks": [["yelp_polarity", "cola", "snli"]],
                                  "task_embedding_dir": ["task_embeddings/n-train-100"],
                                  "output_dir": ["m1-task-lr-3e-03-emb-128-r-16/"],
@@ -624,17 +624,17 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 # gs://ruse-xcloud-bucket/outputs/mixture1/parametric-meta-adapters-projected-task-embedding/m1-p-task-lr-1e-02-emb-128-r-16
 basic_config_path = "configs/experiments/mixture1/paramteric-meta-task-emb.json"
 job_prefix = "m1-p-task"
-short_keys = ["lr", "n", "e","l", "t"]
+short_keys = ["lr", "n", "e","ul", "t"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
                                                                          [7200, 1440, 720, 360, 180]),
-                                 "unfreeze_lm_head": ["true", "false"],
-                                 "freeze_model_but_task_embeddings": ["true", "false"],
+                                 "unfreeze_lm_head": [True, False],
+                                 "freeze_model_but_task_embeddings": [True, False],
                                  'projected_task_embedding_dim': [128],
                                  "reduction_factor": [16],
-                                 "do_finetune": ["true"],
-                                 "train_task_embeddings": ["true"],
-                                 "do_train": ["false"],
+                                 "do_finetune": [True],
+                                 "train_task_embeddings": [True],
+                                 "do_train": [False],
                                  "eval_tasks": [["yelp_polarity", "cola", "snli"]],
                                  "task_embedding_dir": ["task_embeddings/n-train-100"],
                                  "output_dir": ["m1-p-task-lr-1e-02-emb-128-r-16"],

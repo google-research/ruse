@@ -50,6 +50,7 @@ def freezing_params(model, training_args, model_args, adapter_args):
       if isinstance(sub_module, (MetaAdapterController, MetaParamterizedAdapterController)):
         for param_name, param in sub_module.named_parameters():
           param.requires_grad = True
+
   elif model_args.freeze_model_but_lm_head:
     freeze_params(model)
     for param in model.lm_head.parameters():
@@ -61,12 +62,7 @@ def freezing_params(model, training_args, model_args, adapter_args):
       freeze_params(model.get_encoder())
       assert_all_frozen(model.get_encoder())
 
-  if model_args.unfreeze_lm_head:
-    for param in model.lm_head.parameters():
-      param.requires_grad = True
-
-  # TODO: only works for parametric-meta-adapter.
-  if model_args.freeze_model_but_task_embeddings or model_args.freeze_model_but_task_embeddings_and_lm_head:
+  if model_args.freeze_model_but_task_embeddings:
     freeze_params(model)
     for name, sub_module in model.named_modules():
       if isinstance(sub_module, MetaAdapterController):
@@ -78,15 +74,9 @@ def freezing_params(model, training_args, model_args, adapter_args):
           for param in sub_module.task_hyper_net.parameters():
             param.requires_grad = True
 
-  if model_args.freeze_model_but_task_embeddings_and_lm_head:
+  if model_args.unfreeze_lm_head:
     for param in model.lm_head.parameters():
       param.requires_grad = True
-
-
-  for n, p in model.named_parameters():
-    if p.requires_grad: 
-      print(n)
-  sys.exit(0)
 
 
 def main():

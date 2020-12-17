@@ -568,7 +568,7 @@ params = ["learning_rate", "n_finetune"]
 retrieve_results(sweep["eval_output_dir"][0], sweep, short_keys, job_prefix, params)
 """
 
-
+"""
 job_prefix = "m1"
 short_keys = ["lr", "h", "r", "n"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
@@ -582,4 +582,29 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 #download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
 params = ["learning_rate", "unfreeze_lm_head", "reduction_factor", "non_linearity"]
 retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+"""
 
+# 17 Dec
+# can we train task-embeddings with another network and make it work like this? 
+job_prefix = "m1-task"
+short_keys = ["lr", 'emb', 'r']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                'projected_task_embedding_dim': [64, 128, 512],
+                                 "reduction_factor": [8, 16],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100"],
+                                 "output_dir": ["outputs/mixture1/meta-adapters-projected-task-embedding"]})
+download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+#retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+
+
+job_prefix = "m1-p-task"
+short_keys = ["lr", 'emb', 'r']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                'projected_task_embedding_dim': [64, 128, 512],
+                                 "reduction_factor": [8, 16],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100"],
+                                 "output_dir": ["outputs/mixture1/parametric-meta-adapters-projected-task-embedding"]})
+download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+#retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)

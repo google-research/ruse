@@ -601,8 +601,8 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 # finetune the best trained models on the new sets.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
-job_prefix = "m1-task"
-short_keys = ["lr", "n", "e","ul", "t"]
+job_prefix = "m1"
+short_keys = ["lr", "n", "e","l", "t"]
 # gsutil cp outputs/mixture1/meta-adapters-projected-task-embedding/m1-task-lr-3e-03-emb-128-r-16
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
@@ -623,8 +623,8 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 
 # gs://ruse-xcloud-bucket/outputs/mixture1/parametric-meta-adapters-projected-task-embedding/m1-p-task-lr-1e-02-emb-128-r-16
 basic_config_path = "configs/experiments/mixture1/paramteric-meta-task-emb.json"
-job_prefix = "m1-p-task"
-short_keys = ["lr", "n", "e","ul", "t"]
+job_prefix = "m1p"
+short_keys = ["lr", "n", "e","l", "t"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
                                                                          [7200, 1440, 720, 360, 180]),

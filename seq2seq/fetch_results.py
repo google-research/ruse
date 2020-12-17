@@ -593,9 +593,9 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "reduction_factor": [8, 16],
                                  'task_embedding_dir': ["task_embeddings/n-train-100"],
                                  "output_dir": ["outputs/mixture1/meta-adapters-projected-task-embedding"]})
-download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
-do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-#retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+#download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+params = ["learning_rate", "projected_task_embedding_dim", "reduction_factor"]
+retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
 
 
 job_prefix = "m1-p-task"
@@ -605,6 +605,6 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "reduction_factor": [8, 16],
                                  'task_embedding_dir': ["task_embeddings/n-train-100"],
                                  "output_dir": ["outputs/mixture1/parametric-meta-adapters-projected-task-embedding"]})
-download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
-do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-#retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+params = ["learning_rate", "projected_task_embedding_dim", "reduction_factor"]
+#download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)

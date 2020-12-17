@@ -98,6 +98,9 @@ class Seq2SeqTrainingArguments(TrainingArguments):
         metadata={"help": "The output directory where the evaluation of the model and checkpoints during "
                           "evaluation will be written. Would use the original output_dir if not specified."}
   )
+  generate_classifier_weights: Optional[bool] = field(default=False,
+                                                      metadata={"help": "If set, generates the weights of the classifier"
+                                                                        "by using a hyper-network."})
 
 @dataclass
 class ModelArguments:

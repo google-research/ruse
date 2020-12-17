@@ -150,8 +150,8 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
         #print(tabulate(df1, headers='keys', tablefmt='pipe', showindex=False))
         dfs.append(df1)
 
-        left = dfs[0]
-        for i in range(1, len(dfs)):
-          right = dfs[i]
-          left = pd.merge(left, right, on=params_max)
-        print(tabulate(left, headers='keys', tablefmt='pipe', showindex=False))
+  left = dfs[0]
+  for i in range(1, len(dfs)):
+    right = dfs[i]
+    left = pd.merge(left, right, on=params_max)
+  print(tabulate(left, headers='keys', tablefmt='pipe', showindex=False))

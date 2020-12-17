@@ -83,6 +83,11 @@ def freezing_params(model, training_args, model_args, adapter_args):
       param.requires_grad = True
 
 
+  for n, p in model.named_parameters():
+    if p.requires_grad: 
+      print(n)
+  sys.exit(0)
+
 
 def main():
   # See all possible arguments in src/transformers/training_args.py or by passing

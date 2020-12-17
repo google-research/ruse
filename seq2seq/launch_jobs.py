@@ -581,6 +581,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                 'projected_task_embedding_dim': [64, 128, 512],
                                  "reduction_factor": [8, 16],
                                  'task_embedding_dir': ["task_embeddings/n-train-100"],
+                                 "train_task_embeddings": ["true"],
                                  "output_dir": ["outputs/mixture1/meta-adapters-projected-task-embedding"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
@@ -591,6 +592,7 @@ short_keys = ["lr", 'emb', 'r']
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                 'projected_task_embedding_dim': [64, 128, 512],
                                  "reduction_factor": [8, 16],
+                                 "train_task_embeddings": ["true"],
                                  'task_embedding_dir': ["task_embeddings/n-train-100"],
                                  "output_dir": ["outputs/mixture1/parametric-meta-adapters-projected-task-embedding"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)

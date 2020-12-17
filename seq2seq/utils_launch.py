@@ -108,7 +108,7 @@ def download_all_evals(sweep, job_prefix, short_keys, output_dir):
       #copy_commands.append(["gsutil", "cp", f"{bucket}/{eval_path}", f"{experiment_output_dir}/eval_results.json"])
       copy_commands.append(f"gsutil cp {bucket}/{eval_path} {experiment_output_dir}/eval_results.json")
   print(copy_commands)
-  run_in_parallel(copy_commands)
+  #run_in_parallel(copy_commands)
 
 #acc_cols = ['cola_eval_acc',   'snli_eval_acc', 'yelp_polarity_eval_acc']
 acc_cols = ["qnli_eval_acc", "scitail_eval_acc", "boolq_eval_acc"]

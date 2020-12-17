@@ -584,6 +584,7 @@ params = ["learning_rate", "unfreeze_lm_head", "reduction_factor", "non_linearit
 retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
 """
 
+"""
 # 17 Dec
 # can we train task-embeddings with another network and make it work like this? 
 job_prefix = "m1-task"
@@ -608,3 +609,48 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 params = ["reduction_factor", "projected_task_embedding_dim", "learning_rate"]
 #download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
 retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+"""
+
+
+
+job_prefix = "m1"
+short_keys = ["lr", "n", "e","l", "t"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [7200, 1440, 720, 360, 180]),
+                                 "unfreeze_lm_head": [True, False],
+                                 "freeze_model_but_task_embeddings": [True, False],
+                                 'projected_task_embedding_dim': [128],
+                                 "reduction_factor": [16],
+                                 "do_finetune": [True],
+                                 "train_task_embeddings": [True],
+                                 "do_train": [False],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["task_embeddings/n-train-100"],
+                                 "output_dir": ["m1-task-lr-3e-03-emb-128-r-16/"],
+                                 "eval_output_dir": ["outputs/eval-v/finetune-meta-adapters-projected-task-embedding/"]})
+params = ["unfreeze_lm_head", "freeze_model_but_task_embeddings", "n_finetune", "learning_rate"]
+#download_all_evals(sweep, job_prefix, short_keys, sweep["eval_output_dir"][0])
+retrieve_results(sweep["eval_output_dir"][0], sweep, short_keys, job_prefix, params)
+
+
+job_prefix = "m1p"
+short_keys = ["lr", "n", "e","l", "t"]
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [7200, 1440, 720, 360, 180]),
+                                 "unfreeze_lm_head": [True, False],
+                                 "freeze_model_but_task_embeddings": [True, False],
+                                 'projected_task_embedding_dim': [128],
+                                 "reduction_factor": [16],
+                                 "do_finetune": [True],
+                                 "train_task_embeddings": [True],
+                                 "do_train": [False],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["task_embeddings/n-train-100"],
+                                 "output_dir": ["m1-p-task-lr-1e-02-emb-128-r-16"],
+                                 "eval_output_dir": ["outputs/eval-v/finetune-parametric-meta-adapters-projected-task-embedding/"]})
+params = ["unfreeze_lm_head", "freeze_model_but_task_embeddings", "n_finetune", "learning_rate"]
+#download_all_evals(sweep, job_prefix, short_keys, sweep["eval_output_dir"][0])
+retrieve_results(sweep["eval_output_dir"][0], sweep, short_keys, job_prefix, params)
+

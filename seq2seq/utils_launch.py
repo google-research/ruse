@@ -14,7 +14,7 @@ def get_run_command(config_path, job_name):
     launch_command = f.read()
   launch_command = launch_command.rstrip()
   #os.system("{2} google/launch_xla_clean1.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(config_path, job_name, launch_command))
-  return "{0} google/launch_xla_clean1.py -- --config_path {1} --job_name {2} --num_gpus 1 --norun_copybara".format(launch_command, config_path, job_name)
+  return "{0} google/launch_xla_clean1.py -- --config_path {1} --job_name {2} --num_gpus 1 --norun_copybara --noxc_monitor_on_launch".format(launch_command, config_path, job_name)
   #opy_commands.append(["gsutil", "cp", f"{bucket}/{eval_path}", f"{experiment_output_dir}/eval_results.json"])
   #return [command]
   
@@ -56,12 +56,13 @@ def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name=
     config.update({key: value for key, value in zip(keys, option)})
     name = make_name(job_prefix, short_keys, option)
     print("### name ", name)
-    if output_dir_name in parent_config:
-      parent_output_dir = parent_config[output_dir_name]
-    else:
+    if output_dir_name in sweep: #parent_config:
       parent_output_dir = sweep[output_dir_name][0]
+    else:
+      parent_output_dir = parent_config[output_dir_name]
     output_dir = os.path.join(parent_output_dir, name)
     config.update({output_dir_name: output_dir})
+    print(config)
     config_path = "{0}/{1}.json".format(temp_configs_dir, name)
     with open(config_path, 'w') as f:
       json.dump(config, f)

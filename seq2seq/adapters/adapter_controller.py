@@ -137,6 +137,7 @@ class MetaAdapterController(nn.Module):
     self.train_task_embeddings = config.train_task_embeddings
     if self.train_task_embeddings:
       self.task_hyper_net = TaskHyperNet(config)
+      print(self.task_hyper_net)
     self.meta_up_sampler = HyperNetUpSampler(config)
     self.meta_down_sampler = HyperNetDownSampler(config)
     self.activation_type = config.non_linearity.lower()

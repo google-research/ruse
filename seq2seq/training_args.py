@@ -214,4 +214,5 @@ class AdapterTrainingArguments:
   non_linearity: Optional[str] = field(default="swish", metadata={"help": "Defines nonlinearity for adapter layers."})
   train_task_embeddings: Optional[bool] = field(default=False, metadata={"help": "If specified learns the tasks "
                                                                                   "embeddings from given task seedings."})
-
+  projected_task_embedding_dim: Optional[int] = field(default=64, metadata={"help": "Defines the task embedding dimension"
+                                                                                    " after projection layer. "})

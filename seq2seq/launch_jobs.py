@@ -618,7 +618,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "task_embedding_dir": ["task_embeddings/n-train-100"],
                                  "output_dir": ["m1-task-lr-3e-03-emb-128-r-16/"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-meta-adapters-projected-task-embedding/"]})
-do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
 
 
 # gs://ruse-xcloud-bucket/outputs/mixture1/parametric-meta-adapters-projected-task-embedding/m1-p-task-lr-1e-02-emb-128-r-16
@@ -639,4 +639,4 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "task_embedding_dir": ["task_embeddings/n-train-100"],
                                  "output_dir": ["m1-p-task-lr-1e-02-emb-128-r-16"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-parametric-meta-adapters-projected-task-embedding/"]})
-do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")

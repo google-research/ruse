@@ -599,6 +599,7 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
+"""
 # finetune the best trained models on the new sets.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1"
@@ -640,3 +641,20 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "output_dir": ["m1-p-task-lr-1e-02-emb-128-r-16"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-parametric-meta-adapters-projected-task-embedding/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
+"""
+
+
+# Dec 18
+# remove adapter layers from decoder
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "m1"
+short_keys = ["lr", 'r', 'l']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_lm_head": [True, False],
+                                 'projected_task_embedding_dim': [64], #, 128, 512],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100"],
+                                 "train_task_embeddings": [True],
+                                 "add_adapters_in_decoder": [False],
+                                 "output_dir": ["outputs/mixture1/meta-adapters-projected-task-embedding-no-decoder-adapter-t4"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)

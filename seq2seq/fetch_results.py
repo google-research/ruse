@@ -612,7 +612,7 @@ retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
 """
 
 
-
+"""
 job_prefix = "m1"
 short_keys = ["lr", "n", "e","l", "t"]
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
@@ -653,4 +653,21 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 #params = ["unfreeze_lm_head", "freeze_model_but_task_embeddings", "n_finetune", "learning_rate"]
 #download_all_evals(sweep, job_prefix, short_keys, sweep["eval_output_dir"][0])
 retrieve_results(sweep["eval_output_dir"][0], sweep, short_keys, job_prefix, params)
+"""
 
+# Dec 18
+# remove adapter layers from decoder
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "m1"
+short_keys = ["lr", 'r', 'l']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_lm_head": [True, False],
+                                 'projected_task_embedding_dim': [64], #, 128, 512],
+                                 'task_embedding_dir': ["task_embeddings/n-train-100"],
+                                 "train_task_embeddings": [True],
+                                 "add_adapters_in_decoder": [False],
+                                 "output_dir": ["outputs/mixture1/meta-adapters-projected-task-embedding-no-decoder-adapter-t4"]})
+params = ["unfreeze_lm_head", "reduction_factor", "learning_rate"]
+#download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)

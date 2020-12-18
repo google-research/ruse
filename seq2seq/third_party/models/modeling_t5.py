@@ -408,7 +408,6 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
     if config.train_adapters:
       encoder_config.train_adapters = True
     self.encoder = T5Stack(encoder_config, self.shared, adapter_config=adapter_config)
-
     decoder_config = copy.deepcopy(config)
     decoder_config.is_decoder = True
     decoder_config.is_encoder_decoder = False

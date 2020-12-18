@@ -41,7 +41,8 @@
 "train_task_embeddings": true,
 "projected_task_embedding_dim": 512,
 "add_adapters_in_decoder": false,
-"unfreeze_lm_head": true
+"unfreeze_lm_head": true,
+"unfreeze_layer_norms": true
 }
 
 

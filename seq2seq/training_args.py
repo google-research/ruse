@@ -127,7 +127,7 @@ class ModelArguments:
       "whole model and only keep the language model head as the training parameter."})
   unfreeze_lm_head: bool = field(default=False, metadata={"help": "Whether  to unfreeze the lm_head."})
   freeze_model_but_task_embeddings: bool = field(default=False, metadata={"help": "freezes the whole model but task-embedding."})
-
+  unfreeze_layer_norms: bool = field(default=False, metadata={"help": "unfreezes the layer norms."})
 
 @dataclass
 class DataTrainingArguments:

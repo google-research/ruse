@@ -12,6 +12,7 @@ from transformers import AutoTokenizer, HfArgumentParser, set_seed
 from transformers.file_utils import is_torch_tpu_available
 from transformers.trainer_utils import EvaluationStrategy
 
+from transformers.modeling_t5 import T5LayerNorm
 from seq2seq.adapters import AdapterController, MetaAdapterController, AutoAdapterConfig
 from seq2seq.data import AutoTask, TaskCollator
 from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments, \
@@ -72,6 +73,11 @@ def freezing_params(model, training_args, model_args, adapter_args):
     for param in model.lm_head.parameters():
       param.requires_grad = True
 
+  if model_args.unfreeze_layer_norms:
+    for name, sub_module in model.named_modules():
+      if isinstance(sub_module, T5LayerNorm):
+        for param_name, param in sub_module.named_parameters():
+          param.requires_grad = True
 
 def main():
   # See all possible arguments in src/transformers/training_args.py or by passing

@@ -29,6 +29,8 @@ from seq2seq.adapters import AutoAdapterController
 from .modeling_outputs import RuseBaseModelOutputWithPastAndCrossAttentions, RuseSeq2SeqLMOutput
 from seq2seq.models.poolings import AutoPooling
 from seq2seq.models.projections import AutoProjection
+from seq2seq.adapters import MetaAdapterConfig, ParametricMetaAdapterConfig
+from seq2seq.adapters import TaskEmbeddingController
 
 logger = logging.get_logger(__name__)
 
@@ -42,12 +44,16 @@ class T5LayerFF(nn.Module):
     self.train_adapters = config.train_adapters
     if self.train_adapters:
       self.adapter_controller = AutoAdapterController.get(adapter_config)
+      self.is_meta_adapter = True if isinstance(adapter_config, (MetaAdapterConfig, ParametricMetaAdapterConfig)) else False
 
-  def forward(self, hidden_states, task=None):
+  def forward(self, hidden_states, task=None, task_embedding=None):
     norm_x = self.layer_norm(hidden_states)
     y = self.DenseReluDense(norm_x)
     if self.train_adapters:
-      y = self.adapter_controller(task, y)
+      if not self.is_meta_adapter:
+        y = self.adapter_controller(task, y)
+      else:
+        y = self.adapter_controller(task_embedding, y)
     layer_output = hidden_states + self.dropout(y)
     return layer_output
 
@@ -63,6 +69,8 @@ class T5LayerSelfAttention(nn.Module):
     self.train_adapters = config.train_adapters
     if self.train_adapters:
       self.adapter_controller = AutoAdapterController.get(adapter_config)
+      self.is_meta_adapter = True if isinstance(adapter_config,
+                                                (MetaAdapterConfig, ParametricMetaAdapterConfig)) else False
 
   def forward(
       self,
@@ -74,6 +82,7 @@ class T5LayerSelfAttention(nn.Module):
       use_cache=False,
       output_attentions=False,
       task=None,
+      task_embedding=None
   ):
     norm_x = self.layer_norm(hidden_states)
     attention_output = self.SelfAttention(
@@ -87,7 +96,10 @@ class T5LayerSelfAttention(nn.Module):
     )
     y = attention_output[0]
     if self.train_adapters:
-      y = self.adapter_controller(task, y)
+      if not self.is_meta_adapter:
+        y = self.adapter_controller(task, y)
+      else:
+        y = self.adapter_controller(task_embedding, y)
     layer_output = hidden_states + self.dropout(y)
     outputs = (layer_output,) + attention_output[1:]  # add attentions if we output them
     return outputs
@@ -120,7 +132,8 @@ class T5Block(nn.Module):
       use_cache=False,
       output_attentions=False,
       return_dict=False,
-      task=None
+      task=None,
+      task_embedding=None
   ):
     if past_key_value is not None:
       assert self.is_decoder, "Only decoder can use `past_key_values`"
@@ -148,7 +161,8 @@ class T5Block(nn.Module):
       past_key_value=self_attn_past_key_value,
       use_cache=use_cache,
       output_attentions=output_attentions,
-      task=task
+      task=task,
+      task_embedding=task_embedding
     )
     hidden_states, present_key_value_state = self_attention_outputs[:2]
     # Keep self-attention outputs and relative position weights
@@ -186,7 +200,7 @@ class T5Block(nn.Module):
       attention_outputs = attention_outputs + cross_attention_outputs[2:]
 
     # Apply Feed Forward layer
-    hidden_states = self.layer[-1](hidden_states, task=task)
+    hidden_states = self.layer[-1](hidden_states, task=task, task_embedding=task_embedding)
     outputs = (hidden_states,)
 
     outputs = outputs + (present_key_value_state,) + attention_outputs
@@ -243,6 +257,7 @@ class T5Stack(T5PreTrainedModel):
       output_hidden_states=None,
       return_dict=None,
       task=None,
+      task_embedding=None
   ):
     use_cache = use_cache if use_cache is not None else self.config.use_cache
     output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
@@ -324,7 +339,8 @@ class T5Stack(T5PreTrainedModel):
         past_key_value=past_key_value,
         use_cache=use_cache,
         output_attentions=output_attentions,
-        task=task
+        task=task,
+        task_embedding=task_embedding
       )
       # layer_outputs is a tuple with:
       # hidden-states, key-value-states, (self-attention weights),
@@ -399,6 +415,11 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
 
   def __init__(self, config, adapter_config=None):
     super().__init__(config)
+
+    # Computes the task-embeddings.
+    if config.train_adapters:
+      self.task_embedding_controller = TaskEmbeddingController(adapter_config)
+
     self.adapter_config = adapter_config
     self.model_dim = config.d_model
     self.shared = nn.Embedding(config.vocab_size, config.d_model)
@@ -416,7 +437,6 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
       decoder_config.train_adapters = adapter_config.add_adapters_in_decoder
     self.decoder = T5Stack(decoder_config, self.shared, adapter_config=adapter_config)
     self.lm_head = nn.Linear(config.d_model, config.vocab_size, bias=False)
-
     self.fixed_length_emb = config.fixed_length_emb
     self.only_projection_bottleneck = config.only_projection_bottleneck
     self.concat_projection_token = config.concat_projection_token
@@ -456,6 +476,7 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
       output_hidden_states=None,
       return_dict=None,
       task=None,
+      task_embedding=None,
       **kwargs,
   ):
     r"""
@@ -491,7 +512,6 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
         a dog is good for you ", return_tensors="pt").input_ids# Batch size 1
         >>> outputs = model.generate(input_ids)
     """
-
     if "lm_labels" in kwargs:
       warnings.warn(
         "The `lm_labels` argument is deprecated and will be removed in a future version, use `labels` instead.",
@@ -526,7 +546,8 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
         output_attentions=output_attentions,
         output_hidden_states=output_hidden_states,
         return_dict=return_dict,
-        task=task
+        task=task,
+        task_embedding=self.task_embedding_controller(task) #get_task_embeddings(task)
       )
     elif return_dict and not isinstance(encoder_outputs, BaseModelOutput):
       # TODO(rabeeh): from what I see it does not go here.
@@ -577,7 +598,8 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
       output_attentions=output_attentions,
       output_hidden_states=output_hidden_states,
       return_dict=return_dict,
-      task=task
+      task=task,
+      task_embedding=self.task_embedding_controller(task)
     )
 
     sequence_output = decoder_outputs[0]
@@ -621,7 +643,8 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
       "encoder_outputs": encoder_outputs,
       "attention_mask": attention_mask,
       "use_cache": use_cache,
-      "task": kwargs["task"]
+      "task": kwargs["task"],
+      "task_embedding": kwargs["task_embedding"] #self.task_embedding_controller(kwargs["task"])
     }
 
   def _reorder_cache(self, past, beam_idx):

@@ -12,8 +12,7 @@ from transformers import AutoTokenizer, HfArgumentParser, set_seed
 from transformers.file_utils import is_torch_tpu_available
 from transformers.trainer_utils import EvaluationStrategy
 
-from seq2seq.adapters import AdapterController, MetaAdapterController, MetaParamterizedAdapterController, \
-  AutoAdapterConfig
+from seq2seq.adapters import AdapterController, MetaAdapterController, AutoAdapterConfig
 from seq2seq.data import AutoTask, TaskCollator
 from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments, \
   AdapterTrainingArguments
@@ -47,9 +46,11 @@ def freezing_params(model, training_args, model_args, adapter_args):
     # Sets the last layer of decoder to be trained.
     freeze_params(model)
     for name, sub_module in model.named_modules():
-      if isinstance(sub_module, (MetaAdapterController, MetaParamterizedAdapterController)):
+      if isinstance(sub_module, (MetaAdapterController, AdapterController)):
         for param_name, param in sub_module.named_parameters():
           param.requires_grad = True
+    for param in model.task_embedding_controller.parameters():
+      param.requires_grad = True
 
   elif model_args.freeze_model_but_lm_head:
     freeze_params(model)
@@ -64,16 +65,9 @@ def freezing_params(model, training_args, model_args, adapter_args):
 
   if model_args.freeze_model_but_task_embeddings:
     freeze_params(model)
-    for name, sub_module in model.named_modules():
-      if isinstance(sub_module, MetaAdapterController):
-        task_embedding_dict = sub_module.task_to_embeddings
-        if isinstance(task_embedding_dict, nn.ParameterDict):
-          for param in task_embedding_dict.parameters():
-            param.requires_grad = True
-        if adapter_args.train_task_embeddings:
-          for param in sub_module.task_hyper_net.parameters():
-            param.requires_grad = True
-
+    for param in model.task_embedding_controller.parameters():
+      param.requires_grad = True
+  
   if model_args.unfreeze_lm_head:
     for param in model.lm_head.parameters():
       param.requires_grad = True
@@ -265,10 +259,8 @@ def main():
             if isinstance(sub_module, AdapterController):
               sub_module.set_task_to_adapter_map(task_to_adapter)
         if adapter_args.adapter_config_name in ["meta-adapter", "parametric-meta-adapter"]:
-          for name, sub_module in model.named_modules():
-            if isinstance(sub_module, MetaAdapterController):
-              sub_module.update_task_embeddings([eval_task],
-                                                parametric=training_args.parametric_task_embedding)
+          model.task_embedding_controller.update_task_embeddings([eval_task],
+                    parametric=training_args.parametric_task_embedding)
 
       # if training_args.eval_output_dir is not None:
       #    training_args.output_dir = training_args.eval_output_dir

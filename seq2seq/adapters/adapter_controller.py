@@ -13,19 +13,16 @@
 # limitations under the License.
 """Implements Adapter Controller, a module that keeps multiple 
 layers of Adapters, and controls which adapter layer to use."""
-import os
-
-import numpy as np
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers.activations import get_activation
 
 from .adapter_configuration import AdapterConfig, MetaAdapterConfig, ParametricMetaAdapterConfig
 from .adapter_modeling import Adapter
-from .adapter_utils import HyperNetUpSampler, HyperNetDownSampler, TaskHyperNet
+from .adapter_utils import HyperNetUpSampler, HyperNetDownSampler
 
 
+# TODO: current model would not work with the AdapterController
 class AdapterController(nn.Module):
   """Implements Adapter controller module which controls the logics of
   putting adapter layers within transformer's layers."""
@@ -129,14 +126,7 @@ class MetaAdapterController(nn.Module):
     self.device = config.device
     self.adapters = nn.ModuleDict(dict())
     self.config = config
-    self.tasks = config.tasks
-    self.task_embedding_dim = config.task_embedding_dim
-    self.task_embedding_dir = config.task_embedding_dir
     self.input_dim = config.input_dim
-    self.set_task_embeddings(self.tasks)
-    self.train_task_embeddings = config.train_task_embeddings
-    if self.train_task_embeddings:
-      self.task_hyper_net = TaskHyperNet(config)
     self.meta_up_sampler = HyperNetUpSampler(config)
     self.meta_down_sampler = HyperNetDownSampler(config)
     self.activation_type = config.non_linearity.lower()
@@ -147,34 +137,7 @@ class MetaAdapterController(nn.Module):
     if self.add_layer_norm_before_adapter:
       self.pre_layer_norm = nn.LayerNorm(self.input_dim)
 
-  def load_or_init_task_embedding(self, task):
-    if self.task_embedding_dir is not None:
-      task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
-      return torch.Tensor(np.load(task_embedding_path)).to(self.device)
-    else:
-      return torch.Tensor(torch.randn(self.task_embedding_dim)).to(self.device)
-
-  def set_task_embeddings(self, tasks, parametric=False):
-    self.task_to_embeddings = {} if not parametric else nn.ParameterDict(dict())
-    for task in tasks:
-      task_embedding = self.load_or_init_task_embedding(task)
-      self.task_to_embeddings[task] = task_embedding if not parametric else nn.Parameter(task_embedding)
-
-  def update_task_embeddings(self, tasks, parametric=False):
-    self.task_to_embeddings = {} if not parametric else nn.ParameterDict(dict())
-    for task in tasks:
-      #if task not in self.task_to_embeddings:
-      task_embedding = self.load_or_init_task_embedding(task)
-      self.task_to_embeddings[task] = task_embedding if not parametric else nn.Parameter(task_embedding)
-
-  def get_task_embeddings(self, task):
-    task_embedding = self.task_to_embeddings[task]
-    if self.train_task_embeddings:
-      return self.task_hyper_net(task_embedding)
-    return task_embedding
-
-  def call_adapter(self, inputs, task):
-    task_embedding = self.get_task_embeddings(task)
+  def call_adapter(self, inputs, task_embedding):
     weight_up, bias_up = self.meta_up_sampler(task_embedding)
     weight_down, bias_down = self.meta_down_sampler(task_embedding)
     down = F.linear(inputs, weight=weight_down, bias=bias_down)
@@ -182,7 +145,7 @@ class MetaAdapterController(nn.Module):
     output = F.linear(middle, weight=weight_up, bias=bias_up)
     return output
 
-  def forward(self, task, inputs):
+  def forward(self, task_embedding, inputs):
     """Retrieves the adapter layer corresponding to the given
     task. It freezes the adapter layers for all the other tasks
     and call the selected adapter layer.
@@ -193,33 +156,11 @@ class MetaAdapterController(nn.Module):
       z = self.pre_layer_norm(inputs)
     else:
       z = inputs
-    outputs = self.call_adapter(z, task)
+    outputs = self.call_adapter(z, task_embedding)
     if self.add_layer_norm_after_adapter:
       outputs = self.post_layer_norm(outputs)
     outputs = outputs + inputs
     return outputs
-
-
-class MetaParamterizedAdapterController(MetaAdapterController):
-  """Implements Meta parameterized Adapter controller module, in which
-  the adapter layers' weights are generated from a hyper-network.
-  In this case, task-embeddings are parametric, they can be initialized
-  from a directory (task_embedding_dir) or if not given, the task
-  embeddings will be initialized to random."""
-
-  def __init__(self, config):
-    super().__init__(config)
-    self.set_task_embeddings(self.tasks)
-
-  def set_task_embeddings(self, tasks, parametric=True):
-    self.task_to_embeddings = nn.ParameterDict(dict())
-    for task in tasks:
-      self.task_to_embeddings[task] = nn.Parameter(self.load_or_init_task_embedding(task))
-
-  def update_task_embeddings(self, tasks, parametric=True):
-    for task in tasks:
-      if task not in self.task_to_embeddings:
-        self.task_to_embeddings[task] = nn.Parameter(self.load_or_init_task_embedding(task))
 
 
 class AutoAdapterController(nn.Module):
@@ -229,7 +170,7 @@ class AutoAdapterController(nn.Module):
   @classmethod
   def get(cls, config):
     if isinstance(config, ParametricMetaAdapterConfig):
-      return MetaParamterizedAdapterController(config)
+      return MetaAdapterController(config)
     elif isinstance(config, MetaAdapterConfig):
       return MetaAdapterController(config)
     elif isinstance(config, AdapterConfig):

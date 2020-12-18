@@ -13,7 +13,6 @@
 # limitations under the License.
 from .adapter_configuration import ADAPTER_CONFFIG_MAPPING, AutoAdapterConfig
 from .adapter_configuration import AdapterConfig, MetaAdapterConfig, ParametricMetaAdapterConfig
-from .adapter_controller import AdapterController, MetaAdapterController, MetaParamterizedAdapterController, \
-  AutoAdapterController
+from .adapter_controller import AdapterController, MetaAdapterController, AutoAdapterController
 from .adapter_modeling import Adapter
-from .adapter_utils import HyperNetDownSampler, HyperNetUpSampler
+from .adapter_utils import HyperNetDownSampler, HyperNetUpSampler, TaskEmbeddingController

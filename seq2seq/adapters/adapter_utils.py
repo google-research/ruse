@@ -16,7 +16,9 @@
 
 import torch.nn as nn
 from transformers.activations import get_activation
-
+import torch
+import numpy as np
+import os
 
 class Activations(nn.Module):
   def __init__(self, activation_type):
@@ -103,3 +105,44 @@ class TaskHyperNet(nn.Module):
   def forward(self, task_embedding):
     task_embedding = task_embedding.view(-1)
     return self.task_embeding_generator(task_embedding).view(-1)
+
+
+class TaskEmbeddingController(nn.Module):
+  def __init__(self, config):
+    super(TaskEmbeddingController, self).__init__()
+    self.device = config.device 
+    self.task_embedding_dim = config.task_embedding_dim
+    self.task_embedding_dir = config.task_embedding_dir
+    self.set_task_embeddings(config.tasks)
+    self.train_task_embeddings = config.train_task_embeddings
+    if self.train_task_embeddings:
+      self.task_hyper_net = TaskHyperNet(config)
+
+  # Defines utilities for task-embeddings.
+  def load_or_init_task_embedding(self, task):
+      if self.task_embedding_dir is not None:
+        task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
+        return torch.Tensor(np.load(task_embedding_path)).to(self.device)
+      else:
+        return torch.Tensor(torch.randn(self.task_embedding_dim)).to(self.device)
+
+  def set_task_embeddings(self, tasks, parametric=False):
+      self.task_to_embeddings = {} if not parametric else nn.ParameterDict(dict())
+      for task in tasks:
+        task_embedding = self.load_or_init_task_embedding(task)
+        self.task_to_embeddings[task] = task_embedding if not parametric else nn.Parameter(task_embedding)
+
+  def update_task_embeddings(self, tasks, parametric=False):
+      self.task_to_embeddings = {} if not parametric else nn.ParameterDict(dict())
+      for task in tasks:
+        # if task not in self.task_to_embeddings:
+        task_embedding = self.load_or_init_task_embedding(task)
+        self.task_to_embeddings[task] = task_embedding if not parametric else nn.Parameter(task_embedding)
+
+  def forward(self, task):
+      task_embedding = self.task_to_embeddings[task]
+      if self.train_task_embeddings:
+        return self.task_hyper_net(task_embedding)
+      return task_embedding
+
+

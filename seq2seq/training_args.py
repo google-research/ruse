@@ -215,3 +215,5 @@ class AdapterTrainingArguments:
                                                                                   "embeddings from given task seedings."})
   projected_task_embedding_dim: Optional[int] = field(default=64, metadata={"help": "Defines the task embedding dimension"
                                                                                     " after projection layer. "})
+  add_adapters_in_decoder: Optional[bool] = field(default=True, metadata={"help": "Defines if to set adapter layers"
+                                                                                  "in the decoder or not."})

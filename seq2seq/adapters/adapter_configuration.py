@@ -29,6 +29,7 @@ class AdapterConfig(object):
   non_linearity: str = "swish"
   reduction_factor: int = 16
   weight_init_range = 1e-2
+  add_adapters_in_decoder = True
 
 
 class MetaAdapterConfig(AdapterConfig):

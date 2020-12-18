@@ -148,7 +148,8 @@ def main():
                           "hidden_dim",
                           "non_linearity",
                           "train_task_embeddings",
-                          "projected_task_embedding_dim")
+                          "projected_task_embedding_dim",
+                          "add_adapters_in_decoder")
   for p in extra_adapter_params:
     if hasattr(adapter_args, p):
         assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"

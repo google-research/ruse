@@ -414,7 +414,7 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
     decoder_config.is_encoder_decoder = False
     decoder_config.num_layers = config.num_decoder_layers
     if config.train_adapters:
-      decoder_config.train_adapters = True
+      decoder_config.train_adapters = adapter_config.add_adapters_in_decoder
     self.decoder = T5Stack(decoder_config, self.shared, adapter_config=adapter_config)
     self.lm_head = nn.Linear(config.d_model, config.vocab_size, bias=False)
 

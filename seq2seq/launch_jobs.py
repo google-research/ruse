@@ -646,6 +646,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 
 # Dec 18
 # remove adapter layers from decoder
+"""
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1"
 short_keys = ["lr", 'r', 'l']
@@ -657,4 +658,30 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "train_task_embeddings": [True],
                                  "add_adapters_in_decoder": [False],
                                  "output_dir": ["outputs/mixture1/meta-adapters-projected-task-embedding-no-decoder-adapter-t4"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+"""
+
+
+# test the performance with having one task-projector network.
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "m1-task"
+short_keys = ["lr", 'emb', 'r']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                'projected_task_embedding_dim': [64, 128, 512],
+                                 "reduction_factor": [8, 16],
+                                 'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
+                                 "train_task_embeddings": [True],
+                                 "output_dir": ["outputs/mixture1/meta-adapters-projected-task-embedding-one-task-projector-network"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+
+
+basic_config_path = "configs/experiments/mixture1/paramteric-meta-task-emb.json"
+job_prefix = "m1-p-task"
+short_keys = ["lr", 'emb', 'r']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                'projected_task_embedding_dim': [64, 128, 512],
+                                 "reduction_factor": [8, 16],
+                                 "train_task_embeddings": [True],
+                                 'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
+                                 "output_dir": ["outputs/mixture1/parametric-meta-adapters-projected-task-embedding-one-task-projector-network"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)

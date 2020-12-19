@@ -26,6 +26,7 @@ from third_party.utils import (
   save_json,
   write_txt_file,
 )
+from seq2seq.utils import T5CheckpointCallback
 from seq2seq.utils import upload, use_task_specific_params, reset_config
 
 logger = logging.getLogger(__name__)
@@ -228,7 +229,8 @@ def main():
     data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores),
     compute_metrics=compute_metrics_fn,
     data_args=data_args,
-    dataset_sizes=dataset_sizes if training_args.do_train else None
+    dataset_sizes=dataset_sizes if training_args.do_train else None,
+    callbacks=[T5CheckpointCallback()]
   )
   # Training
   if training_args.do_train:
@@ -301,7 +303,8 @@ def main():
           data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores),
           compute_metrics=compute_metrics_fn[eval_task],
           data_args=eval_data_args,
-          dataset_sizes=dataset_sizes
+          dataset_sizes=dataset_sizes,
+          callbacks=[T5CheckpointCallback()]
         )
         trainer.train(
           model_path=eval_training_args.output_dir if os.path.isdir(eval_training_args.output_dir) else None

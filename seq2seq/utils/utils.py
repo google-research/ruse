@@ -3,6 +3,9 @@ from seq2seq.data import TASK_MAPPING
 from logging import getLogger
 import torch.nn as nn
 import os
+import pytorch_lightning as pl
+from transformers import  TrainerCallback
+
 
 logger = getLogger(__name__)
 
@@ -62,5 +65,14 @@ def partly_freeze_params(model: nn.Module, not_freezed_pattern):
         #p.requires_grad = True if not_freezed_pattern in name else False
 
 
-
+############################################
+# Defines callbacks.
+############################################
+class T5CheckpointCallback(TrainerCallback):
+ def on_save(self, args, state, control, **kwargs):
+        """
+        Event called after a checkpoint save.
+        """
+        if state.is_world_process_zero and args.gcs_bucket is not None:
+            upload(args.output_dir, args.gcs_bucket)
 

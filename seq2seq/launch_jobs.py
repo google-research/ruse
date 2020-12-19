@@ -688,6 +688,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
 # test the performance with having one task-projector network.
+"""
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1n"
 short_keys = ["lr", 'emb', 'r']
@@ -712,3 +713,27 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
                                  "output_dir": ["outputs/mixture1/parametric-meta-adapters-projected-task-embedding-one-task-projector-network-layernorm"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+"""
+
+# evaluate transfer performance
+# gsutil ls gs://ruse-xcloud-bucket/outputs/mixture1/meta-adapters-projected-task-embedding-one-task-projector-network-layernorm/m1n-lr-3e-03-emb-64-r-16
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "m1n"
+short_keys = ['lr', 'n', 'e', 'l', 't'] #["lr", 'emb', 'l', 't']
+sweep = collections.OrderedDict({
+                                 'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [1800, 360, 180, 90, 45]),
+                                 "unfreeze_lm_head": [True, False],
+                                 "freeze_model_but_task_embeddings": [True, False],
+                                 'projected_task_embedding_dim': [64],
+                                 "reduction_factor": [16],
+                                 "unfreeze_layer_norms": [True],
+                                 "do_finetune": [True],
+                                 "train_task_embeddings": [True],
+                                 "do_train": [False],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["test_data/task_embeddings/n-train-100"],
+                                 "output_dir": ["m1n-lr-3e-03-emb-64-r-16"],
+                                 "eval_output_dir": ["outputs/eval-v/finetune-meta-adapters-projected-task-emb-with-layer-norm-new/"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")

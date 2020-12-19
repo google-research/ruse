@@ -38,12 +38,14 @@ if is_torch_tpu_available():
 def shard_data(datasets, num_replicas, rank):
   """Returns the sharded data belonging to the given rank."""
   for i, dataset in enumerate(datasets):
+    # shuffle needs to be per epoch as well.
+    dataset = dataset.shuffle()
     sharded_dataset = dataset.shard(num_replicas, rank)
     datasets[i] = sharded_dataset
   return datasets
 
 
-def freezing_params(model, training_args, model_args, adapter_args):
+def freezing_params(model, training_args, model_args):
   if training_args.train_adapters:
     # Sets the last layer of decoder to be trained.
     freeze_params(model)
@@ -179,7 +181,7 @@ def main():
 
   # freezing the parameters.
   if training_args.do_train:
-    freezing_params(model, training_args, model_args, adapter_args)
+    freezing_params(model, training_args, model_args)
 
 
   dataset_class = AutoTask
@@ -291,7 +293,7 @@ def main():
         eval_data_args.eval_tasks = [eval_task]
 
 
-        freezing_params(model, eval_training_args, model_args, adapter_args)
+        freezing_params(model, eval_training_args, model_args)
 
 
         trainer = T5Trainer(

@@ -191,8 +191,6 @@ class T5Trainer(Trainer):
         Subclass and override this method if you want to inject some custom behavior.
         """
         #train_dataset = self.get_train_dataset_shards()
-        # TODO: we need to make sure that the number of batches are correctly computed
-        #   and this is consistent across the cores.
         multitask_sampler = MultiTaskBatchSampler(self.dataset_sizes, self.args.train_batch_size,
                 self.args.temperature)
         return DataLoader(self.train_dataset, batch_sampler=multitask_sampler,
@@ -233,10 +231,7 @@ class T5Trainer(Trainer):
         # TODO: the arguments needs to be handled per task.
         gen_kwargs = {
             "max_length": self.config.max_length,
-            #self.data_args.val_max_target_length
-            #if self.data_args is not None
-            #else self.config.max_length,
-            "num_beams": self.config.num_beams #self.data_args.eval_beams if self.data_args is not None else self.config.num_beams,
+            "num_beams": self.config.num_beams
         }
         gen_kwargs["task"] = inputs["task"]
         gen_kwargs["task_embedding"] = model.task_embedding_controller(inputs["task"])

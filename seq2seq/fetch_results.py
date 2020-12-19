@@ -657,6 +657,7 @@ retrieve_results(sweep["eval_output_dir"][0], sweep, short_keys, job_prefix, par
 
 # Dec 18
 # remove adapter layers from decoder
+"""
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1"
 short_keys = ["lr", 'r', 'l']
@@ -669,5 +670,33 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
                                  "add_adapters_in_decoder": [False],
                                  "output_dir": ["outputs/mixture1/meta-adapters-projected-task-embedding-no-decoder-adapter-t4"]})
 params = ["unfreeze_lm_head", "reduction_factor", "learning_rate"]
+#download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+"""
+
+
+# test the performance with having one task-projector network.
+job_prefix = "m1-task"
+short_keys = ["lr", 'emb', 'r']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                'projected_task_embedding_dim': [64, 128, 512],
+                                 "reduction_factor": [8, 16],
+                                 'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
+                                 "train_task_embeddings": [True],
+                                 "output_dir": ["outputs/mixture1/meta-adapters-projected-task-embedding-one-task-projector-network"]})
+params = ["projected_task_embedding_dim", "reduction_factor", "learning_rate"]
+#download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+
+
+job_prefix = "m1-p-task"
+short_keys = ["lr", 'emb', 'r']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                'projected_task_embedding_dim': [64, 128, 512],
+                                 "reduction_factor": [8, 16],
+                                 "train_task_embeddings": [True],
+                                 'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
+                                 "output_dir": ["outputs/mixture1/parametric-meta-adapters-projected-task-embedding-one-task-projector-network"]})
+params = ["projected_task_embedding_dim", "reduction_factor", "learning_rate"]
 #download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
 retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)

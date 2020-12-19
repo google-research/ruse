@@ -719,11 +719,11 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 # gsutil ls gs://ruse-xcloud-bucket/outputs/mixture1/meta-adapters-projected-task-embedding-one-task-projector-network-layernorm/m1n-lr-3e-03-emb-64-r-16
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1n"
-short_keys = ["lr", 'emb', 'l', 't']
+short_keys = ['lr', 'n', 'e', 'l', 't'] #["lr", 'emb', 'l', 't']
 sweep = collections.OrderedDict({
                                  'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
-                                                                         [7200, 1440, 720, 360, 180]),
+                                                                         [1800, 360, 180, 90, 45]),
                                  "unfreeze_lm_head": [True, False],
                                  "freeze_model_but_task_embeddings": [True, False],
                                  'projected_task_embedding_dim': [64],
@@ -735,5 +735,5 @@ sweep = collections.OrderedDict({
                                  "eval_tasks": [["yelp_polarity", "cola", "snli"]],
                                  "task_embedding_dir": ["test_data/task_embeddings/n-train-100"],
                                  "output_dir": ["m1n-lr-3e-03-emb-64-r-16"],
-                                 "eval_output_dir": ["outputs/eval-v/finetune-meta-adapters-projected-task-emb-with-layer-norm/"]})
+                                 "eval_output_dir": ["outputs/eval-v/finetune-meta-adapters-projected-task-emb-with-layer-norm-new/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")

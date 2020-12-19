@@ -5,7 +5,7 @@ import sys
 
 import torch.nn as nn
 import datasets
-from third_party.metrics import build_compute_metrics_fn
+from third_party.utils import build_compute_metrics_fn
 from third_party.models import T5Config, T5ForConditionalGeneration
 from third_party.trainers import T5Trainer
 from transformers import AutoTokenizer, HfArgumentParser, set_seed
@@ -17,7 +17,7 @@ from seq2seq.adapters import AdapterController, MetaAdapterController, AutoAdapt
 from seq2seq.data import AutoTask, TaskCollator
 from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments, \
   AdapterTrainingArguments
-from seq2seq.utils import (
+from third_party.utils import (
   assert_all_frozen,
   check_output_dir,
   freeze_embeds,

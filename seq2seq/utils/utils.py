@@ -1,15 +1,17 @@
 from google.cloud import storage
-from seq2seq.data import TASK_MAPPING
 from logging import getLogger
 import torch.nn as nn
 import os
+
 from transformers import TrainerCallback
+from transformers.modeling_t5 import T5LayerNorm
+
+from seq2seq.adapters import AdapterController, MetaAdapterController
+from seq2seq.data import TASK_MAPPING
 from third_party.utils import (
     assert_all_frozen,
     freeze_embeds,
     freeze_params)
-from transformers.modeling_t5 import T5LayerNorm
-from seq2seq.adapters import AdapterController, MetaAdapterController, AutoAdapterConfig
 
 logger = getLogger(__name__)
 
@@ -22,18 +24,19 @@ def upload(upload_dir: str, gcs_bucket: str) -> None:
         upload_dir,
         os.path.join("gs://" + gcs_bucket, upload_dir)))
 
+
 def upload_with_storage(upload_dir: str, gcs_bucket: str) -> None:
-  """Uploads the upload_dir to the gs_bucket. Note that this method could
-  results in timeout issues and is better not to use storage library and
-  only rely on gsutil for copying files."""
-  storage_client = storage.Client()
-  bucket = storage_client.get_bucket(gcs_bucket)
-  for dirpath, _, filenames in os.walk(upload_dir):
-    for name in filenames:
-      filename = os.path.join(dirpath, name)
-      blob = storage.Blob(os.path.join(upload_dir, name), bucket)
-      with open(filename, 'rb') as f:
-        blob.upload_from_file(f, num_retries=10, timeout=10*60)
+    """Uploads the upload_dir to the gs_bucket. Note that this method could
+    results in timeout issues and is better not to use storage library and
+    only rely on gsutil for copying files."""
+    storage_client = storage.Client()
+    bucket = storage_client.get_bucket(gcs_bucket)
+    for dirpath, _, filenames in os.walk(upload_dir):
+        for name in filenames:
+            filename = os.path.join(dirpath, name)
+            blob = storage.Blob(os.path.join(upload_dir, name), bucket)
+            with open(filename, 'rb') as f:
+                blob.upload_from_file(f, num_retries=10, timeout=10 * 60)
 
 
 def use_task_specific_params(model, task):
@@ -125,6 +128,7 @@ def freezing_params(model, training_args, model_args):
             if isinstance(sub_module, T5LayerNorm):
                 for param_name, param in sub_module.named_parameters():
                     param.requires_grad = True
+
 
 ############################################
 # Defines callbacks.

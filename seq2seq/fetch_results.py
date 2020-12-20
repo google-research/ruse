@@ -674,7 +674,7 @@ params = ["unfreeze_lm_head", "reduction_factor", "learning_rate"]
 retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
 """
 
-
+"""
 # test the performance with having one task-projector network.
 job_prefix = "m1-task"
 short_keys = ["lr", 'emb', 'r']
@@ -700,3 +700,115 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4]
 params = ["projected_task_embedding_dim", "reduction_factor", "learning_rate"]
 #download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
 retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+"""
+
+##############################################################
+# 20 Dec
+##############################################################
+# test the performance with having one task-projector network.
+"""
+print("with layernorm, unique task embedding projector, meta adapter")
+job_prefix = "m1n"
+short_keys = ["lr", 'emb', 'r']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                'projected_task_embedding_dim': [64, 128, 512],
+                                 "reduction_factor": [8, 16],
+                                 'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
+                                 "train_task_embeddings": [True],
+                                 "unfreeze_layer_norms": [True],
+                                 "output_dir": ["outputs/mixture1/meta-adapters-projected-task-embedding-one-task-projector-network-layernorm"]})
+params = ["learning_rate", "projected_task_embedding_dim", "reduction_factor"]
+#download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+
+
+
+print("with layernorm, unique task embedding projector, parametric meta adapter")
+job_prefix = "m1-pn"
+short_keys = ["lr", 'emb', 'r']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                'projected_task_embedding_dim': [64, 128, 512],
+                                 "reduction_factor": [8, 16],
+                                 "train_task_embeddings": [True],
+                                 "unfreeze_layer_norms": [True],
+                                 'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
+                                 "output_dir": ["outputs/mixture1/parametric-meta-adapters-projected-task-embedding-one-task-projector-network-layernorm"]})
+params = ["learning_rate", "projected_task_embedding_dim", "reduction_factor"]
+#download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+"""
+
+# evaluate transfer performance
+# gsutil ls gs://ruse-xcloud-bucket/outputs/mixture1/meta-adapters-projected-task-embedding-one-task-projector-network-layernorm/m1n-lr-3e-03-emb-64-r-16
+print("evaluation of the trained models with layernorm, still with unfreezing later norms, meta-adapter")
+job_prefix = "m1n"
+short_keys = ['lr', 'n', 'e', 'l', 't'] #["lr", 'emb', 'l', 't']
+sweep = collections.OrderedDict({
+                                 'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [7200, 1440, 720, 360, 180]),
+                                                                         #[1800, 360, 180, 90, 45]),
+                                 "unfreeze_lm_head": [True, False],
+                                 "freeze_model_but_task_embeddings": [True, False],
+                                 'projected_task_embedding_dim': [64],
+                                 "reduction_factor": [16],
+                                 "unfreeze_layer_norms": [True],
+                                 "do_finetune": [True],
+                                 "train_task_embeddings": [True],
+                                 "do_train": [False],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["test_data/task_embeddings/n-train-100"],
+                                 "output_dir": ["m1n-lr-3e-03-emb-64-r-16"],
+                                 "eval_output_dir": ["outputs/eval-v/finetune-meta-adapters-projected-task-emb-with-layer-norm-new-t4/"]})
+params = ["learning_rate", "unfreeze_lm_head", "freeze_model_but_task_embeddings", "n_finetune"]
+#download_all_evals(sweep, job_prefix, short_keys, sweep["eval_output_dir"][0])
+retrieve_results(sweep["eval_output_dir"][0], sweep, short_keys, job_prefix, params)
+
+
+print("evaluation of the trained models with layernorm, without unfreezing later norms, meta-adapter")
+job_prefix = "m1no"
+short_keys = ['lr', 'n', 'e', 'l', 't'] #["lr", 'emb', 'l', 't']
+sweep = collections.OrderedDict({
+                                 'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [7200, 1440, 720, 360, 180]),
+                                                                         #[1800, 360, 180, 90, 45]),
+                                 "unfreeze_lm_head": [True, False],
+                                 "freeze_model_but_task_embeddings": [True, False],
+                                 'projected_task_embedding_dim': [64],
+                                 "reduction_factor": [16],
+                                 "do_finetune": [True],
+                                 "train_task_embeddings": [True],
+                                 "do_train": [False],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["test_data/task_embeddings/n-train-100"],
+                                 "output_dir": ["m1n-lr-3e-03-emb-64-r-16"],
+                                 "eval_output_dir": ["outputs/eval-v/finetune-meta-adapters-projected-task-emb-with-layer-norm-new-t4-without-unfreezing/"]})
+params = ["learning_rate", "unfreeze_lm_head", "freeze_model_but_task_embeddings", "n_finetune"]
+#download_all_evals(sweep, job_prefix, short_keys, sweep["eval_output_dir"][0])
+retrieve_results(sweep["eval_output_dir"][0], sweep, short_keys, job_prefix, params)
+
+
+print("evaluation of the trained models with layernorm, still with unfreezing later norms, meta-adapter, longer epochs")
+job_prefix = "m1n"
+short_keys = ['lr', 'n', 'e', 'l', 't'] #["lr", 'emb', 'l', 't']
+sweep = collections.OrderedDict({
+                                 'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [7200, 1440, 720, 360, 180]),
+                                                                         #[1800, 360, 180, 90, 45]),
+                                 "unfreeze_lm_head": [True, False],
+                                 "freeze_model_but_task_embeddings": [True, False],
+                                 'projected_task_embedding_dim': [64],
+                                 "reduction_factor": [16],
+                                 "unfreeze_layer_norms": [True],
+                                 "do_finetune": [True],
+                                 "train_task_embeddings": [True],
+                                 "do_train": [False],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["test_data/task_embeddings/n-train-100"],
+                                 "output_dir": ["m1n-lr-3e-03-emb-64-r-16"],
+                                 "eval_output_dir": ["outputs/eval-v/finetune-meta-adapters-projected-task-emb-with-layer-norm-new-t4-long/"]})
+params = ["learning_rate", "unfreeze_lm_head", "freeze_model_but_task_embeddings", "n_finetune"]
+#download_all_evals(sweep, job_prefix, short_keys, sweep["eval_output_dir"][0])
+retrieve_results(sweep["eval_output_dir"][0], sweep, short_keys, job_prefix, params)

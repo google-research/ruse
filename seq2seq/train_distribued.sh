@@ -26,37 +26,35 @@ export BS=4; CUDA_VISIBLE_DEVICES=0,1  USE_TF=0   python -m torch.distributed.la
 		--num_train_epochs 10 \
 		--warmup_steps 500 \
 		--eval_steps 200 \
-		--overwrite_output_dir true \
-		--tasks  ["scitail", "boolq"] \
-		--eval_tasks ["rte", "boolq"] \
-		--sampling true \
+		--overwrite_output_dir  \
+		--tasks  scitail boolq \
+		--eval_tasks rte boolq \
+		--sampling  \
 		--label_smoothing 0.1 \
-		--freeze_encoder false \
-		--freeze_embeds false \
-		--per_device_train_batch_size" 64 \
-		--per_device_eval_batch_size" 64 \
-		--save_steps": 20 \
-		--logging_first_step true \
+		--per_device_train_batch_size 64 \
+		--per_device_eval_batch_size 64 \
+		--save_steps 20 \
+		--logging_first_step \
 		--logging_steps 200 \
 		--save_total_limit 1 \
-		--train_adapters true \
+		--train_adapters \
 		--adapter_config_name parametric-meta-adapter \
 		--temperature 10 \
-		--do_eval \
-		--predict_with_generate true \
+		--do_eval  \
+		--predict_with_generate \
 		--n_train  10 \
 		--task_embedding_dir test_data/task_embeddings/n-train-all \
 		--task_embedding_dim  512 \
 		--n_val 10 \
 		--n_train 10 \
-		--do_finetune true \
-		--do_train true \
+		--do_finetune \
+		--do_train  \
 		--n_finetune 100 \
 		--eval_output_dir outputs/eval_test \
 		--reduction_factor 16 \
 		--non_linearity relu \
-		--train_task_embeddings true \
-		--projected_task_embedding_dim  512
-		--add_adapters_in_decoder false \
+		--train_task_embeddings \
+		--projected_task_embedding_dim  512 \
 		--unfreeze_lm_head \
-		--unfreeze_layer_norms
+		--unfreeze_layer_norms \
+                "$@"

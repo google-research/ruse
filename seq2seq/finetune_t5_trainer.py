@@ -39,7 +39,15 @@ def main():
   # separation of concerns.
   parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments, AdapterTrainingArguments))
 
-  if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
+  print("@@@@@ ", sys.argv)
+  '--local_rank=1', 'configs/experiments/test.json'
+  if len(sys.argv) == 3 and sys.argv[1].startswith("--local_rank") and sys.argv[2].endswith(".json"):
+    with open(, "a") as myfile:
+      f.write("appended text")
+
+    model_args, data_args, training_args, adapter_args = parser.parse_json_file(
+      json_file=os.path.abspath(sys.argv[1]))
+  elif len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
     # If we pass only one argument to the script and it's the path to a json file,
     # let's parse it to get our arguments.
     model_args, data_args, training_args, adapter_args = parser.parse_json_file(

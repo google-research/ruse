@@ -181,6 +181,14 @@ class T5Trainer(Trainer):
             return self.train_dataset
     """
 
+    """
+    def make_multitask_sampler(self, batch_size, distributed=False, shuffle=True, **kwargs):
+        if distributed:
+            return DistributedMultiTaskBatchSampler(self.dataset_sizes, batch_size, shuffle=shuffle, **kwargs)
+        else:
+            return MultiTaskBatchSampler(self.dataset_sizes, batch_size, shuffle=shuffle)
+    """
+
     def get_train_dataloader(self) -> DataLoader:
         """
         Returns the training :class:`~torch.utils.data.DataLoader`.
@@ -191,8 +199,15 @@ class T5Trainer(Trainer):
         Subclass and override this method if you want to inject some custom behavior.
         """
         #train_dataset = self.get_train_dataset_shards()
-        multitask_sampler = MultiTaskBatchSampler(self.dataset_sizes, self.args.train_batch_size,
+        print("@@@ ", self.args.per_device_train_batch_size, self.args.train_batch_size)
+        if self.args.local_rank != -1:
+            # TODO: does it called for tpus too?
+            multitask_sampler = MultiTaskBatchSampler(self.dataset_sizes, self.args.per_device_train_batch_size,
                 self.args.temperature)
+        else:
+            # TODO: is this correct batch size for multiple cores?
+            multitask_sampler = MultiTaskBatchSampler(self.dataset_sizes, self.args.train_batch_size,
+                                                      self.args.temperature)
         return DataLoader(self.train_dataset, batch_sampler=multitask_sampler,
                                 collate_fn=self.data_collator)
 

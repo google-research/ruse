@@ -15,22 +15,23 @@ logger = getLogger(__name__)
 
 
 def upload(upload_dir: str, gcs_bucket: str) -> None:
-    os.system("/root/google-cloud-sdk/bin/gsutil  rm -r {}".format(os.path.join("gs://" + gcs_bucket, upload_dir)))
-    os.system("/root/google-cloud-sdk/bin/gsutil -m cp -r {} {}".format(upload_dir,
-                                                                        os.path.join("gs://" + gcs_bucket, upload_dir)))
+    """Uploads the local upload_dir to the gs bucket."""
+    os.system("/root/google-cloud-sdk/bin/gsutil  rm -r {}".format(
+        os.path.join("gs://" + gcs_bucket, upload_dir)))
+    os.system("/root/google-cloud-sdk/bin/gsutil -m cp -r {} {}".format(
+        upload_dir,
+        os.path.join("gs://" + gcs_bucket, upload_dir)))
 
-# Uploading the local folder to gs-bucket, note that this method normally
-# results in the timeout issues and the default is to the use the upload method
-# with gsutil.
 def upload_with_storage(upload_dir: str, gcs_bucket: str) -> None:
-  #Upload files to GCS.
-  gcs_path = upload_dir
+  """Uploads the upload_dir to the gs_bucket. Note that this method could
+  results in timeout issues and is better not to use storage library and
+  only rely on gsutil for copying files."""
   storage_client = storage.Client()
   bucket = storage_client.get_bucket(gcs_bucket)
   for dirpath, _, filenames in os.walk(upload_dir):
     for name in filenames:
       filename = os.path.join(dirpath, name)
-      blob = storage.Blob(os.path.join(gcs_path, name), bucket)
+      blob = storage.Blob(os.path.join(upload_dir, name), bucket)
       with open(filename, 'rb') as f:
         blob.upload_from_file(f, num_retries=10, timeout=10*60)
 
@@ -73,7 +74,6 @@ def partly_freeze_params(model: nn.Module, not_freezed_pattern):
             p.requires_grad = True
         else:
             p.requires_grad = False
-        # p.requires_grad = True if not_freezed_pattern in name else False
 
 
 def shard_data(datasets, num_replicas, rank):
@@ -131,8 +131,6 @@ def freezing_params(model, training_args, model_args):
 ############################################
 class T5CheckpointCallback(TrainerCallback):
     def on_save(self, args, state, control, **kwargs):
-        """
-        Event called after a checkpoint save.
-        """
+        """Event called after a checkpoint save."""
         if state.is_world_process_zero and args.gcs_bucket is not None:
             upload(args.output_dir, args.gcs_bucket)

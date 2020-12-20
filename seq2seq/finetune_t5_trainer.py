@@ -3,7 +3,8 @@ import logging
 import os
 import sys
 
-import torch.nn as nn
+from pathlib import Path
+import json
 import datasets
 from third_party.utils import build_compute_metrics_fn
 from third_party.models import T5Config, T5ForConditionalGeneration
@@ -39,13 +40,11 @@ def main():
   # separation of concerns.
   parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments, AdapterTrainingArguments))
 
-  #print("@@@@@ ", sys.argv)
-  #'--local_rank=1', 'configs/experiments/test.json'
+  # for the case when calling with distributed version of torch, this adds '--local_rank=1', 'configs/experiments/test.json'.
   if len(sys.argv) == 3 and sys.argv[1].startswith("--local_rank") and sys.argv[2].endswith(".json"):
-    with open(os.path.abspath(sys.argv[2]), "a") as f:
-      f.write(sys.argv[1])
-    model_args, data_args, training_args, adapter_args = parser.parse_json_file(
-      json_file=os.path.abspath(sys.argv[2]))
+    args_dict = json.loads(Path(sys.argv[2]).read_text())
+    args_dict.update({'local_rank': int(sys.argv[1].split('=')[-1])})
+    model_args, data_args, training_args, adapter_args = parser.parse_dict(args_dict)
   elif len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
     # If we pass only one argument to the script and it's the path to a json file,
     # let's parse it to get our arguments.

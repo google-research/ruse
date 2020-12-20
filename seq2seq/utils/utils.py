@@ -1,13 +1,13 @@
-#from google.cloud import storage
+from google.cloud import storage
 from seq2seq.data import TASK_MAPPING
 from logging import getLogger
 import torch.nn as nn
 import os
-from transformers import  TrainerCallback
+from transformers import TrainerCallback
 from third_party.utils import (
-  assert_all_frozen,
-  freeze_embeds,
-  freeze_params)
+    assert_all_frozen,
+    freeze_embeds,
+    freeze_params)
 from transformers.modeling_t5 import T5LayerNorm
 from seq2seq.adapters import AdapterController, MetaAdapterController, AutoAdapterConfig
 
@@ -15,11 +15,14 @@ logger = getLogger(__name__)
 
 
 def upload(upload_dir: str, gcs_bucket: str) -> None:
-    os.system("/root/google-cloud-sdk/bin/gsutil  rm -r {}".format(os.path.join("gs://"+gcs_bucket, upload_dir)))
-    os.system("/root/google-cloud-sdk/bin/gsutil -m cp -r {} {}".format(upload_dir, os.path.join("gs://"+gcs_bucket, upload_dir)))
+    os.system("/root/google-cloud-sdk/bin/gsutil  rm -r {}".format(os.path.join("gs://" + gcs_bucket, upload_dir)))
+    os.system("/root/google-cloud-sdk/bin/gsutil -m cp -r {} {}".format(upload_dir,
+                                                                        os.path.join("gs://" + gcs_bucket, upload_dir)))
 
-"""
-def upload(upload_dir: str, gcs_bucket: str) -> None:
+# Uploading the local folder to gs-bucket, note that this method normally
+# results in the timeout issues and the default is to the use the upload method
+# with gsutil.
+def upload_with_storage(upload_dir: str, gcs_bucket: str) -> None:
   #Upload files to GCS.
   gcs_path = upload_dir
   storage_client = storage.Client()
@@ -30,7 +33,7 @@ def upload(upload_dir: str, gcs_bucket: str) -> None:
       blob = storage.Blob(os.path.join(gcs_path, name), bucket)
       with open(filename, 'rb') as f:
         blob.upload_from_file(f, num_retries=10, timeout=10*60)
-"""
+
 
 def use_task_specific_params(model, task):
     """Update config with task specific params during evaluation."""
@@ -40,10 +43,12 @@ def use_task_specific_params(model, task):
         logger.info(f"using task specific params for {task}: {task_specific_config}")
         model.config.update(task_specific_config)
 
+
 def reset_config(model, config):
     """Resets the config file to the one provided."""
     model.config = config
     logger.info(f"config is reset to the initial values.")
+
 
 def use_task_specific_params(model, task):
     """Update config with task specific params during evaluation."""
@@ -53,10 +58,12 @@ def use_task_specific_params(model, task):
         logger.info(f"using task specific params for {task}: {task_specific_config}")
         model.config.update(task_specific_config)
 
+
 def reset_config(model, config):
     """Resets the config file to the one provided."""
     model.config = config
     logger.info(f"config is reset to the initial values.")
+
 
 def partly_freeze_params(model: nn.Module, not_freezed_pattern):
     # TODO(rabeeh): unfreezed patterns need to be a list.
@@ -66,7 +73,7 @@ def partly_freeze_params(model: nn.Module, not_freezed_pattern):
             p.requires_grad = True
         else:
             p.requires_grad = False
-        #p.requires_grad = True if not_freezed_pattern in name else False
+        # p.requires_grad = True if not_freezed_pattern in name else False
 
 
 def shard_data(datasets, num_replicas, rank):
@@ -81,7 +88,6 @@ def shard_data(datasets, num_replicas, rank):
 
 def freezing_params(model, training_args, model_args):
     if training_args.train_adapters:
-        # Sets the last layer of decoder to be trained.
         freeze_params(model)
         for name, sub_module in model.named_modules():
             if isinstance(sub_module, (MetaAdapterController, AdapterController)):
@@ -90,16 +96,20 @@ def freezing_params(model, training_args, model_args):
         for param in model.task_embedding_controller.parameters():
             param.requires_grad = True
 
-    elif model_args.freeze_model_but_lm_head:
+    if model_args.freeze_model:
+        freeze_params(model)
+
+    if model_args.freeze_model_but_lm_head:
         freeze_params(model)
         for param in model.lm_head.parameters():
             param.requires_grad = True
-    else:
-        if model_args.freeze_embeds:
-            freeze_embeds(model)
-        if model_args.freeze_encoder:
-            freeze_params(model.get_encoder())
-            assert_all_frozen(model.get_encoder())
+
+    if model_args.freeze_embeds:
+        freeze_embeds(model)
+
+    if model_args.freeze_encoder:
+        freeze_params(model.get_encoder())
+        assert_all_frozen(model.get_encoder())
 
     if model_args.freeze_model_but_task_embeddings:
         freeze_params(model)
@@ -116,15 +126,13 @@ def freezing_params(model, training_args, model_args):
                 for param_name, param in sub_module.named_parameters():
                     param.requires_grad = True
 
-
 ############################################
 # Defines callbacks.
 ############################################
 class T5CheckpointCallback(TrainerCallback):
- def on_save(self, args, state, control, **kwargs):
+    def on_save(self, args, state, control, **kwargs):
         """
         Event called after a checkpoint save.
         """
         if state.is_world_process_zero and args.gcs_bucket is not None:
             upload(args.output_dir, args.gcs_bucket)
-

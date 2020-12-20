@@ -12,21 +12,18 @@ from transformers import AutoTokenizer, HfArgumentParser, set_seed
 from transformers.file_utils import is_torch_tpu_available
 from transformers.trainer_utils import EvaluationStrategy
 
-from transformers.modeling_t5 import T5LayerNorm
+
 from seq2seq.adapters import AdapterController, MetaAdapterController, AutoAdapterConfig
 from seq2seq.data import AutoTask, TaskCollator
 from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments, \
   AdapterTrainingArguments
 from third_party.utils import (
-  assert_all_frozen,
   check_output_dir,
-  freeze_embeds,
-  freeze_params,
   lmap,
   save_json,
   write_txt_file,
 )
-from seq2seq.utils import T5CheckpointCallback
+from seq2seq.utils import T5CheckpointCallback, freezing_params, shard_data
 from seq2seq.utils import upload, use_task_specific_params, reset_config
 
 logger = logging.getLogger(__name__)
@@ -35,52 +32,6 @@ if is_torch_tpu_available():
   import torch_xla.core.xla_model as xm
 
 
-def shard_data(datasets, num_replicas, rank):
-  """Returns the sharded data belonging to the given rank."""
-  for i, dataset in enumerate(datasets):
-    # shuffle needs to be per epoch as well.
-    dataset = dataset.shuffle()
-    sharded_dataset = dataset.shard(num_replicas, rank)
-    datasets[i] = sharded_dataset
-  return datasets
-
-
-def freezing_params(model, training_args, model_args):
-  if training_args.train_adapters:
-    # Sets the last layer of decoder to be trained.
-    freeze_params(model)
-    for name, sub_module in model.named_modules():
-      if isinstance(sub_module, (MetaAdapterController, AdapterController)):
-        for param_name, param in sub_module.named_parameters():
-          param.requires_grad = True
-    for param in model.task_embedding_controller.parameters():
-      param.requires_grad = True
-
-  elif model_args.freeze_model_but_lm_head:
-    freeze_params(model)
-    for param in model.lm_head.parameters():
-      param.requires_grad = True
-  else:
-    if model_args.freeze_embeds:
-      freeze_embeds(model)
-    if model_args.freeze_encoder:
-      freeze_params(model.get_encoder())
-      assert_all_frozen(model.get_encoder())
-
-  if model_args.freeze_model_but_task_embeddings:
-    freeze_params(model)
-    for param in model.task_embedding_controller.parameters():
-      param.requires_grad = True
-  
-  if model_args.unfreeze_lm_head:
-    for param in model.lm_head.parameters():
-      param.requires_grad = True
-
-  if model_args.unfreeze_layer_norms:
-    for name, sub_module in model.named_modules():
-      if isinstance(sub_module, T5LayerNorm):
-        for param_name, param in sub_module.named_parameters():
-          param.requires_grad = True
 
 def main():
   # See all possible arguments in src/transformers/training_args.py or by passing

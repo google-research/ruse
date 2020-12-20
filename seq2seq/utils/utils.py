@@ -1,11 +1,15 @@
-from google.cloud import storage
+#from google.cloud import storage
 from seq2seq.data import TASK_MAPPING
 from logging import getLogger
 import torch.nn as nn
 import os
-import pytorch_lightning as pl
 from transformers import  TrainerCallback
-
+from third_party.utils import (
+  assert_all_frozen,
+  freeze_embeds,
+  freeze_params)
+from transformers.modeling_t5 import T5LayerNorm
+from seq2seq.adapters import AdapterController, MetaAdapterController, AutoAdapterConfig
 
 logger = getLogger(__name__)
 
@@ -63,6 +67,54 @@ def partly_freeze_params(model: nn.Module, not_freezed_pattern):
         else:
             p.requires_grad = False
         #p.requires_grad = True if not_freezed_pattern in name else False
+
+
+def shard_data(datasets, num_replicas, rank):
+    """Returns the sharded data belonging to the given rank."""
+    for i, dataset in enumerate(datasets):
+        # shuffle needs to be per epoch as well.
+        dataset = dataset.shuffle()
+        sharded_dataset = dataset.shard(num_replicas, rank)
+        datasets[i] = sharded_dataset
+    return datasets
+
+
+def freezing_params(model, training_args, model_args):
+    if training_args.train_adapters:
+        # Sets the last layer of decoder to be trained.
+        freeze_params(model)
+        for name, sub_module in model.named_modules():
+            if isinstance(sub_module, (MetaAdapterController, AdapterController)):
+                for param_name, param in sub_module.named_parameters():
+                    param.requires_grad = True
+        for param in model.task_embedding_controller.parameters():
+            param.requires_grad = True
+
+    elif model_args.freeze_model_but_lm_head:
+        freeze_params(model)
+        for param in model.lm_head.parameters():
+            param.requires_grad = True
+    else:
+        if model_args.freeze_embeds:
+            freeze_embeds(model)
+        if model_args.freeze_encoder:
+            freeze_params(model.get_encoder())
+            assert_all_frozen(model.get_encoder())
+
+    if model_args.freeze_model_but_task_embeddings:
+        freeze_params(model)
+        for param in model.task_embedding_controller.parameters():
+            param.requires_grad = True
+
+    if model_args.unfreeze_lm_head:
+        for param in model.lm_head.parameters():
+            param.requires_grad = True
+
+    if model_args.unfreeze_layer_norms:
+        for name, sub_module in model.named_modules():
+            if isinstance(sub_module, T5LayerNorm):
+                for param_name, param in sub_module.named_parameters():
+                    param.requires_grad = True
 
 
 ############################################

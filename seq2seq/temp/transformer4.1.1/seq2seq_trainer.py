@@ -1,17 +1,28 @@
-"""Implements a T5 trainer class doing training and evaluation."""
+# Copyright 2020 The HuggingFace Team. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import torch
 from torch import nn
-from torch.utils.data.dataset import Dataset
-from seq2seq.data import MultiTaskBatchSampler
 from torch.utils.data import DistributedSampler, RandomSampler
-from transformers import PreTrainedModel, logging
-from .trainer  import Trainer
-from transformers.configuration_fsmt import FSMTConfig
-from transformers.file_utils import is_torch_tpu_available
-from torch.utils.data.dataloader import DataLoader
 
+from transformers import PreTrainedModel, logging
+from trainer import Trainer
+from transformers.file_utils import is_torch_tpu_available
+from transformers.integrations import is_fairscale_available
+from transformers.models.fsmt.configuration_fsmt import FSMTConfig
 from transformers.optimization import (
     Adafactor,
     AdamW,
@@ -22,6 +33,13 @@ from transformers.optimization import (
     get_linear_schedule_with_warmup,
     get_polynomial_decay_schedule_with_warmup,
 )
+from transformers.trainer_pt_utils import get_tpu_sampler
+from transformers.training_args import ParallelMode
+
+
+if is_fairscale_available():
+    from fairscale.optim import OSS
+
 
 logger = logging.get_logger(__name__)
 
@@ -35,8 +53,8 @@ arg_to_scheduler = {
 }
 
 
-class T5Trainer(Trainer):
-    def __init__(self, config=None, data_args=None, dataset_sizes=None, *args, **kwargs):
+class Seq2SeqTrainer(Trainer):
+    def __init__(self, config=None, data_args=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if config is None:
@@ -47,7 +65,6 @@ class T5Trainer(Trainer):
         else:
             self.config = config
 
-        self.dataset_sizes = dataset_sizes
         self.data_args = data_args
         self.vocab_size = self.config.tgt_vocab_size if isinstance(self.config, FSMTConfig) else self.config.vocab_size
 
@@ -65,18 +82,16 @@ class T5Trainer(Trainer):
             self.loss_fn = torch.nn.CrossEntropyLoss(ignore_index=self.config.pad_token_id)
         else:
             # dynamically import label_smoothed_nll_loss
-            from third_party.utils import label_smoothed_nll_loss
+            from utils import label_smoothed_nll_loss
 
             self.loss_fn = label_smoothed_nll_loss
-
 
     def create_optimizer_and_scheduler(self, num_training_steps: int):
         """
         Setup the optimizer and the learning rate scheduler.
 
-        We provide a reasonable default that works well. If you want to use
-        something else, you can pass a tuple in the Trainer's init through
-        :obj:`optimizers`, or subclass and override this method in a subclass.
+        We provide a reasonable default that works well. If you want to use something else, you can pass a tuple in the
+        Trainer's init through :obj:`optimizers`, or subclass and override this method in a subclass.
         """
         if self.optimizer is None:
             no_decay = ["bias", "LayerNorm.weight"]
@@ -90,18 +105,25 @@ class T5Trainer(Trainer):
                     "weight_decay": 0.0,
                 },
             ]
+            optimizer_cls = Adafactor if self.args.adafactor else AdamW
             if self.args.adafactor:
-                self.optimizer = Adafactor(
-                    optimizer_grouped_parameters,
-                    lr=self.args.learning_rate,
-                    scale_parameter=False,
-                    relative_step=False,
-                )
-
+                optimizer_cls = Adafactor
+                optimizer_kwargs = {"scale_parameter": False, "relative_step": False}
             else:
-                self.optimizer = AdamW(
-                    optimizer_grouped_parameters, lr=self.args.learning_rate, eps=self.args.adam_epsilon
+                optimizer_cls = AdamW
+                optimizer_kwargs = {
+                    "betas": (self.args.adam_beta1, self.args.adam_beta2),
+                    "eps": self.args.adam_epsilon,
+                }
+            optimizer_kwargs["lr"] = self.args.learning_rate
+            if self.sharded_dpp:
+                self.optimizer = OSS(
+                    params=optimizer_grouped_parameters,
+                    optim=optimizer_cls,
+                    **optimizer_kwargs,
                 )
+            else:
+                self.optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
 
         if self.lr_scheduler is None:
             self.lr_scheduler = self._get_lr_scheduler(num_training_steps)
@@ -120,17 +142,16 @@ class T5Trainer(Trainer):
             )
         return scheduler
 
-    """
     def _get_train_sampler(self) -> Optional[torch.utils.data.sampler.Sampler]:
         if isinstance(self.train_dataset, torch.utils.data.IterableDataset):
             return None
         elif is_torch_tpu_available():
-            return get_tpu_sampler(self.train_dataset, self.data_groups)
+            return get_tpu_sampler(self.train_dataset)
         else:
             if self.args.sortish_sampler:
                 self.train_dataset.make_sortish_sampler(
-                    self.args.per_device_train_batch_size, 
-                    distributed=(self.args.n_gpu > 1 and self.args.local_rank != -1)
+                    self.args.per_device_train_batch_size,
+                    distributed=(self.args.parallel_mode == ParallelMode.DISTRIBUTED),
                 )
 
             return (
@@ -138,8 +159,6 @@ class T5Trainer(Trainer):
                 if self.args.local_rank == -1
                 else DistributedSampler(self.train_dataset)
             )
-    """
-
 
     def _compute_loss(self, model, inputs, labels):
         if self.args.label_smoothing == 0:
@@ -157,53 +176,17 @@ class T5Trainer(Trainer):
             loss, _ = self.loss_fn(lprobs, labels, self.args.label_smoothing, ignore_index=self.config.pad_token_id)
         return loss, logits
 
-
-    def get_sharded_data(self, num_replicas, rank):
-        """Returns the sharded data belonging to the given rank."""
-        sharded_dataset_names_to_datasets = {}
-        for dataset_name, dataset in self.train_dataset.items():
-            sharded_data = dataset.shard(num_replicas, rank)
-            sharded_dataset_names_to_datasets.update({dataset_name: sharded_data})
-        self.train_dataset = sharded_dataset_names_to_datasets
-        return self.train_dataset
-
-    """
-    def get_train_dataset_shards(self):
-        #In case of multiprocessing, returns the sharded data for the given rank.
-        if is_torch_tpu_available():
-            if xm.xrt_world_size() > 1:
-                return self.get_sharded_data(num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
-            else:
-                return self.train_dataset
-        elif self.args.local_rank != -1:
-                return self.get_sharded_data(num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
-        else:
-            return self.train_dataset
-    """
-
-    def get_train_dataloader(self) -> DataLoader:
-        """
-        Returns the training :class:`~torch.utils.data.DataLoader`.
-
-        Will use no sampler if :obj:`self.train_dataset` does not implement :obj:`__len__`, a random sampler (adapted
-        to distributed training if necessary) otherwise.
-
-        Subclass and override this method if you want to inject some custom behavior.
-        """
-        #train_dataset = self.get_train_dataset_shards()
-        multitask_sampler = MultiTaskBatchSampler(self.dataset_sizes, self.args.train_batch_size,
-                self.args.temperature)
-        return DataLoader(self.train_dataset, batch_sampler=multitask_sampler,
-                                collate_fn=self.data_collator)
-
     def compute_loss(self, model, inputs):
         labels = inputs.pop("labels")
         loss, _ = self._compute_loss(model, inputs, labels)
         return loss
 
     def prediction_step(
-        self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]],
-        prediction_loss_only: bool
+        self,
+        model: nn.Module,
+        inputs: Dict[str, Union[torch.Tensor, Any]],
+        prediction_loss_only: bool,
+        ignore_keys: Optional[List[str]] = None,
     ) -> Tuple[Optional[float], Optional[torch.Tensor], Optional[torch.Tensor]]:
         """
         Perform an evaluation step on :obj:`model` using obj:`inputs`.
@@ -216,9 +199,8 @@ class T5Trainer(Trainer):
             inputs (:obj:`Dict[str, Union[torch.Tensor, Any]]`):
                 The inputs and targets of the model.
 
-                The dictionary will be unpacked before being fed to the model.
-                Most models expect the targets under the argument :obj:`labels`.
-                Check your model's documentation for all accepted arguments.
+                The dictionary will be unpacked before being fed to the model. Most models expect the targets under the
+                argument :obj:`labels`. Check your model's documentation for all accepted arguments.
             prediction_loss_only (:obj:`bool`):
                 Whether or not to return the loss only.
 
@@ -227,14 +209,14 @@ class T5Trainer(Trainer):
             A tuple with the loss, logits and labels (each being optional).
         """
         inputs = self._prepare_inputs(inputs)
-        # TODO: we set these in evalute function, does this function is called alone too?
-        # TODO: the arguments needs to be handled per task.
+
         gen_kwargs = {
-            "max_length": self.config.max_length,
-            "num_beams": self.config.num_beams
+            "max_length": self.data_args.val_max_target_length
+            if self.data_args is not None
+            else self.config.max_length,
+            "num_beams": self.data_args.eval_beams if self.data_args is not None else self.config.num_beams,
         }
-        gen_kwargs["task"] = inputs["task"]
-        gen_kwargs["task_embedding"] = model.task_embedding_controller(inputs["task"])
+
         if self.args.predict_with_generate and not self.args.prediction_loss_only:
             generated_tokens = self.model.generate(
                 inputs["input_ids"],
@@ -267,8 +249,7 @@ class T5Trainer(Trainer):
 
         if pad_token_id is None:
             raise ValueError(
-                f"Make sure that either `config.pad_token_id` or `config.eos_token_id`"
-                f" is defined if tensor has to be padded to `max_length`={max_length}"
+                f"Make sure that either `config.pad_token_id` or `config.eos_token_id` is defined if tensor has to be padded to `max_length`={max_length}"
             )
 
         padded_tensor = pad_token_id * torch.ones(
@@ -276,6 +257,3 @@ class T5Trainer(Trainer):
         )
         padded_tensor[:, : tensor.shape[-1]] = tensor
         return padded_tensor
-
-
-

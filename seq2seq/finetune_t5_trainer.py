@@ -5,7 +5,7 @@ import sys
 
 import torch.nn as nn
 import datasets
-from third_party.metrics import build_compute_metrics_fn
+from third_party.utils import build_compute_metrics_fn
 from third_party.models import T5Config, T5ForConditionalGeneration
 from third_party.trainers import T5Trainer
 from transformers import AutoTokenizer, HfArgumentParser, set_seed
@@ -17,7 +17,7 @@ from seq2seq.adapters import AdapterController, MetaAdapterController, AutoAdapt
 from seq2seq.data import AutoTask, TaskCollator
 from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments, \
   AdapterTrainingArguments
-from seq2seq.utils import (
+from third_party.utils import (
   assert_all_frozen,
   check_output_dir,
   freeze_embeds,
@@ -26,6 +26,7 @@ from seq2seq.utils import (
   save_json,
   write_txt_file,
 )
+from seq2seq.utils import T5CheckpointCallback
 from seq2seq.utils import upload, use_task_specific_params, reset_config
 
 logger = logging.getLogger(__name__)
@@ -37,12 +38,14 @@ if is_torch_tpu_available():
 def shard_data(datasets, num_replicas, rank):
   """Returns the sharded data belonging to the given rank."""
   for i, dataset in enumerate(datasets):
+    # shuffle needs to be per epoch as well.
+    dataset = dataset.shuffle()
     sharded_dataset = dataset.shard(num_replicas, rank)
     datasets[i] = sharded_dataset
   return datasets
 
 
-def freezing_params(model, training_args, model_args, adapter_args):
+def freezing_params(model, training_args, model_args):
   if training_args.train_adapters:
     # Sets the last layer of decoder to be trained.
     freeze_params(model)
@@ -178,7 +181,7 @@ def main():
 
   # freezing the parameters.
   if training_args.do_train:
-    freezing_params(model, training_args, model_args, adapter_args)
+    freezing_params(model, training_args, model_args)
 
 
   dataset_class = AutoTask
@@ -228,7 +231,8 @@ def main():
     data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores),
     compute_metrics=compute_metrics_fn,
     data_args=data_args,
-    dataset_sizes=dataset_sizes if training_args.do_train else None
+    dataset_sizes=dataset_sizes if training_args.do_train else None,
+    callbacks=[T5CheckpointCallback()]
   )
   # Training
   if training_args.do_train:
@@ -289,7 +293,7 @@ def main():
         eval_data_args.eval_tasks = [eval_task]
 
 
-        freezing_params(model, eval_training_args, model_args, adapter_args)
+        freezing_params(model, eval_training_args, model_args)
 
 
         trainer = T5Trainer(
@@ -301,7 +305,8 @@ def main():
           data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores),
           compute_metrics=compute_metrics_fn[eval_task],
           data_args=eval_data_args,
-          dataset_sizes=dataset_sizes
+          dataset_sizes=dataset_sizes,
+          callbacks=[T5CheckpointCallback()]
         )
         trainer.train(
           model_path=eval_training_args.output_dir if os.path.isdir(eval_training_args.output_dir) else None

@@ -129,7 +129,6 @@ def freezing_params(model, training_args, model_args):
                 for param_name, param in sub_module.named_parameters():
                     param.requires_grad = True
 
-
 ############################################
 # Defines callbacks.
 ############################################

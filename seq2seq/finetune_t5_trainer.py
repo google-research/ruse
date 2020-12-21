@@ -109,7 +109,11 @@ def main():
                             "non_linearity",
                             "train_task_embeddings",
                             "projected_task_embedding_dim",
-                            "add_adapters_in_decoder")
+                            "add_adapters_in_decoder",
+                            "add_adapter_in_feed_forward",
+                            "add_adapter_in_self_attention",
+                            "task_hidden_dim"
+                            )
     for p in extra_adapter_params:
         if hasattr(adapter_args, p):
             assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"

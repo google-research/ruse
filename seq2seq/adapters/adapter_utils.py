@@ -82,6 +82,7 @@ class HyperNetUpSampler(nn.Module):
     self.bias_generator = nn.Sequential(
       linear_layer(self.task_embedding_dim, self.hidden_dim),
       linear_layer(self.hidden_dim, self.input_dim))
+    print("@@ up sampler ", self.hidden_dim)
 
   def forward(self, task_embedding):
     task_embedding = task_embedding.view(-1)
@@ -95,12 +96,12 @@ class TaskHyperNet(nn.Module):
 
   def __init__(self, config):
     super(TaskHyperNet, self).__init__()
-    self.hidden_dim = config.hidden_dim
+    self.task_hidden_dim = config.task_hidden_dim
     self.projected_task_embedding_dim = config.projected_task_embedding_dim
     self.task_embeding_generator = nn.Sequential(
-      linear_layer(config.task_embedding_dim, self.hidden_dim),
+      linear_layer(config.task_embedding_dim, self.task_hidden_dim),
       #nn.ReLU(),
-      linear_layer(self.hidden_dim, self.projected_task_embedding_dim))
+      linear_layer(self.task_hidden_dim, self.projected_task_embedding_dim))
 
   def forward(self, task_embedding):
     task_embedding = task_embedding.view(-1)

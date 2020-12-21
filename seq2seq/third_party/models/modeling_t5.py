@@ -41,7 +41,7 @@ class T5LayerFF(nn.Module):
     self.DenseReluDense = T5DenseReluDense(config)
     self.layer_norm = T5LayerNorm(config.d_model, eps=config.layer_norm_epsilon)
     self.dropout = nn.Dropout(config.dropout_rate)
-    self.train_adapters = config.train_adapters
+    self.train_adapters = config.train_adapters and adapter_config.add_adapter_in_feed_forward
     if self.train_adapters:
       self.adapter_controller = AutoAdapterController.get(adapter_config)
       self.is_meta_adapter = True if isinstance(adapter_config, (MetaAdapterConfig, ParametricMetaAdapterConfig)) else False
@@ -66,7 +66,7 @@ class T5LayerSelfAttention(nn.Module):
     )
     self.layer_norm = T5LayerNorm(config.d_model, eps=config.layer_norm_epsilon)
     self.dropout = nn.Dropout(config.dropout_rate)
-    self.train_adapters = config.train_adapters
+    self.train_adapters = config.train_adapters and adapter_config.add_adapter_in_self_attention
     if self.train_adapters:
       self.adapter_controller = AutoAdapterController.get(adapter_config)
       self.is_meta_adapter = True if isinstance(adapter_config,

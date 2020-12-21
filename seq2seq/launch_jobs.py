@@ -790,6 +790,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 
 # 21 Dec
 # lets finetune only the layernorms.
+"""
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1n"
 short_keys = ['lr', 'n', 'e', 'l'] #["lr", 'emb', 'l', 't']
@@ -811,3 +812,15 @@ sweep = collections.OrderedDict({
                                  "output_dir": ["m1n-lr-3e-03-emb-64-r-16"],
                                  "eval_output_dir": ["outputs/eval-v/finetune-meta-adapters-projected-task-emb-only-layer-norms/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
+"""
+
+# finetune layernorms only.
+basic_config_path="configs/experiments/mixture1/finetune.json"
+job_prefix = "finetune"
+short_keys = ["lr", "l"]
+sweep = collections.OrderedDict({'learning_rate': [2e-5, 3e-3, 3e-4, 3e-5],
+                                 "unfreeze_lm_head": [True, False],
+                                 "output_dir": ["finetune-only-layernorm"],
+                                 "freeze_model": [True],
+                                 "unfreeze_layer_norms": [True]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)

@@ -199,13 +199,8 @@ class T5Trainer(Trainer):
         Subclass and override this method if you want to inject some custom behavior.
         """
         #train_dataset = self.get_train_dataset_shards()
-        if self.args.local_rank != -1:
-            # TODO: does it called for tpus too?
-            multitask_sampler = MultiTaskBatchSampler(self.dataset_sizes, self.args.per_device_train_batch_size,
-                self.args.temperature)
-        else:
-            # TODO: is this correct batch size for multiple cores?
-            multitask_sampler = MultiTaskBatchSampler(self.dataset_sizes, self.args.train_batch_size,
+        # train_batch_size is computed per device.
+        multitask_sampler = MultiTaskBatchSampler(self.dataset_sizes, self.args.train_batch_size,
                                                       self.args.temperature)
         return DataLoader(self.train_dataset, batch_sampler=multitask_sampler,
                                 collate_fn=self.data_collator)

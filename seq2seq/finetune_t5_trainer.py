@@ -151,7 +151,7 @@ def main():
         if is_torch_tpu_available() and xm.xrt_world_size() > 1:
             train_datasets = shard_data(train_datasets, num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
         elif training_args.local_rank != -1:
-            train_datasets = shard_data(train_datasets, num_replicas=training_args.n_gpu, rank=training_args.local_rank)
+            train_datasets = shard_data(train_datasets, num_replicas=torch.distributed.get_world_size(), rank=training_args.local_rank)
         dataset_sizes = [len(train_dataset) for train_dataset in train_datasets]
         train_dataset = datasets.concatenate_datasets(train_datasets)
     # TODO: you should not do this, introduces bug.

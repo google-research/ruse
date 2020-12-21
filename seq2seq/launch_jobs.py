@@ -814,6 +814,10 @@ sweep = collections.OrderedDict({
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
 """
 
+################################
+# 22 Dec 
+################################
+"""
 # finetune layernorms only.
 basic_config_path="configs/experiments/mixture1/finetune.json"
 job_prefix = "finetune"
@@ -824,3 +828,30 @@ sweep = collections.OrderedDict({'learning_rate': [2e-5, 3e-3, 3e-4, 3e-5],
                                  "freeze_model": [True],
                                  "unfreeze_layer_norms": [True]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+"""
+
+# Train the current model, making sure all works 
+# changing learning rate to lower ones.
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "m1"
+short_keys = ["lr", 'emb', 'r', 'l']
+sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                'projected_task_embedding_dim': [64, 128, 256],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_lm_head": [True, False],
+                                 'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
+                                 "train_task_embeddings": [True],
+                                 "output_dir": ["outputs/mixture1/meta-adapters-task-projector"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "m1"
+short_keys = ["lr", 'r', 'l']
+sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_lm_head": [True, False],
+                                 'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
+                                 "train_task_embeddings": [False],
+                                 "output_dir": ["outputs/mixture1/meta-adapters-task-projector"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+

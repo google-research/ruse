@@ -199,7 +199,6 @@ class T5Trainer(Trainer):
         Subclass and override this method if you want to inject some custom behavior.
         """
         #train_dataset = self.get_train_dataset_shards()
-        print("@@@ ", self.args.per_device_train_batch_size, self.args.train_batch_size)
         if self.args.local_rank != -1:
             # TODO: does it called for tpus too?
             multitask_sampler = MultiTaskBatchSampler(self.dataset_sizes, self.args.per_device_train_batch_size,

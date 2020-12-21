@@ -809,5 +809,5 @@ sweep = collections.OrderedDict({
                                  "eval_tasks": [["yelp_polarity", "cola", "snli"]],
                                  "task_embedding_dir": ["test_data/task_embeddings/n-train-100"],
                                  "output_dir": ["m1n-lr-3e-03-emb-64-r-16"],
-                                 "eval_output_dir": ["outputs/eval-v/finetune-meta-adapters-projected-task-emb-with-layer-norm-new-t4-long/"]})
+                                 "eval_output_dir": ["outputs/eval-v/finetune-meta-adapters-projected-task-emb-only-layer-norms/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")

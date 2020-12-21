@@ -243,7 +243,7 @@ class T5Trainer(Trainer):
             "num_beams": self.config.num_beams
         }
         gen_kwargs["task"] = inputs["task"]
-        gen_kwargs["task_embedding"] = model.task_embedding_controller(inputs["task"])
+        gen_kwargs["task_embedding"] = model.task_embedding_controller(inputs["task"]) if self.config.train_adapters else None 
         if self.args.predict_with_generate and not self.args.prediction_loss_only:
             generated_tokens = self.model.generate(
                 inputs["input_ids"],

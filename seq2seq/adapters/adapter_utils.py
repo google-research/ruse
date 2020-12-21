@@ -99,7 +99,7 @@ class TaskHyperNet(nn.Module):
     self.projected_task_embedding_dim = config.projected_task_embedding_dim
     self.task_embeding_generator = nn.Sequential(
       linear_layer(config.task_embedding_dim, self.hidden_dim),
-      nn.ReLU(),
+      #nn.ReLU(),
       linear_layer(self.hidden_dim, self.projected_task_embedding_dim))
 
   def forward(self, task_embedding):

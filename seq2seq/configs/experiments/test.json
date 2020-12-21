@@ -11,8 +11,8 @@
 "warmup_steps": 500,
 "eval_steps": 200,
 "overwrite_output_dir": true,
-"tasks": ["scitail", "boolq"],
-"eval_tasks": ["rte", "boolq"],
+"tasks": ["cola"],
+"eval_tasks": ["cola"],
 "sampling": true,
 "label_smoothing": 0.1,
 "freeze_encoder":false,
@@ -31,19 +31,15 @@
 "n_train": 10,
 "task_embedding_dir":"test_data/task_embeddings/n-train-all",
 "task_embedding_dim": 512,
-"n_val": 10,
-"n_train": 500,
-"do_finetune": true,
 "do_train": true,
-"n_finetune": 100,
 "eval_output_dir": "outputs/eval_test",
 "reduction_factor": 16,
 "non_linearity": "relu",
-"train_task_embeddings": true,
 "projected_task_embedding_dim": 512,
-"add_adapters_in_decoder": false,
-"unfreeze_lm_head": true,
-"unfreeze_layer_norms": true
+"add_adapters_in_decoder": true,
+"unfreeze_lm_head": false,
+"unfreeze_layer_norms": true,
+"train_task_embeddings": true
 }
 
 

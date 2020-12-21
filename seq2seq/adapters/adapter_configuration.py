@@ -30,6 +30,8 @@ class AdapterConfig(object):
   reduction_factor: int = 16
   weight_init_range = 1e-2
   add_adapters_in_decoder = True
+  add_adapter_in_feed_forward = True
+  add_adapter_in_self_attention = True
 
 
 class MetaAdapterConfig(AdapterConfig):
@@ -40,6 +42,7 @@ class MetaAdapterConfig(AdapterConfig):
   hidden_dim = 128
   train_task_embeddings = False
   projected_task_embedding_dim = 64
+  task_hidden_dim = 128
 
 
 class ParametricMetaAdapterConfig(AdapterConfig):
@@ -50,6 +53,7 @@ class ParametricMetaAdapterConfig(AdapterConfig):
   task_embedding_dim = 64
   train_task_embeddings = False
   projected_task_embedding_dim = 64
+  task_hidden_dim = 128
 
 
 ADAPTER_CONFFIG_MAPPING = OrderedDict(

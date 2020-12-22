@@ -152,8 +152,6 @@ def main():
             split="train", n_obs=data_args.n_train, add_prefix=False if training_args.train_adapters else True)
             for task in data_args.tasks]
         # Shard the data if needed.
-        # TODO: also add for distribued GPU training.
-        # TODO: here we need to make sure shards are the same length across the cores.
         '''
         if is_torch_tpu_available() and xm.xrt_world_size() > 1:
             train_datasets = shard_data(train_datasets, num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
@@ -289,7 +287,8 @@ def main():
             task_metric = trainer.evaluate()
             tasks_metric = {eval_task + "_" + k: v for k, v in task_metric.items()}
             # TODO: should it be done in word_process_zero?
-            result.update(tasks_metric)
+            if trainer.is_world_process_zero():
+               result.update(tasks_metric)
             reset_config(trainer.model, model_config)
 
         # logger.info(eval_datasets)

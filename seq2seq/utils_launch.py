@@ -9,12 +9,12 @@ import subprocess
 import os
 import time
 
-def get_run_command(config_path, job_name):
+def get_run_command(config_path, job_name, num_gpus):
   with open('google/launch_command', 'r') as f:
     launch_command = f.read()
   launch_command = launch_command.rstrip()
   #os.system("{2} google/launch_xla_clean1.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(config_path, job_name, launch_command))
-  return "{0} google/launch_xla_clean1.py -- --config_path {1} --job_name {2} --num_gpus 1 --norun_copybara --noxc_monitor_on_launch".format(launch_command, config_path, job_name)
+  return "{0} google/launch_xla_clean1.py -- --config_path {1} --job_name {2} --num_gpus {3} --norun_copybara --noxc_monitor_on_launch".format(launch_command, config_path, job_name, num_gpus)
   #opy_commands.append(["gsutil", "cp", f"{bucket}/{eval_path}", f"{experiment_output_dir}/eval_results.json"])
   #return [command]
   
@@ -40,7 +40,7 @@ def make_name(prefix, keys, values):
   return name[:-1]
 
 
-def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name="output_dir", failed_jobs = []):
+def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name="output_dir", failed_jobs=[], num_gpus=1):
   temp_configs_dir = "temp_configs"
   if not os.path.exists(temp_configs_dir):
      os.makedirs(temp_configs_dir)
@@ -67,7 +67,7 @@ def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name=
     with open(config_path, 'w') as f:
       json.dump(config, f)
     if (len(failed_jobs) != 0 and name in failed_jobs) or len(failed_jobs) == 0:
-      commands.append(get_run_command(config_path, name))
+      commands.append(get_run_command(config_path, name, num_gpus))
   print(len(commands))
   run_in_parallel(commands)
 

@@ -830,6 +830,7 @@ sweep = collections.OrderedDict({'learning_rate': [2e-5, 3e-3, 3e-4, 3e-5],
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
+"""
 # Train the current model, making sure all works 
 # changing learning rate to lower ones.
 #    0 |                  8 |          0.03   |                             64 |        0.877884 |           0.905602 |         0.736617 |
@@ -897,3 +898,29 @@ sweep = collections.OrderedDict({
                                  "output_dir": ["m1-lr-3e-02-r-8-l-false"],
                                  "eval_output_dir": ["outputs/evals/meta-adapter-without-projected-task-emb/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
+"""
+
+
+# Training our model in distributed fashion to check
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "m"
+short_keys = ["lr", 'r', 'l']
+sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_lm_head": [True, False],
+                                 'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
+                                 "train_task_embeddings": [False],
+                                 "output_dir": ["outputs/mixture1/meta-adapters-task-projector-new_sampler"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=1)
+
+
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "mp"
+short_keys = ["lr", 'r', 'l']
+sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_lm_head": [True, False],
+                                 'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
+                                 "train_task_embeddings": [False],
+                                 "output_dir": ["outputs/mixture1/meta-adapters-task-projector-new_sampler-multiple-gpus"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)

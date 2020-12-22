@@ -859,7 +859,7 @@ sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "train_task_embeddings": [False],
                                  "output_dir": ["outputs/mixture1/meta-adapters-task-projector"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-
+"""
 
 # evaluate the best model of trained two above commands.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"

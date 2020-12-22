@@ -830,6 +830,7 @@ sweep = collections.OrderedDict({'learning_rate': [2e-5, 3e-3, 3e-4, 3e-5],
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 """
 
+"""
 # Train the current model, making sure all works 
 # changing learning rate to lower ones.
 #    0 |                  8 |          0.03   |                             64 |        0.877884 |           0.905602 |         0.736617 |
@@ -858,7 +859,7 @@ sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "train_task_embeddings": [False],
                                  "output_dir": ["outputs/mixture1/meta-adapters-task-projector"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
-
+"""
 
 # evaluate the best model of trained two above commands.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"

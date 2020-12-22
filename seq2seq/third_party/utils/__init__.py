@@ -1,4 +1,4 @@
-from .utils import (build_compute_metrics_fn,
+from .utils import (
   calculate_rouge,
   calculate_bleu,
   assert_all_frozen,

@@ -2,7 +2,7 @@ import copy
 import logging
 import os
 import sys
-import torch 
+#import torch
 from pathlib import Path
 import json
 import datasets
@@ -10,7 +10,7 @@ from third_party.utils import build_compute_metrics_fn
 from third_party.models import T5Config, T5ForConditionalGeneration
 from third_party.trainers import T5Trainer
 from transformers import AutoTokenizer, HfArgumentParser, set_seed
-from transformers.file_utils import is_torch_tpu_available
+#from transformers.file_utils import is_torch_tpu_available
 from transformers.trainer_utils import EvaluationStrategy
 
 from seq2seq.adapters import AdapterController, AutoAdapterConfig

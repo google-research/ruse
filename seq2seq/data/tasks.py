@@ -20,6 +20,7 @@ from typing import Callable, Dict, Mapping
 
 import datasets
 from transformers import T5Tokenizer
+from .utils import stsb_target
 
 
 def compute_task_max_decoding_length(word_list):
@@ -58,10 +59,6 @@ class AbstractTaskDataset(abc.ABC):
       split = split + "[:{}]".format(n_obs)
     return split
 
-  def add_prefix(self, text, prefix, add_prefix):
-    """If add_prefix is set to true adds the prefix to the given text."""
-    return prefix + " : " + text if add_prefix else text
-
   def load_dataset(self, split):
     return datasets.load_dataset(self.task.name, split=split, script_version="master")
 
@@ -72,15 +69,22 @@ class AbstractTaskDataset(abc.ABC):
                           remove_columns=dataset.column_names)
     return dataset
 
+  def seq2seq_format(self, src_strs, tgt_strs, add_prefix=False, prefix=None):
+    src_prefix = self.task.name if prefix is None else prefix
+    src_strs = [src_prefix]+src_strs if add_prefix else src_strs
+    return {"src_texts": ' '.join(src_strs),
+            "tgt_texts": ' '.join(tgt_strs),
+            "task": self.task.name}
+
 
 class SquadTaskDataset(AbstractTaskDataset):
   task = Task(name="squad", category="question_answering")
   split_to_data_split = {"train": "train", "validation": "validation"}
 
   def preprocessor(self, example, add_prefix=True):
-    src_texts = "question: {0} context: {1} ".format(example["question"], example["context"])
-    return {"src_texts": self.add_prefix(src_texts, "SQUAD", add_prefix),
-            "tgt_texts": example["answers"]["text"][0], "task": self.task.name}
+    src_texts = ["question:", example["question"], "context:", example["context"]]
+    tgt_texts = [example["answers"]["text"][0]]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class IMDBTaskDataset(AbstractTaskDataset):
@@ -90,33 +94,38 @@ class IMDBTaskDataset(AbstractTaskDataset):
   task_specific_config = {'max_length': 3}
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix(example["text"], "imdb", add_prefix),
-            "tgt_texts": str(example["label"]), "task": self.task.name}
+    src_texts = [example["text"]]
+    tgt_texts = [example["label"]]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class BoolQTaskDataset(AbstractTaskDataset):
   task_specific_config = {'max_length': 4}
   task = Task(name="boolq", category="classification")
-  split_to_data_split = {"train": "train", "validation": "validation", "test": "validation"}
+  split_to_data_split = {"train": "train",
+                         "validation": "validation",
+                         "test": "validation"}
   label_list = ["0", "1"]
 
   def preprocessor(self, example, add_prefix=True):
-    src_texts = "question: {} passage: {}: ".format(example["question"], example["passage"])
-    return {"src_texts": self.add_prefix(src_texts, "Boolq", add_prefix),
-            "tgt_texts": str(example["answer"]), "task": self.task.name}
+    src_texts = ["question:", example["question"], "passage:", example["passage"]]
+    tgt_texts = [str(example["answer"])]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class SNLITaskDataset(AbstractTaskDataset):
   task_specific_config = {'max_length': 5, 'num_beams': 4}
   task = Task(name="snli", category="classification")
   task_specific_config = {'max_length': 3}
-  split_to_data_split = {"train": "train", "validation": "validation", "test": "test"}
+  split_to_data_split = {"train": "train",
+                         "validation": "validation",
+                         "test": "test"}
   label_list = ["0", "1", "2"]
 
   def preprocessor(self, example, add_prefix=True):
-    src_texts = "premise: {} hypothesis: {}".format(example["premise"], example["hypothesis"])
-    return {"src_texts": self.add_prefix(src_texts, "SNLI", add_prefix),
-            "tgt_texts": str(example["label"]), "task": self.task.name}
+    src_texts = ["premise:", example["premise"], "hypothesis:", example["hypothesis"]]
+    tgt_texts = [example["label"]]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class MNLITaskDataset(AbstractTaskDataset):
@@ -128,9 +137,9 @@ class MNLITaskDataset(AbstractTaskDataset):
   label_list = ["0", "1", "2"]
 
   def preprocessor(self, example, add_prefix=True):
-    src_texts = "premise: {} hypothesis: {}".format(example["premise"], example["hypothesis"])
-    return {"src_texts": self.add_prefix(src_texts, "MNLI", add_prefix),
-            "tgt_texts": str(example["label"]), "task": self.task.name}
+    src_texts = ["premise:", example["premise"], "hypothesis:", example["hypothesis"]]
+    tgt_texts = [example["label"]]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class IWSLT2017RONL(AbstractTaskDataset):
@@ -142,9 +151,10 @@ class IWSLT2017RONL(AbstractTaskDataset):
     return datasets.load_dataset("iwslt2017", 'iwslt2017-ro-nl', split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix(example['translation']["ro"],
-                                         "Translate Romanian to Dutch", add_prefix),
-            "tgt_texts": str(example['translation']["nl"]), "task": self.task.name}
+    src_texts = [example['translation']["ro"]]
+    tgt_texts = [example['translation']["nl"]]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix,
+                               prefix="Translate Romanian to Dutch")
 
 
 class IWSLT2017ENNL(AbstractTaskDataset):
@@ -156,9 +166,10 @@ class IWSLT2017ENNL(AbstractTaskDataset):
     return datasets.load_dataset("iwslt2017", 'iwslt2017-en-nl', split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix(example['translation']["en"],
-                                         "Translate English to Dutch", add_prefix),
-            "tgt_texts": str(example['translation']["nl"]), "task": self.task.name}
+    src_texts = [example['translation']["en"]]
+    tgt_texts = [example['translation']["nl"]]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix,
+                               prefix="Translate English to Dutch")
 
 
 class WMT16ENROTaskDataset(AbstractTaskDataset):
@@ -170,11 +181,10 @@ class WMT16ENROTaskDataset(AbstractTaskDataset):
     return datasets.load_dataset("wmt16", self.pair, split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix(example['translation']["en"],
-                                         "Translate English to Romanian",
-                                         add_prefix),
-            "tgt_texts": str(example['translation']["ro"]), "task": self.task.name}
-
+    src_texts = [example['translation']["en"]]
+    tgt_texts = [example['translation']["ro"]]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix,
+                               prefix="Translate English to Romanian")
 
 class WMT16ROENTaskDataset(AbstractTaskDataset):
   task = Task(name="wmt16-ro-en", category="translation")
@@ -185,11 +195,10 @@ class WMT16ROENTaskDataset(AbstractTaskDataset):
     return datasets.load_dataset("wmt16", self.pair, split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": "{}{}".format(
-      "Translate Romanian to English: " if add_prefix else "",
-      example['translation']["ro"]),
-      "tgt_texts": str(example['translation']["en"]), "task": self.task.name}
-
+    src_texts = [example['translation']["ro"]]
+    tgt_texts = [example['translation']["en"]]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix,
+                               prefix="Translate Romanian to English")
 
 class WMT16ENCSTaskDataset(AbstractTaskDataset):
   task = Task(name="wmt16-en-cs", category="translation")
@@ -200,10 +209,10 @@ class WMT16ENCSTaskDataset(AbstractTaskDataset):
     return datasets.load_dataset("wmt16", self.pair, split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": "{} {}".format(
-      "Translate English to Czech: " if add_prefix else "",
-      example['translation']["en"]),
-      "tgt_texts": str(example['translation']["cs"]), "task": self.task.name}
+    src_texts = [example['translation']["en"]]
+    tgt_texts = [example['translation']["cs"]]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix,
+                               prefix="Translate English to Czech")
 
 
 class WMT16ENFITaskDataset(AbstractTaskDataset):
@@ -214,11 +223,11 @@ class WMT16ENFITaskDataset(AbstractTaskDataset):
   def load_dataset(self, split):
     return datasets.load_dataset("wmt16", self.pair, split=split)
 
-  def preprocessor(self, example):
-    return {"src_texts": "Translate English to Finnish:  {}".format(
-      example['translation']["en"]),
-      "tgt_texts": str(example['translation']["fi"]), "task": self.task.name}
-
+  def preprocessor(self, example, add_prefix=True):
+    src_texts = [example['translation']["en"]]
+    tgt_texts = [example['translation']["fi"]]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix,
+                               prefix="Translate English to Finnish")
 
 class WMT14HIENTaskDataset(AbstractTaskDataset):
   task = Task(name="wmt14-hi-en", category="translation")
@@ -229,10 +238,10 @@ class WMT14HIENTaskDataset(AbstractTaskDataset):
     return datasets.load_dataset("wmt14", self.pair, split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix(example['translation']["en"],
-                                         "Translate English to Romanian",
-                                         add_prefix),
-            "tgt_texts": str(example['translation']["hi"]), "task": self.task.name}
+    src_texts = [example['translation']["en"]]
+    tgt_texts = [example['translation']["hi"]]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix,
+                               prefix="Translate English to Hindi")
 
 
 class TRECTaskDataset(AbstractTaskDataset):
@@ -244,9 +253,9 @@ class TRECTaskDataset(AbstractTaskDataset):
     return datasets.load_dataset("trec", split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix("sentence :  {}".format(example['text']),
-                                         "Trec", add_prefix),
-            "tgt_texts": str(example['label-coarse']), "task": self.task.name}
+    src_texts = ["sentence:", example['text']]
+    tgt_texts = [example['label-coarse']]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class YelpPolarityTaskDataset(AbstractTaskDataset):
@@ -259,9 +268,9 @@ class YelpPolarityTaskDataset(AbstractTaskDataset):
     return datasets.load_dataset("yelp_polarity", split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix("sentence :  {}".format(example['text']),
-                                         "Yelp Polarity", add_prefix),
-            "tgt_texts": str(example['label']), "task": self.task.name}
+    src_texts = ["sentence:", example['text']]
+    tgt_texts = [str(example['label'])]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class ScitailTaskDataset(AbstractTaskDataset):
@@ -274,11 +283,9 @@ class ScitailTaskDataset(AbstractTaskDataset):
     return dataset
 
   def preprocessor(self, example, add_prefix=True):
-    return {
-      "src_texts": self.add_prefix("sentence1: {} sentence2: {}".format(example['sentence1'],
-                                                                        example['sentence2']),
-                                   "Scitail", add_prefix),
-      "tgt_texts": str(example['gold_label']), "task": self.task.name}
+    src_texts = ["sentence1:", example['sentence1'], "sentence2:", example["sentence2"]]
+    tgt_texts = [str(example['gold_label'])]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class MRPCTaskDataset(AbstractTaskDataset):
@@ -290,11 +297,9 @@ class MRPCTaskDataset(AbstractTaskDataset):
     return datasets.load_dataset('glue', 'mrpc', split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {
-      "src_texts": self.add_prefix("sentence1 : {} sentence2: {}".format(example['sentence1'],
-                                                                         example['sentence2']),
-                                   "MRPC", add_prefix),
-      "tgt_texts": str(example['label']), "task": self.task.name}
+    src_texts = ["sentence1:", example['sentence1'], "sentence2:", example["sentence2"]]
+    tgt_texts = [str(example['label'])]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class COLATaskDataset(AbstractTaskDataset):
@@ -306,9 +311,9 @@ class COLATaskDataset(AbstractTaskDataset):
     return datasets.load_dataset('glue', 'cola', split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix("sentence : {}".format(example['sentence']),
-                                         "COLA", add_prefix),
-            "tgt_texts": str(example['label']), "task": self.task.name}
+    src_texts = ["sentence:", example['sentence']]
+    tgt_texts = [str(example['label'])]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class SST2TaskDataset(AbstractTaskDataset):
@@ -320,9 +325,23 @@ class SST2TaskDataset(AbstractTaskDataset):
     return datasets.load_dataset('glue', 'sst2', split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix("sentence : {}".format(example['sentence']),
-                                         "SST2", add_prefix),
-            "tgt_texts": str(example['label']), "task": self.task.name}
+    src_texts = ["sentence:", example['sentence']]
+    tgt_texts = [str(example['label'])]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
+
+
+class STSBTaskDataset(AbstractTaskDataset):
+  task = Task(name="stsb", category="classification")
+  label_list = ["0", "1"]
+  task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+
+  def load_dataset(self, split):
+    return datasets.load_dataset('glue', 'sstb', split=split)
+
+  def preprocessor(self, example, add_prefix=True):
+    src_texts = ["sentence:", example['sentence']]
+    tgt_texts = [str(example['label'])]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class QQPTaskDataset(AbstractTaskDataset):
@@ -334,10 +353,9 @@ class QQPTaskDataset(AbstractTaskDataset):
     return datasets.load_dataset('glue', 'qqp', split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {
-      "src_texts": self.add_prefix("question1 : {} question2: {}".format(
-        example['question1'], example['question2']), "QQP", add_prefix),
-      "tgt_texts": str(example['label']), "task": self.task.name}
+    src_texts = ["question1:", example['question1'], "question2:", example["question2"]]
+    tgt_texts = [str(example['label'])]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class MNLITaskDataset(AbstractTaskDataset):
@@ -351,10 +369,9 @@ class MNLITaskDataset(AbstractTaskDataset):
     return datasets.load_dataset('glue', 'mnli', split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts":
-      self.add_prefix("premise : {} hypothesis : {}".format(
-        example['premise'], example['hypothesis']), "MNLI", add_prefix),
-      "tgt_texts": str(example['label']), "task": self.task.name}
+    src_texts = ["premise:", example['premise'], "hypothesis", example["hypothesis"]]
+    tgt_texts = [str(example['label'])]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class QNLITaskDataset(AbstractTaskDataset):
@@ -366,10 +383,9 @@ class QNLITaskDataset(AbstractTaskDataset):
     return datasets.load_dataset('glue', 'qnli', split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix(
-      "question: {} sentence: {}".format(example['question'], example['sentence']),
-      "QNLI", add_prefix),
-      "tgt_texts": str(example['label']), "task": self.task.name}
+    src_texts = ["question:", example['question'], "sentence:", example["sentence"]]
+    tgt_texts = [str(example['label'])]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class RTETaskDataset(AbstractTaskDataset):
@@ -381,11 +397,9 @@ class RTETaskDataset(AbstractTaskDataset):
     return datasets.load_dataset('glue', 'rte', split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts": self.add_prefix(
-      "sentence1 : {} sentence2 : {}".format(example['sentence1'], example['sentence2']),
-      "RTE",
-      add_prefix),
-      "tgt_texts": str(example['label']), "task": self.task.name}
+    src_texts = ["sentence1:", example['sentence1'], "sentence2:", example["sentence2"]]
+    tgt_texts = [str(example['label'])]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class WNLITaskDataset(AbstractTaskDataset):
@@ -397,10 +411,9 @@ class WNLITaskDataset(AbstractTaskDataset):
     return datasets.load_dataset('glue', 'wnli', split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    return {"src_texts":
-      self.add_prefix("sentence1 : {} sentence2 : {}".format(
-        example['sentence1'], example['sentence2']), "WNLI", add_prefix),
-      "tgt_texts": str(example['label']), "task": self.task.name}
+    src_texts = ["sentence1:", example['sentence1'], "sentence2:", example["sentence2"]]
+    tgt_texts = [str(example['label'])]
+    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 TASK_MAPPING = OrderedDict([
@@ -421,6 +434,7 @@ TASK_MAPPING = OrderedDict([
   ('iwslt2017-en-nl', IWSLT2017ENNL),
   ('cola', COLATaskDataset),
   ('sst2', SST2TaskDataset),
+  ('stsb', STSBTaskDataset),
   ('qqp', QQPTaskDataset),
   ('mnli', MNLITaskDataset),
   ('qnli', QNLITaskDataset),

@@ -62,7 +62,7 @@ def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name=
       parent_output_dir = parent_config[output_dir_name]
     output_dir = os.path.join(parent_output_dir, name)
     config.update({output_dir_name: output_dir})
-    print(config)
+    #print(config)
     config_path = "{0}/{1}.json".format(temp_configs_dir, name)
     with open(config_path, 'w') as f:
       json.dump(config, f)

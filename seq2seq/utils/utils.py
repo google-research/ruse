@@ -1,17 +1,16 @@
+import os
+import torch.nn as nn
 from google.cloud import storage
 from logging import getLogger
-import torch.nn as nn
-import os
-
+from third_party.utils import (
+    assert_all_frozen,
+    freeze_embeds,
+    freeze_params)
 from transformers import TrainerCallback
 from transformers.modeling_t5 import T5LayerNorm
 
 from seq2seq.adapters import AdapterController, MetaAdapterController
 from seq2seq.data import TASK_MAPPING
-from third_party.utils import (
-    assert_all_frozen,
-    freeze_embeds,
-    freeze_params)
 
 logger = getLogger(__name__)
 
@@ -70,7 +69,6 @@ def reset_config(model, config):
 
 
 def partly_freeze_params(model: nn.Module, not_freezed_pattern):
-    # TODO(rabeeh): unfreezed patterns need to be a list.
     """Freezes all the parameters of the model expect for the specified not_freezed_pattern."""
     for name, p in model.named_parameters():
         if not_freezed_pattern in name:
@@ -78,16 +76,6 @@ def partly_freeze_params(model: nn.Module, not_freezed_pattern):
         else:
             p.requires_grad = False
 
-'''
-def shard_data(datasets, num_replicas, rank):
-    """Returns the sharded data belonging to the given rank."""
-    for i, dataset in enumerate(datasets):
-        # shuffle needs to be per epoch as well.
-        dataset = dataset.shuffle()
-        sharded_dataset = dataset.shard(num_replicas, rank)
-        datasets[i] = sharded_dataset
-    return datasets
-'''
 
 def freezing_params(model, training_args, model_args):
     if training_args.train_adapters:
@@ -129,9 +117,7 @@ def freezing_params(model, training_args, model_args):
                 for param_name, param in sub_module.named_parameters():
                     param.requires_grad = True
 
-############################################
-# Defines callbacks.
-############################################
+
 class T5CheckpointCallback(TrainerCallback):
     def on_save(self, args, state, control, **kwargs):
         """Event called after a checkpoint save."""

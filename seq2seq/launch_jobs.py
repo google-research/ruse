@@ -832,6 +832,8 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
 # Train the current model, making sure all works 
 # changing learning rate to lower ones.
+#    0 |                  8 |          0.03   |                             64 |        0.877884 |           0.905602 |         0.736617 |
+# gsutil ls gs://ruse-xcloud-bucket/outputs/mixture1/meta-adapters-task-projector/m1-lr-3e-02-emb-64-r-8-l-false/
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1"
 short_keys = ["lr", 'emb', 'r', 'l']
@@ -844,6 +846,8 @@ sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "output_dir": ["outputs/mixture1/meta-adapters-task-projector"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
+# gsutil ls gs://ruse-xcloud-bucket/outputs/mixture1/meta-adapters-task-projector/m1-lr-3e-02-r-8-l-false
+# 0 |                  8 |          0.03   |        0.876053 |           0.9033   |         0.744876 
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "m1"
 short_keys = ["lr", 'r', 'l']
@@ -855,3 +859,41 @@ sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "output_dir": ["outputs/mixture1/meta-adapters-task-projector"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 
+
+# evaluate the best model of trained two above commands.
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "m1p"
+short_keys = ['lr', 'n', 'e', 'l']
+sweep = collections.OrderedDict({
+                                 'learning_rate': [3e-2, 3e-3, 3e-4, 3e-5, 2e-5],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [7200, 1440, 720, 360, 180]),
+                                 "unfreeze_lm_head": [True, False],
+                                 'projected_task_embedding_dim': [64],
+                                 "reduction_factor": [8],
+                                 "do_finetune": [True],
+                                 "train_task_embeddings": [True],
+                                 "do_train": [False],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["test_data/task_embeddings/n-train-100"],
+                                 "output_dir": ["m1-lr-3e-02-emb-64-r-8-l-false"],
+                                 "eval_output_dir": ["outputs/evals/meta-adapter-projected-task-emb/"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
+
+
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "m1"
+short_keys = ['lr', 'n', 'e', 'l']
+sweep = collections.OrderedDict({
+                                 'learning_rate': [3e-2, 3e-3, 3e-4, 3e-5, 2e-5],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [7200, 1440, 720, 360, 180]),
+                                 "unfreeze_lm_head": [True, False],
+                                 "reduction_factor": [8],
+                                 "do_finetune": [True],
+                                 "do_train": [False],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "task_embedding_dir": ["test_data/task_embeddings/n-train-100"],
+                                 "output_dir": ["m1-lr-3e-02-r-8-l-false"],
+                                 "eval_output_dir": ["outputs/evals/meta-adapter-without-projected-task-emb/"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")

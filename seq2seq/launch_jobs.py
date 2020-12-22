@@ -933,7 +933,11 @@ short_keys = ["lr", 'r', 'l']
 sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
                                  "reduction_factor": [8], #, 16],
                                  "unfreeze_lm_head": [True, False],
+                                 "tpu_num_cores": [8],
+                                 "prediction_loss_only": [True],
                                  'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
                                  "train_task_embeddings": [False],
+                                 "do_eval": [False],
+                                 "predict_with_generate": [False],
                                  "output_dir": ["outputs/mixture1/meta-adapters-task-projector-new_sampler-tpu"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=0)

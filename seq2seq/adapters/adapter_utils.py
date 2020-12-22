@@ -82,7 +82,6 @@ class HyperNetUpSampler(nn.Module):
     self.bias_generator = nn.Sequential(
       linear_layer(self.task_embedding_dim, self.hidden_dim),
       linear_layer(self.hidden_dim, self.input_dim))
-    print("@@ up sampler ", self.hidden_dim)
 
   def forward(self, task_embedding):
     task_embedding = task_embedding.view(-1)
@@ -106,6 +105,18 @@ class TaskHyperNet(nn.Module):
   def forward(self, task_embedding):
     task_embedding = task_embedding.view(-1)
     return self.task_embeding_generator(task_embedding).view(-1)
+
+
+class LayerNormHyperNet(nn.Module):
+  """This module generates the weight and bias for the task conditioned layer norm."""
+  def __init__(self, config):
+    super(LayerNormHyperNet, self).__init__()
+    self.task_embedding_dim = config.projected_task_embedding_dim if config.train_task_embeddings else config.task_embedding_dim
+    self.weight_generator = linear_layer(self.task_embedding_dim, config.input_dim)
+    self.bias_generator = linear_layer(self.task_embedding_dim, config.input_dim)
+
+  def forward(self, input):
+    return self.weight_generator(input), self.bias_generator(input)
 
 
 class TaskEmbeddingController(nn.Module):

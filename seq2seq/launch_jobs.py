@@ -957,8 +957,5 @@ sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "train_task_embeddings": [False],
                                  "do_eval": [True],
                                  "do_train": [False],
-                                 "gsc_bucket": [None],
                                  "output_dir": ["outputs/mixture1/meta-adapters-task-projector-new_sampler-tpu"]})
-                                 #,
-                                 #"eval_output_dir": ["outputs/eval-v/tpu-evaluation"]})
-do_sweep(basic_config_path, sweep, short_keys, job_prefix) #output_dir_name="eval_output_dir", num_gpus=1)
+do_sweep(basic_config_path, sweep, short_keys, job_prefix) 

@@ -23,13 +23,15 @@ from third_party.utils import (
     save_json,
     write_txt_file,
 )
-from seq2seq.utils import T5CheckpointCallback, freezing_params, shard_data
+from seq2seq.utils import T5CheckpointCallback, freezing_params #, shard_data
 from seq2seq.utils import upload, use_task_specific_params, reset_config
 
 logger = logging.getLogger(__name__)
 
+'''
 if is_torch_tpu_available():
     import torch_xla.core.xla_model as xm
+'''
 
 
 def main():
@@ -152,10 +154,13 @@ def main():
         # Shard the data if needed.
         # TODO: also add for distribued GPU training.
         # TODO: here we need to make sure shards are the same length across the cores.
+        '''
         if is_torch_tpu_available() and xm.xrt_world_size() > 1:
             train_datasets = shard_data(train_datasets, num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
         elif training_args.local_rank != -1:
             train_datasets = shard_data(train_datasets, num_replicas=torch.distributed.get_world_size(), rank=training_args.local_rank)
+        '''
+
         dataset_sizes = [len(train_dataset) for train_dataset in train_datasets]
         train_dataset = datasets.concatenate_datasets(train_datasets)
     # TODO: you should not do this, introduces bug.

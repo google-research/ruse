@@ -78,7 +78,7 @@ def partly_freeze_params(model: nn.Module, not_freezed_pattern):
         else:
             p.requires_grad = False
 
-
+'''
 def shard_data(datasets, num_replicas, rank):
     """Returns the sharded data belonging to the given rank."""
     for i, dataset in enumerate(datasets):
@@ -87,7 +87,7 @@ def shard_data(datasets, num_replicas, rank):
         sharded_dataset = dataset.shard(num_replicas, rank)
         datasets[i] = sharded_dataset
     return datasets
-
+'''
 
 def freezing_params(model, training_args, model_args):
     if training_args.train_adapters:

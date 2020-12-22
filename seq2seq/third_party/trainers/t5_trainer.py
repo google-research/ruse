@@ -34,6 +34,9 @@ arg_to_scheduler = {
     "constant_w_warmup": get_constant_schedule_with_warmup,
 }
 
+if is_torch_tpu_available():
+    import torch_xla.core.xla_model as xm
+
 
 class T5Trainer(Trainer):
     def __init__(self, config=None, data_args=None, dataset_sizes=None, *args, **kwargs):
@@ -158,6 +161,7 @@ class T5Trainer(Trainer):
         return loss, logits
 
 
+    '''
     def get_sharded_data(self, num_replicas, rank):
         """Returns the sharded data belonging to the given rank."""
         sharded_dataset_names_to_datasets = {}
@@ -166,6 +170,7 @@ class T5Trainer(Trainer):
             sharded_dataset_names_to_datasets.update({dataset_name: sharded_data})
         self.train_dataset = sharded_dataset_names_to_datasets
         return self.train_dataset
+    '''
 
     """
     def get_train_dataset_shards(self):
@@ -200,8 +205,19 @@ class T5Trainer(Trainer):
         """
         #train_dataset = self.get_train_dataset_shards()
         # train_batch_size is computed per device.
+        if is_torch_tpu_available() and xm.xrt_world_size() > 1:
+            num_replicas = xm.xrt_world_size()
+            rank = xm.get_ordinal()
+        elif self.args.local_rank != -1:
+           num_replicas = torch.distributed.get_world_size()
+           rank = self.args.local_rank
+        else:
+           num_replicas = 1
+           rank = 0
+            
         multitask_sampler = MultiTaskBatchSampler(self.dataset_sizes, self.args.train_batch_size,
-                                                      self.args.temperature)
+                                                  self.args.temperature, rank=rank,
+                                                  num_replicas=num_replicas)
         return DataLoader(self.train_dataset, batch_sampler=multitask_sampler,
                                 collate_fn=self.data_collator)
 

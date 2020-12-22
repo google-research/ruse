@@ -110,8 +110,8 @@ def download_all_evals(sweep, job_prefix, short_keys, output_dir):
   print(copy_commands)
   run_in_parallel(copy_commands)
 
-acc_cols = ['cola_eval_acc',   'snli_eval_acc', 'yelp_polarity_eval_acc']
-#acc_cols = ["qnli_eval_acc", "scitail_eval_acc", "boolq_eval_acc"]
+#acc_cols = ['cola_eval_acc',   'snli_eval_acc', 'yelp_polarity_eval_acc']
+acc_cols = ["qnli_eval_acc", "scitail_eval_acc", "boolq_eval_acc"]
 def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
   print(job_prefix)
   df = pd.DataFrame()

@@ -1,17 +1,11 @@
 """Implements a T5 trainer class doing training and evaluation."""
 
-from typing import Any, Dict, Optional, Tuple, Union
 import torch
 from torch import nn
-from torch.utils.data.dataset import Dataset
-from seq2seq.data import MultiTaskBatchSampler
-from torch.utils.data import DistributedSampler, RandomSampler
+from torch.utils.data.dataloader import DataLoader
 from transformers import PreTrainedModel, logging
-from .trainer  import Trainer
 from transformers.configuration_fsmt import FSMTConfig
 from transformers.file_utils import is_torch_tpu_available
-from torch.utils.data.dataloader import DataLoader
-
 from transformers.optimization import (
     Adafactor,
     AdamW,
@@ -22,6 +16,10 @@ from transformers.optimization import (
     get_linear_schedule_with_warmup,
     get_polynomial_decay_schedule_with_warmup,
 )
+from typing import Any, Dict, Optional, Tuple, Union
+
+from seq2seq.data import MultiTaskBatchSampler
+from .trainer import Trainer
 
 logger = logging.get_logger(__name__)
 
@@ -56,7 +54,7 @@ class T5Trainer(Trainer):
 
         if self.args.label_smoothing != 0 or (self.data_args is not None and self.data_args.ignore_pad_token_for_loss):
             assert (
-                self.config.pad_token_id is not None
+                    self.config.pad_token_id is not None
             ), "Make sure that `config.pad_token_id` is correcly defined when ignoring `pad_token` for loss calculation or doing label smoothing."
 
         if self.config.pad_token_id is None and self.config.eos_token_id is not None:
@@ -71,7 +69,6 @@ class T5Trainer(Trainer):
             from third_party.utils import label_smoothed_nll_loss
 
             self.loss_fn = label_smoothed_nll_loss
-
 
     def create_optimizer_and_scheduler(self, num_training_steps: int):
         """
@@ -123,26 +120,19 @@ class T5Trainer(Trainer):
             )
         return scheduler
 
-    """
     def _get_train_sampler(self) -> Optional[torch.utils.data.sampler.Sampler]:
-        if isinstance(self.train_dataset, torch.utils.data.IterableDataset):
-            return None
-        elif is_torch_tpu_available():
-            return get_tpu_sampler(self.train_dataset, self.data_groups)
+        if is_torch_tpu_available() and xm.xrt_world_size() > 1:
+            num_replicas = xm.xrt_world_size()
+            rank = xm.get_ordinal()
+        elif self.args.local_rank != -1:
+            num_replicas = torch.distributed.get_world_size()
+            rank = self.args.local_rank
         else:
-            if self.args.sortish_sampler:
-                self.train_dataset.make_sortish_sampler(
-                    self.args.per_device_train_batch_size, 
-                    distributed=(self.args.n_gpu > 1 and self.args.local_rank != -1)
-                )
-
-            return (
-                RandomSampler(self.train_dataset)
-                if self.args.local_rank == -1
-                else DistributedSampler(self.train_dataset)
-            )
-    """
-
+            num_replicas = 1
+            rank = 0
+        return MultiTaskBatchSampler(self.dataset_sizes, self.args.train_batch_size,
+                                     self.args.temperature, rank=rank,
+                                     num_replicas=num_replicas)
 
     def _compute_loss(self, model, inputs, labels):
         if self.args.label_smoothing == 0:
@@ -160,40 +150,6 @@ class T5Trainer(Trainer):
             loss, _ = self.loss_fn(lprobs, labels, self.args.label_smoothing, ignore_index=self.config.pad_token_id)
         return loss, logits
 
-
-    '''
-    def get_sharded_data(self, num_replicas, rank):
-        """Returns the sharded data belonging to the given rank."""
-        sharded_dataset_names_to_datasets = {}
-        for dataset_name, dataset in self.train_dataset.items():
-            sharded_data = dataset.shard(num_replicas, rank)
-            sharded_dataset_names_to_datasets.update({dataset_name: sharded_data})
-        self.train_dataset = sharded_dataset_names_to_datasets
-        return self.train_dataset
-    '''
-
-    """
-    def get_train_dataset_shards(self):
-        #In case of multiprocessing, returns the sharded data for the given rank.
-        if is_torch_tpu_available():
-            if xm.xrt_world_size() > 1:
-                return self.get_sharded_data(num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
-            else:
-                return self.train_dataset
-        elif self.args.local_rank != -1:
-                return self.get_sharded_data(num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
-        else:
-            return self.train_dataset
-    """
-
-    """
-    def make_multitask_sampler(self, batch_size, distributed=False, shuffle=True, **kwargs):
-        if distributed:
-            return DistributedMultiTaskBatchSampler(self.dataset_sizes, batch_size, shuffle=shuffle, **kwargs)
-        else:
-            return MultiTaskBatchSampler(self.dataset_sizes, batch_size, shuffle=shuffle)
-    """
-
     def get_train_dataloader(self) -> DataLoader:
         """
         Returns the training :class:`~torch.utils.data.DataLoader`.
@@ -203,23 +159,9 @@ class T5Trainer(Trainer):
 
         Subclass and override this method if you want to inject some custom behavior.
         """
-        #train_dataset = self.get_train_dataset_shards()
-        # train_batch_size is computed per device.
-        if is_torch_tpu_available() and xm.xrt_world_size() > 1:
-            num_replicas = xm.xrt_world_size()
-            rank = xm.get_ordinal()
-        elif self.args.local_rank != -1:
-           num_replicas = torch.distributed.get_world_size()
-           rank = self.args.local_rank
-        else:
-           num_replicas = 1
-           rank = 0
-            
-        multitask_sampler = MultiTaskBatchSampler(self.dataset_sizes, self.args.train_batch_size,
-                                                  self.args.temperature, rank=rank,
-                                                  num_replicas=num_replicas)
+        multitask_sampler = self._get_train_sampler(self)
         return DataLoader(self.train_dataset, batch_sampler=multitask_sampler,
-                                collate_fn=self.data_collator)
+                          collate_fn=self.data_collator)
 
     def compute_loss(self, model, inputs):
         labels = inputs.pop("labels")
@@ -227,8 +169,8 @@ class T5Trainer(Trainer):
         return loss
 
     def prediction_step(
-        self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]],
-        prediction_loss_only: bool
+            self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]],
+            prediction_loss_only: bool
     ) -> Tuple[Optional[float], Optional[torch.Tensor], Optional[torch.Tensor]]:
         """
         Perform an evaluation step on :obj:`model` using obj:`inputs`.
@@ -252,14 +194,13 @@ class T5Trainer(Trainer):
             A tuple with the loss, logits and labels (each being optional).
         """
         inputs = self._prepare_inputs(inputs)
-        # TODO: we set these in evalute function, does this function is called alone too?
-        # TODO: the arguments needs to be handled per task.
         gen_kwargs = {
             "max_length": self.config.max_length,
             "num_beams": self.config.num_beams
         }
         gen_kwargs["task"] = inputs["task"]
-        gen_kwargs["task_embedding"] = model.task_embedding_controller(inputs["task"]) if self.config.train_adapters else None 
+        gen_kwargs["task_embedding"] = model.task_embedding_controller(
+            inputs["task"]) if self.config.train_adapters else None
         if self.args.predict_with_generate and not self.args.prediction_loss_only:
             generated_tokens = self.model.generate(
                 inputs["input_ids"],
@@ -301,6 +242,3 @@ class T5Trainer(Trainer):
         )
         padded_tensor[:, : tensor.shape[-1]] = tensor
         return padded_tensor
-
-
-

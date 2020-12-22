@@ -2,7 +2,6 @@ import copy
 import logging
 import os
 import sys
-#import torch
 from pathlib import Path
 import json
 import datasets
@@ -10,7 +9,6 @@ from seq2seq.metrics import build_compute_metrics_fn
 from third_party.models import T5Config, T5ForConditionalGeneration
 from third_party.trainers import T5Trainer
 from transformers import AutoTokenizer, HfArgumentParser, set_seed
-#from transformers.file_utils import is_torch_tpu_available
 from transformers.trainer_utils import EvaluationStrategy
 
 from seq2seq.adapters import AdapterController, AutoAdapterConfig
@@ -23,15 +21,11 @@ from third_party.utils import (
     save_json,
     write_txt_file,
 )
-from seq2seq.utils import T5CheckpointCallback, freezing_params #, shard_data
+from seq2seq.utils import T5CheckpointCallback, freezing_params
 from seq2seq.utils import upload, use_task_specific_params, reset_config
 
 logger = logging.getLogger(__name__)
 
-'''
-if is_torch_tpu_available():
-    import torch_xla.core.xla_model as xm
-'''
 
 
 def main():
@@ -151,14 +145,6 @@ def main():
         train_datasets = [dataset_class.get(task).get_dataset(
             split="train", n_obs=data_args.n_train, add_prefix=False if training_args.train_adapters else True)
             for task in data_args.tasks]
-        # Shard the data if needed.
-        '''
-        if is_torch_tpu_available() and xm.xrt_world_size() > 1:
-            train_datasets = shard_data(train_datasets, num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
-        elif training_args.local_rank != -1:
-            train_datasets = shard_data(train_datasets, num_replicas=torch.distributed.get_world_size(), rank=training_args.local_rank)
-        '''
-
         dataset_sizes = [len(train_dataset) for train_dataset in train_datasets]
         train_dataset = datasets.concatenate_datasets(train_datasets)
     # TODO: you should not do this, introduces bug.

@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 import json
 import datasets
-from seq2seq.metrics import build_compute_metrics_fn
+from seq2seq.metrics  import build_compute_metrics_fn
 from third_party.models import T5Config, T5ForConditionalGeneration
 from third_party.trainers import T5Trainer
 from transformers import AutoTokenizer, HfArgumentParser, set_seed

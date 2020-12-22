@@ -173,7 +173,7 @@ class T5Trainer(Trainer):
 
         Subclass and override this method if you want to inject some custom behavior.
         """
-        multitask_sampler = self._get_train_sampler(self)
+        multitask_sampler = self._get_train_sampler()
         return DataLoader(self.train_dataset, batch_sampler=multitask_sampler,
                           collate_fn=self.data_collator)
 

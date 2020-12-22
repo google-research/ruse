@@ -1,8 +1,8 @@
 {
 "model_name_or_path": "t5-small",
 "tokenizer_name": "t5-small",
-"output_dir": "task_embeddings/n_train_2000",
-"tasks": ["mnli", "mrpc", "rte", "snli", "scitail", "boolq", "yelp_polarity", "cola", "qnli"],
+"output_dir": "test_data/task_embeddings/n-train-100",
+"tasks":  ["rte", "cola", "mrpc", "qqp", "sst2", "stsb", "wnli", "mnli"],
 "per_device_train_batch_size":32,
 "per_device_eval_batch_size":32,
 "save_steps": 200,
@@ -34,7 +34,7 @@
 "do_eval": true,
 "predict_with_generate": true,
 "evaluation_strategy": "steps",
-"n_train": 2000
+"n_train": 100
 }
 
 

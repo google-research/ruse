@@ -21,8 +21,9 @@ import sklearn
 from third_party.utils import calculate_rouge, calculate_bleu, lmap
 from transformers import EvalPrediction, PreTrainedTokenizer
 from typing import Callable, Dict, List, Tuple
+import functools
 
-from seq2seq.data import TASK_MAPPING
+
 
 logger = getLogger(__name__)
 
@@ -97,12 +98,26 @@ def build_compute_metrics_fn(task_names: List[str],
         acc: Dict = accuracy(pred_str, label_str)
         return acc
 
+
+    def t5_wrapper_metrics(pred: EvalPrediction, metrics) -> Dict:
+        pred_str, label_str = decode_pred(pred)
+        eval_results = {}
+        for metric in metrics:
+            eval_results.update(metric(pred_str, label_str))
+        return eval_results
+
+
+    def tasks_metrics(task) -> Dict:
+        from data.tasks import TASK_MAPPING
+        return functools.partial(t5_wrapper_metrics, metrics=TASK_MAPPING[task].metrics) #compute_metrics_fn
+
+    """
     def tasks_metrics(task=None) -> Dict:
         category = TASK_MAPPING[task].task.category
         compute_metrics_fn = CATEGORY_EVALUATION_MAPPING[category]
         logger.info(f"selected metric {compute_metrics_fn} for task {task}")
         return compute_metrics_fn
-
+    
     CATEGORY_EVALUATION_MAPPING = OrderedDict(
         [('summarization', summarization_metrics),
          ('translation', translation_metrics),
@@ -110,4 +125,8 @@ def build_compute_metrics_fn(task_names: List[str],
          ]
     )
     task_to_compute_metrics = {task: tasks_metrics(task) for task in task_names}
+    """
+
+    task_to_compute_metrics = {task: tasks_metrics(task) for task in task_names}
     return task_to_compute_metrics
+

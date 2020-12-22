@@ -16,13 +16,13 @@ import abc
 import functools
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Callable, Dict, Mapping
+from typing import Callable, Dict, Mapping, List
 
 import datasets
 from transformers import T5Tokenizer
 from .utils import round_stsb_target
 import numpy as np
-
+from seq2seq.metrics import metrics
 
 def compute_task_max_decoding_length(word_list):
   tokenizer = T5Tokenizer.from_pretrained('t5-base')
@@ -51,6 +51,7 @@ class AbstractTaskDataset(abc.ABC):
   task_specific_config: Dict = NotImplemented
   task: Task = NotImplemented
   preprocessor: Callable = NotImplemented
+  metrics: List[Callable] = NotImplemented
   split_to_data_split: Mapping[str, str] = \
     {"train": "train", "validation": "validation", "test": "test"}
 
@@ -293,6 +294,7 @@ class MRPCTaskDataset(AbstractTaskDataset):
   task = Task(name="mrpc", category="classification")
   label_list = ["0", "1"]
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+  metrics = [metrics.f1_score_with_invalid, metrics.accuracy]
 
   def load_dataset(self, split):
     return datasets.load_dataset('glue', 'mrpc', split=split)
@@ -321,6 +323,7 @@ class SST2TaskDataset(AbstractTaskDataset):
   task = Task(name="sst2", category="classification")
   label_list = ["0", "1"]
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+  metrics = [metrics.accuracy]
 
   def load_dataset(self, split):
     return datasets.load_dataset('glue', 'sst2', split=split)
@@ -335,6 +338,7 @@ class STSBTaskDataset(AbstractTaskDataset):
   task = Task(name="stsb", category="classification")
   label_list = [str(np.round(label, decimals=1)) for label in np.arange(0, 5.2, 0.2)]
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+  metrics = [metrics.pearson_corrcoef, metrics.spearman_corrcoef]
 
   def load_dataset(self, split):
     return datasets.load_dataset('glue', 'stsb', split=split)
@@ -349,6 +353,7 @@ class QQPTaskDataset(AbstractTaskDataset):
   task = Task(name="qqp", category="classification")
   label_list = ["0", "1"]
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+  metrics = [metrics.f1_score_with_invalid, metrics.accuracy]
 
   def load_dataset(self, split):
     return datasets.load_dataset('glue', 'qqp', split=split)
@@ -365,6 +370,7 @@ class MNLITaskDataset(AbstractTaskDataset):
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
   split_to_data_split = {"train": "train", "validation": "validation_mismatched",
                          "test": "validation_matched"}
+  metrics = [metrics.accuracy]
 
   def load_dataset(self, split):
     return datasets.load_dataset('glue', 'mnli', split=split)
@@ -379,6 +385,7 @@ class QNLITaskDataset(AbstractTaskDataset):
   task = Task(name="qnli", category="classification")
   label_list = ["0", "1"]
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+  metrics = [metrics.accuracy]
 
   def load_dataset(self, split):
     return datasets.load_dataset('glue', 'qnli', split=split)
@@ -393,6 +400,7 @@ class RTETaskDataset(AbstractTaskDataset):
   task = Task(name="rte", category="classification")
   label_list = ["0", "1"]
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+  metrics = [metrics.accuracy]
 
   def load_dataset(self, split):
     return datasets.load_dataset('glue', 'rte', split=split)
@@ -407,6 +415,7 @@ class WNLITaskDataset(AbstractTaskDataset):
   task = Task(name="wnli", category="classification")
   label_list = ["0", "1"]
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+  metrics = [metrics.accuracy]
 
   def load_dataset(self, split):
     return datasets.load_dataset('glue', 'wnli', split=split)

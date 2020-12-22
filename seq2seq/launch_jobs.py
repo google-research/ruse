@@ -948,14 +948,15 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=0)
 
 # Evaluates the TPU jobs on GPU.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
-job_prefix = "xla-eval"
+job_prefix = "xla"
 short_keys = ["lr", 'r', 'l']
 sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
-                                 "reduction_factor": [8],
+                                 "reduction_factor": [8], #, 16],
                                  "unfreeze_lm_head": [True, False],
                                  'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
                                  "train_task_embeddings": [False],
                                  "do_eval": [True],
-                                 "do_train": [False]
-                                 "output_dir": ["outputs/mixture1/meta-adapters-task-projector-new_sampler-tpu"]})
-do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=1)
+                                 "do_train": [False],
+                                 "output_dir": ["outputs/mixture1/meta-adapters-task-projector-new_sampler-tpu"],
+                                 "eval_output_dir": ["outputs/eval-v/tpu-evaluation"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir", num_gpus=1)

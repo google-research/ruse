@@ -235,7 +235,7 @@ def main():
                             sub_module.set_task_to_adapter_map(task_to_adapter)
                 if adapter_args.adapter_config_name in ["meta-adapter", "parametric-meta-adapter"]:
                     model.task_embedding_controller.update_task_embeddings([eval_task],
-                                                                           parametric=training_args.parametric_task_embedding)
+                      parametric=training_args.parametric_task_embedding)
 
             # if training_args.eval_output_dir is not None:
             #    training_args.output_dir = training_args.eval_output_dir

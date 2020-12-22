@@ -21,6 +21,7 @@ from typing import Callable, Dict, Mapping
 import datasets
 from transformers import T5Tokenizer
 from .utils import round_stsb_target
+import numpy as np
 
 
 def compute_task_max_decoding_length(word_list):
@@ -332,7 +333,7 @@ class SST2TaskDataset(AbstractTaskDataset):
 
 class STSBTaskDataset(AbstractTaskDataset):
   task = Task(name="stsb", category="classification")
-  label_list = ["0", "1"]
+  label_list = [str(np.round(label, decimals=1)) for label in np.arange(0, 5.2, 0.2)]
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
 
   def load_dataset(self, split):

@@ -913,8 +913,10 @@ sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "train_task_embeddings": [False],
                                  "output_dir": ["outputs/mixture1/meta-adapters-task-projector-new_sampler-num-gpus-1"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=1)
+"""
 
 
+"""
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "mp"
 short_keys = ["lr", 'r', 'l']
@@ -925,10 +927,10 @@ sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "train_task_embeddings": [False],
                                  "output_dir": ["outputs/mixture1/meta-adapters-task-projector-new_sampler-num-gpus-4"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
-"""
 
+"""
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
-job_prefix = "mp"
+job_prefix = "xla"
 short_keys = ["lr", 'r', 'l']
 sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
                                  "reduction_factor": [8], #, 16],

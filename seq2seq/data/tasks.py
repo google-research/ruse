@@ -20,7 +20,7 @@ from typing import Callable, Dict, Mapping
 
 import datasets
 from transformers import T5Tokenizer
-from .utils import stsb_target
+from .utils import round_stsb_target
 
 
 def compute_task_max_decoding_length(word_list):
@@ -336,11 +336,11 @@ class STSBTaskDataset(AbstractTaskDataset):
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
 
   def load_dataset(self, split):
-    return datasets.load_dataset('glue', 'sstb', split=split)
+    return datasets.load_dataset('glue', 'stsb', split=split)
 
   def preprocessor(self, example, add_prefix=True):
-    src_texts = ["sentence:", example['sentence']]
-    tgt_texts = [str(example['label'])]
+    src_texts = ["sentence1:", example['sentence1'], "sentence2:", example["sentence2"]]
+    tgt_texts = [str(round_stsb_target(example['label']))]
     return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 

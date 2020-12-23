@@ -15,6 +15,7 @@
 """Implements a T5 trainer class doing training and evaluation."""
 
 import torch
+from seq2seq.data import MultiTaskBatchSampler
 from torch import nn
 from torch.utils.data.dataloader import DataLoader
 from transformers import PreTrainedModel, logging
@@ -32,7 +33,6 @@ from transformers.optimization import (
 )
 from typing import Any, Dict, Optional, Tuple, Union
 
-from seq2seq.data import MultiTaskBatchSampler
 from .trainer import Trainer
 
 logger = logging.get_logger(__name__)

@@ -17,6 +17,11 @@
 import copy
 import torch
 import warnings
+from seq2seq.adapters import AutoAdapterController
+from seq2seq.adapters import MetaAdapterConfig, ParametricMetaAdapterConfig
+from seq2seq.adapters import TaskEmbeddingController
+from seq2seq.models.poolings import AutoPooling
+from seq2seq.models.projections import AutoProjection
 from torch import nn
 from torch.nn import CrossEntropyLoss
 from transformers.modeling_outputs import BaseModelOutput
@@ -24,11 +29,6 @@ from transformers.modeling_t5 import (T5PreTrainedModel, T5LayerNorm, T5Block,
                                       T5DenseReluDense, T5Attention, T5LayerCrossAttention)
 from transformers.utils import logging
 
-from seq2seq.adapters import AutoAdapterController
-from seq2seq.adapters import MetaAdapterConfig, ParametricMetaAdapterConfig
-from seq2seq.adapters import TaskEmbeddingController
-from seq2seq.models.poolings import AutoPooling
-from seq2seq.models.projections import AutoProjection
 from .modeling_outputs import RuseBaseModelOutputWithPastAndCrossAttentions, RuseSeq2SeqLMOutput
 
 logger = logging.get_logger(__name__)

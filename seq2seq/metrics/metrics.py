@@ -21,9 +21,10 @@ from transformers import EvalPrediction, PreTrainedTokenizer
 from typing import Callable, Dict, List, Tuple
 import functools
 
-
-
 logger = getLogger(__name__)
+
+
+# TODO: nicer to define postprocessor for the tasks.
 
 
 def accuracy(predictions, targets) -> dict:
@@ -32,7 +33,6 @@ def accuracy(predictions, targets) -> dict:
 
 def pearson_corrcoef(predictions, targets)-> dict:
   """Computes Pearson correlation coefficient."""
-  # TODO: nicer to define postprocessor for the tasks.
   from seq2seq.data import string_to_float
   predictions = [string_to_float(prediction) for prediction in predictions]
   targets = [string_to_float(target) for target in targets]

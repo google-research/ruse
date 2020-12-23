@@ -26,9 +26,11 @@ import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+from seq2seq.data import MultiTaskBatchSampler
+
 
 # Integrations must be imported before ML frameworks:
-from .integrations import (  # isort: split
+from transformers.integrations import (  # isort: split
     default_hp_search_backend,
     hp_params,
     is_azureml_available,
@@ -51,13 +53,13 @@ from torch.utils.data.dataset import Dataset
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler, SequentialSampler
 
-from .data.data_collator import DataCollator, DataCollatorWithPadding, default_data_collator
-from .file_utils import WEIGHTS_NAME, is_datasets_available, is_in_notebook, is_torch_tpu_available
-from .modeling_auto import MODEL_FOR_QUESTION_ANSWERING_MAPPING
-from .modeling_utils import PreTrainedModel
-from .optimization import AdamW, get_linear_schedule_with_warmup
-from .tokenization_utils_base import PreTrainedTokenizerBase
-from .trainer_callback import (
+from transformers.data.data_collator import DataCollator, DataCollatorWithPadding, default_data_collator
+from transformers.file_utils import WEIGHTS_NAME, is_datasets_available, is_in_notebook, is_torch_tpu_available
+from transformers.modeling_auto import MODEL_FOR_QUESTION_ANSWERING_MAPPING
+from transformers.modeling_utils import PreTrainedModel
+from transformers.optimization import AdamW, get_linear_schedule_with_warmup
+from transformers.tokenization_utils_base import PreTrainedTokenizerBase
+from transformers.trainer_callback import (
     CallbackHandler,
     DefaultFlowCallback,
     PrinterCallback,
@@ -66,7 +68,7 @@ from .trainer_callback import (
     TrainerControl,
     TrainerState,
 )
-from .trainer_pt_utils import (
+from transformers.trainer_pt_utils import (
     DistributedTensorGatherer,
     SequentialDistributedSampler,
     distributed_broadcast_scalars,
@@ -78,7 +80,7 @@ from .trainer_pt_utils import (
     nested_xla_mesh_reduce,
     reissue_pt_warnings,
 )
-from .trainer_utils import (
+from transformers.trainer_utils import (
     PREFIX_CHECKPOINT_DIR,
     BestRun,
     EvalPrediction,
@@ -89,8 +91,8 @@ from .trainer_utils import (
     default_hp_space,
     set_seed,
 )
-from .training_args import TrainingArguments
-from .utils import logging
+from transformers.training_args import TrainingArguments
+from transformers.utils import logging
 
 
 _use_native_amp = False
@@ -100,13 +102,13 @@ DEFAULT_CALLBACKS = [DefaultFlowCallback]
 DEFAULT_PROGRESS_CALLBACK = ProgressCallback
 
 if is_in_notebook():
-    from .utils.notebook import NotebookProgressCallback
+    from transformers.utils.notebook import NotebookProgressCallback
 
     DEFAULT_PROGRESS_CALLBACK = NotebookProgressCallback
 
 # Check if Pytorch version >= 1.6 to switch between Native AMP and Apex
 if version.parse(torch.__version__) < version.parse("1.6"):
-    from .file_utils import is_apex_available
+    from transformers.file_utils import is_apex_available
 
     if is_apex_available():
         from apex import amp
@@ -129,23 +131,23 @@ if is_torch_tpu_available():
     import torch_xla.distributed.parallel_loader as pl
 
 if is_tensorboard_available():
-    from .integrations import TensorBoardCallback
+    from transformers.integrations import TensorBoardCallback
 
     DEFAULT_CALLBACKS.append(TensorBoardCallback)
 
 
 if is_wandb_available():
-    from .integrations import WandbCallback
+    from transformers.integrations import WandbCallback
 
     DEFAULT_CALLBACKS.append(WandbCallback)
 
 if is_comet_available():
-    from .integrations import CometCallback
+    from transformers.integrations import CometCallback
 
     DEFAULT_CALLBACKS.append(CometCallback)
 
 if is_mlflow_available():
-    from .integrations import MLflowCallback
+    from transformers.integrations import MLflowCallback
 
     DEFAULT_CALLBACKS.append(MLflowCallback)
 
@@ -156,7 +158,7 @@ if is_ray_available():
     from ray import tune
 
 if is_azureml_available():
-    from .integrations import AzureMLCallback
+    from transformers.integrations import AzureMLCallback
 
     DEFAULT_CALLBACKS.append(AzureMLCallback)
 
@@ -736,8 +738,13 @@ class Trainer:
         self.control = self.callback_handler.on_train_begin(self.args, self.state, self.control)
 
         for epoch in range(epochs_trained, num_train_epochs):
-            if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
-                train_dataloader.sampler.set_epoch(epoch)
+            if isinstance(train_dataloader, DataLoader) and (
+                    isinstance(train_dataloader.sampler, DistributedSampler)
+                    or isinstance(train_dataloader.batch_sampler, MultiTaskBatchSampler)):
+                if isinstance(train_dataloader.sampler, DistributedSampler):
+                    train_dataloader.sampler.set_epoch(epoch)
+                else:
+                    train_dataloader.batch_sampler.set_epoch(epoch)
 
             if is_torch_tpu_available():
                 parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(

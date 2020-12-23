@@ -1,10 +1,23 @@
-from typing import Any, Dict, Optional, Tuple, Union
+# Copyright 2020 The HuggingFace Team. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Implements a T5 trainer class doing training and evaluation."""
 
 import torch
 from torch import nn
-from torch.utils.data import DistributedSampler, RandomSampler
-
-from transformers import PreTrainedModel, Trainer, logging
+from torch.utils.data.dataloader import DataLoader
+from transformers import PreTrainedModel, logging
 from transformers.configuration_fsmt import FSMTConfig
 from transformers.file_utils import is_torch_tpu_available
 from transformers.optimization import (
@@ -17,8 +30,10 @@ from transformers.optimization import (
     get_linear_schedule_with_warmup,
     get_polynomial_decay_schedule_with_warmup,
 )
-from transformers.trainer_pt_utils import get_tpu_sampler
+from typing import Any, Dict, Optional, Tuple, Union
 
+from seq2seq.data import MultiTaskBatchSampler
+from .trainer import Trainer
 
 logger = logging.get_logger(__name__)
 
@@ -31,9 +46,12 @@ arg_to_scheduler = {
     "constant_w_warmup": get_constant_schedule_with_warmup,
 }
 
+if is_torch_tpu_available():
+    import torch_xla.core.xla_model as xm
 
-class Seq2SeqTrainer(Trainer):
-    def __init__(self, config=None, data_args=None, *args, **kwargs):
+
+class T5Trainer(Trainer):
+    def __init__(self, config=None, data_args=None, dataset_sizes=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if config is None:
@@ -44,12 +62,13 @@ class Seq2SeqTrainer(Trainer):
         else:
             self.config = config
 
+        self.dataset_sizes = dataset_sizes
         self.data_args = data_args
         self.vocab_size = self.config.tgt_vocab_size if isinstance(self.config, FSMTConfig) else self.config.vocab_size
 
         if self.args.label_smoothing != 0 or (self.data_args is not None and self.data_args.ignore_pad_token_for_loss):
             assert (
-                self.config.pad_token_id is not None
+                    self.config.pad_token_id is not None
             ), "Make sure that `config.pad_token_id` is correcly defined when ignoring `pad_token` for loss calculation or doing label smoothing."
 
         if self.config.pad_token_id is None and self.config.eos_token_id is not None:
@@ -61,7 +80,7 @@ class Seq2SeqTrainer(Trainer):
             self.loss_fn = torch.nn.CrossEntropyLoss(ignore_index=self.config.pad_token_id)
         else:
             # dynamically import label_smoothed_nll_loss
-            from utils import label_smoothed_nll_loss
+            from third_party.utils import label_smoothed_nll_loss
 
             self.loss_fn = label_smoothed_nll_loss
 
@@ -69,8 +88,9 @@ class Seq2SeqTrainer(Trainer):
         """
         Setup the optimizer and the learning rate scheduler.
 
-        We provide a reasonable default that works well. If you want to use something else, you can pass a tuple in the
-        Trainer's init through :obj:`optimizers`, or subclass and override this method in a subclass.
+        We provide a reasonable default that works well. If you want to use
+        something else, you can pass a tuple in the Trainer's init through
+        :obj:`optimizers`, or subclass and override this method in a subclass.
         """
         if self.optimizer is None:
             no_decay = ["bias", "LayerNorm.weight"]
@@ -115,21 +135,18 @@ class Seq2SeqTrainer(Trainer):
         return scheduler
 
     def _get_train_sampler(self) -> Optional[torch.utils.data.sampler.Sampler]:
-        if isinstance(self.train_dataset, torch.utils.data.IterableDataset):
-            return None
-        elif is_torch_tpu_available():
-            return get_tpu_sampler(self.train_dataset)
+        if is_torch_tpu_available() and xm.xrt_world_size() > 1:
+            num_replicas = xm.xrt_world_size()
+            rank = xm.get_ordinal()
+        elif self.args.local_rank != -1:
+            num_replicas = torch.distributed.get_world_size()
+            rank = self.args.local_rank
         else:
-            if self.args.sortish_sampler:
-                self.train_dataset.make_sortish_sampler(
-                    self.args.per_device_train_batch_size, distributed=self.args.n_gpu > 1
-                )
-
-            return (
-                RandomSampler(self.train_dataset)
-                if self.args.local_rank == -1
-                else DistributedSampler(self.train_dataset)
-            )
+            num_replicas = 1
+            rank = 0
+        return MultiTaskBatchSampler(self.dataset_sizes, self.args.train_batch_size,
+                                     self.args.temperature, rank=rank,
+                                     num_replicas=num_replicas)
 
     def _compute_loss(self, model, inputs, labels):
         if self.args.label_smoothing == 0:
@@ -147,13 +164,27 @@ class Seq2SeqTrainer(Trainer):
             loss, _ = self.loss_fn(lprobs, labels, self.args.label_smoothing, ignore_index=self.config.pad_token_id)
         return loss, logits
 
+    def get_train_dataloader(self) -> DataLoader:
+        """
+        Returns the training :class:`~torch.utils.data.DataLoader`.
+
+        Will use no sampler if :obj:`self.train_dataset` does not implement :obj:`__len__`, a random sampler (adapted
+        to distributed training if necessary) otherwise.
+
+        Subclass and override this method if you want to inject some custom behavior.
+        """
+        multitask_sampler = self._get_train_sampler()
+        return DataLoader(self.train_dataset, batch_sampler=multitask_sampler,
+                          collate_fn=self.data_collator)
+
     def compute_loss(self, model, inputs):
         labels = inputs.pop("labels")
         loss, _ = self._compute_loss(model, inputs, labels)
         return loss
 
     def prediction_step(
-        self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]], prediction_loss_only: bool
+            self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]],
+            prediction_loss_only: bool
     ) -> Tuple[Optional[float], Optional[torch.Tensor], Optional[torch.Tensor]]:
         """
         Perform an evaluation step on :obj:`model` using obj:`inputs`.
@@ -166,8 +197,9 @@ class Seq2SeqTrainer(Trainer):
             inputs (:obj:`Dict[str, Union[torch.Tensor, Any]]`):
                 The inputs and targets of the model.
 
-                The dictionary will be unpacked before being fed to the model. Most models expect the targets under the
-                argument :obj:`labels`. Check your model's documentation for all accepted arguments.
+                The dictionary will be unpacked before being fed to the model.
+                Most models expect the targets under the argument :obj:`labels`.
+                Check your model's documentation for all accepted arguments.
             prediction_loss_only (:obj:`bool`):
                 Whether or not to return the loss only.
 
@@ -176,16 +208,15 @@ class Seq2SeqTrainer(Trainer):
             A tuple with the loss, logits and labels (each being optional).
         """
         inputs = self._prepare_inputs(inputs)
-
         gen_kwargs = {
-            "max_length": self.data_args.val_max_target_length
-            if self.data_args is not None
-            else self.config.max_length,
-            "num_beams": self.data_args.eval_beams if self.data_args is not None else self.config.num_beams,
+            "max_length": self.config.max_length,
+            "num_beams": self.config.num_beams
         }
-
+        gen_kwargs["task"] = inputs["task"]
+        gen_kwargs["task_embedding"] = model.task_embedding_controller(
+            inputs["task"]) if self.config.train_adapters else None
         if self.args.predict_with_generate and not self.args.prediction_loss_only:
-            generated_tokens = model.generate(
+            generated_tokens = self.model.generate(
                 inputs["input_ids"],
                 attention_mask=inputs["attention_mask"],
                 **gen_kwargs,
@@ -216,7 +247,8 @@ class Seq2SeqTrainer(Trainer):
 
         if pad_token_id is None:
             raise ValueError(
-                f"Make sure that either `config.pad_token_id` or `config.eos_token_id` is defined if tensor has to be padded to `max_length`={max_length}"
+                f"Make sure that either `config.pad_token_id` or `config.eos_token_id`"
+                f" is defined if tensor has to be padded to `max_length`={max_length}"
             )
 
         padded_tensor = pad_token_id * torch.ones(

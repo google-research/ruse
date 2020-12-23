@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import OrderedDict
-
 import numpy as np
 import scipy
 from logging import getLogger
@@ -28,23 +26,29 @@ import functools
 logger = getLogger(__name__)
 
 
-def accuracy(output_lns, refs_lns) -> dict:
+def accuracy(predictions, targets) -> dict:
     """Computes the average accuracy."""
-    return {"acc": (np.array(output_lns) == np.array(refs_lns)).mean()}
+    return {"acc": (np.array(predictions) == np.array(targets)).mean()}
 
-def pearson_corrcoef(targets, predictions)-> dict:
+def pearson_corrcoef(predictions, targets)-> dict:
   """Computes Pearson correlation coefficient."""
+  print("@@@ predictions ", predictions)
+  print("@@@ targets ", targets)
   return {"pearson_corrcoef":
               100 * scipy.stats.pearsonr(targets, predictions)[0]}
 
-def spearman_corrcoef(targets, predictions)-> dict:
+
+def spearman_corrcoef(predictions, targets)-> dict:
   """Computes Spearman correlation coefficient."""
+  print(predictions)
+  print(targets)
   return {"spearman_corrcoef":
               100 * scipy.stats.spearmanr(targets, predictions)[0]}
 
 
+# TODO: conversion to int is necessary?
 # This is from T5 paper.
-def f1_score_with_invalid(targets, predictions)-> dict:
+def f1_score_with_invalid(predictions, targets)-> dict:
   """Compute F1 score, but any prediction != 0 or 1 is counted as incorrect.
   Args:
     targets: np.ndarray of targets, either 0 or 1
@@ -52,17 +56,18 @@ def f1_score_with_invalid(targets, predictions)-> dict:
   Returns:
     F1 score, where any prediction != 0 or 1 is counted as wrong.
   """
+  targets = [int(target) for  target in targets]
+  predictions = [int(prediction) if prediction.isnumeric() else prediction for prediction in predictions]
   targets, predictions = np.asarray(targets), np.asarray(predictions)
   # Get indices of invalid predictions
   invalid_idx_mask = np.logical_and(predictions != 0, predictions != 1)
   # For any prediction != 0 or 1, set it to the opposite of what the target is.
-  print("@@@ targets ", targets)
-  print("invalid idx ", invalid_idx_mask)
   predictions[invalid_idx_mask] = 1 - targets[invalid_idx_mask]
+  predictions = [int(prediction) for prediction in predictions]
   return {"f1": 100 * sklearn.metrics.f1_score(targets, predictions)}
 
 
-def matthews_corrcoef(targets, predictions)-> dict:
+def matthews_corrcoef(predictions, targets)-> dict:
     """Computes the Matthews correlation coefficient."""
     return {"mcc": 100 * sklearn.metrics.matthews_corrcoef(targets, predictions)}
 
@@ -95,12 +100,6 @@ def build_compute_metrics_fn(task_names: List[str],
         bleu.update({"gen_len": gen_len})
         return bleu
 
-    """ 
-    def classification_metrics(pred: EvalPrediction) -> Dict:
-        pred_str, label_str = decode_pred(pred)
-        acc: Dict = accuracy(pred_str, label_str)
-        return acc
-    """
 
     def t5_wrapper_metrics(pred: EvalPrediction, metrics) -> Dict:
         pred_str, label_str = decode_pred(pred)
@@ -112,7 +111,6 @@ def build_compute_metrics_fn(task_names: List[str],
 
     def tasks_metrics(task) -> Dict:
         from data.tasks import TASK_MAPPING
-        print("@@@ task ", task)
         return functools.partial(t5_wrapper_metrics, metrics=TASK_MAPPING[task].metrics)
 
     """

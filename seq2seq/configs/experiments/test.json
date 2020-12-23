@@ -12,7 +12,7 @@
 "eval_steps": 200,
 "overwrite_output_dir": true,
 "tasks": ["rte", "cola", "mrpc", "qqp", "sst2", "stsb", "wnli", "mnli"],
-"eval_tasks": ["rte", "cola", "mrpc", "qqp", "sst2", "stsb", "wnli", "mnli"],
+"eval_tasks": ["stsb", "rte", "cola", "mrpc", "qqp", "sst2", "wnli", "mnli"],
 "sampling": true,
 "label_smoothing": 0.1,
 "freeze_encoder":false,

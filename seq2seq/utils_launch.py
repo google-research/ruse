@@ -111,7 +111,24 @@ def download_all_evals(sweep, job_prefix, short_keys, output_dir):
   run_in_parallel(copy_commands)
 
 #acc_cols = ['cola_eval_acc',   'snli_eval_acc', 'yelp_polarity_eval_acc']
-acc_cols = ["qnli_eval_acc", "scitail_eval_acc", "boolq_eval_acc"]
+#acc_cols = ["qnli_eval_acc", "scitail_eval_acc", "boolq_eval_acc"]
+acc_cols = [ "rte_eval_acc",  "sst2_eval_acc", "mrpc_eval_f1", "mrpc_eval_acc",  "stsb_eval_pearson_corrcoef", "stsb_eval_spearman_corrcoef", "qqp_eval_f1",   "qqp_eval_acc",  "mnli_eval_acc", "qnli_eval_acc", "wnli_eval_acc",   "cola_eval_mcc"]
+
+names_to_short_names={
+"rte_eval_acc": "rte (acc)",
+"sst2_eval_acc": "sst2 (acc)",
+"mrpc_eval_f1": "mrpc (f1)",
+"mrpc_eval_acc":"mrpc (acc)",
+"stsb_eval_pearson_corrcoef": "stsb (pearson)",
+"stsb_eval_spearman_corrcoef": "stsb (spearman)",
+"qqp_eval_f1": "qqp (f1)",
+"qqp_eval_acc": "qqp(acc)",
+"mnli_eval_acc": "mnli(acc)",
+"qnli_eval_acc": "qnli(acc)",
+"wnli_eval_acc": "wnli (acc)",
+"cola_eval_mcc": "cola (mcc)"}
+
+
 def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
   print(job_prefix)
   df = pd.DataFrame()
@@ -138,11 +155,12 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
   # computing the maximum.
   #
   dfs = []
+  results_dict = {}
   for acc_col in acc_cols:
      params_max = [p  for p in params if p !="learning_rate"]
      if len(params_max) == 0:
         df1 = df.loc[df[acc_col].idxmax()][params_max+[acc_col]]
-        print(df1) 
+        results_dict[acc_col]=[df1[acc_col]]
      else:
         df1 = df.loc[df.groupby(params_max)[acc_col].idxmax()][params_max+[acc_col]]
         if len(params_max) != 0:
@@ -150,8 +168,12 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
         #print(tabulate(df1, headers='keys', tablefmt='pipe', showindex=False))
         dfs.append(df1)
 
-  left = dfs[0]
-  for i in range(1, len(dfs)):
-    right = dfs[i]
-    left = pd.merge(left, right, on=params_max)
-  print(tabulate(left, headers='keys', tablefmt='pipe', showindex=False))
+  if len(params_max) != 0:
+    table = dfs[0]
+    for i in range(1, len(dfs)):
+        right = dfs[i]
+        table = pd.merge(table, right, on=params_max)
+  else:
+    table = pd.DataFrame.from_dict(results_dict)
+  table = table.rename(columns=names_to_short_names)
+  print(tabulate(table, headers='keys', tablefmt='pipe', showindex=False))

@@ -972,7 +972,7 @@ short_keys = ["lr"]
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
                                  "do_eval": [True],
                                  "output_dir": ["outputs/glue/finetune/num-gpus-4-with-eval"]})
-#download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
 params = [ "learning_rate"]
 retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
 
@@ -1007,6 +1007,6 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "train_task_embeddings": [True],
                                  "output_dir": ["outputs/glue/adapters/num-gpus-4-with-eval"]})
 params = [ "learning_rate", "unfreeze_lm_head", "unfreeze_layer_norms", "reduction_factor"]
-#download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
 retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
 

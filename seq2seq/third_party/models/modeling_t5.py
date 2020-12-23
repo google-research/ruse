@@ -14,14 +14,13 @@
 # limitations under the License.
 """ PyTorch T5 model. """
 
+import math
 
 import copy
-import math
 import os
-import warnings
-
 import torch
 import torch.nn.functional as F
+import warnings
 from torch import nn
 from torch.nn import CrossEntropyLoss
 
@@ -41,7 +40,6 @@ from .modeling_outputs import (
 )
 from .modeling_utils import PreTrainedModel, find_pruneable_heads_and_indices, prune_linear_layer
 from .utils import logging
-
 
 logger = logging.get_logger(__name__)
 
@@ -96,8 +94,8 @@ def load_tf_weights_in_t5(model, config, tf_checkpoint_path):
         # adam_v and adam_m are variables used in AdamWeightDecayOptimizer to calculated m and v
         # which are not required for using pretrained model
         if any(
-            n in ["adam_v", "adam_m", "AdamWeightDecayOptimizer", "AdamWeightDecayOptimizer_1", "global_step"]
-            for n in name
+                n in ["adam_v", "adam_m", "AdamWeightDecayOptimizer", "AdamWeightDecayOptimizer_1", "global_step"]
+                for n in name
         ):
             logger.info("Skipping {}".format("/".join(name)))
             tf_weights.pop(txt_name, None)
@@ -137,7 +135,7 @@ def load_tf_weights_in_t5(model, config, tf_checkpoint_path):
             array = np.transpose(array)
         try:
             assert (
-                pointer.shape == array.shape
+                    pointer.shape == array.shape
             ), f"Pointer shape {pointer.shape} and array shape {array.shape} mismatched"
         except AssertionError as e:
             e.args += (pointer.shape, array.shape)
@@ -282,7 +280,7 @@ class T5Attention(nn.Module):
 
         # The other half of the buckets are for logarithmically bigger bins in positions up to max_distance
         val_if_large = max_exact + (
-            torch.log(n.float() / max_exact) / math.log(max_distance / max_exact) * (num_buckets - max_exact)
+                torch.log(n.float() / max_exact) / math.log(max_distance / max_exact) * (num_buckets - max_exact)
         ).to(torch.long)
         val_if_large = torch.min(val_if_large, torch.full_like(val_if_large, num_buckets - 1))
 
@@ -305,16 +303,16 @@ class T5Attention(nn.Module):
         return values
 
     def forward(
-        self,
-        input,
-        mask=None,
-        kv=None,
-        position_bias=None,
-        past_key_value=None,
-        head_mask=None,
-        query_length=None,
-        use_cache=False,
-        output_attentions=False,
+            self,
+            input,
+            mask=None,
+            kv=None,
+            position_bias=None,
+            past_key_value=None,
+            head_mask=None,
+            query_length=None,
+            use_cache=False,
+            output_attentions=False,
     ):
         """
         Self-attention (if kv is None) or attention over source sentence (provided by kv).
@@ -327,7 +325,7 @@ class T5Attention(nn.Module):
         if past_key_value is not None:
             assert self.is_decoder is True, "Encoder cannot cache past key value states"
             assert (
-                len(past_key_value) == 2
+                    len(past_key_value) == 2
             ), "past_key_value should have 2 past states: keys and values. Got {} past states".format(
                 len(past_key_value)
             )
@@ -421,14 +419,14 @@ class T5LayerSelfAttention(nn.Module):
         self.dropout = nn.Dropout(config.dropout_rate)
 
     def forward(
-        self,
-        hidden_states,
-        attention_mask=None,
-        position_bias=None,
-        head_mask=None,
-        past_key_value=None,
-        use_cache=False,
-        output_attentions=False,
+            self,
+            hidden_states,
+            attention_mask=None,
+            position_bias=None,
+            head_mask=None,
+            past_key_value=None,
+            use_cache=False,
+            output_attentions=False,
     ):
         norm_x = self.layer_norm(hidden_states)
         attention_output = self.SelfAttention(
@@ -456,16 +454,16 @@ class T5LayerCrossAttention(nn.Module):
         self.dropout = nn.Dropout(config.dropout_rate)
 
     def forward(
-        self,
-        hidden_states,
-        kv,
-        attention_mask=None,
-        position_bias=None,
-        head_mask=None,
-        past_key_value=None,
-        use_cache=False,
-        query_length=None,
-        output_attentions=False,
+            self,
+            hidden_states,
+            kv,
+            attention_mask=None,
+            position_bias=None,
+            head_mask=None,
+            past_key_value=None,
+            use_cache=False,
+            query_length=None,
+            output_attentions=False,
     ):
         norm_x = self.layer_norm(hidden_states)
         attention_output = self.EncDecAttention(
@@ -497,18 +495,18 @@ class T5Block(nn.Module):
         self.layer.append(T5LayerFF(config))
 
     def forward(
-        self,
-        hidden_states,
-        attention_mask=None,
-        position_bias=None,
-        encoder_hidden_states=None,
-        encoder_attention_mask=None,
-        encoder_decoder_position_bias=None,
-        head_mask=None,
-        past_key_value=None,
-        use_cache=False,
-        output_attentions=False,
-        return_dict=False,
+            self,
+            hidden_states,
+            attention_mask=None,
+            position_bias=None,
+            encoder_hidden_states=None,
+            encoder_attention_mask=None,
+            encoder_decoder_position_bias=None,
+            head_mask=None,
+            past_key_value=None,
+            use_cache=False,
+            output_attentions=False,
+            return_dict=False,
     ):
 
         if past_key_value is not None:
@@ -633,7 +631,7 @@ class T5PreTrainedModel(PreTrainedModel):
         pad_token_id = self.config.pad_token_id
 
         assert (
-            decoder_start_token_id is not None
+                decoder_start_token_id is not None
         ), "self.model.config.decoder_start_token_id has to be defined. In T5 it is usually set to the pad_token_id. See T5 docs for more information"
 
         # shift inputs to the right
@@ -675,18 +673,18 @@ class T5Stack(T5PreTrainedModel):
         self.embed_tokens = new_embeddings
 
     def forward(
-        self,
-        input_ids=None,
-        attention_mask=None,
-        encoder_hidden_states=None,
-        encoder_attention_mask=None,
-        inputs_embeds=None,
-        head_mask=None,
-        past_key_values=None,
-        use_cache=None,
-        output_attentions=None,
-        output_hidden_states=None,
-        return_dict=None,
+            self,
+            input_ids=None,
+            attention_mask=None,
+            encoder_hidden_states=None,
+            encoder_attention_mask=None,
+            inputs_embeds=None,
+            head_mask=None,
+            past_key_values=None,
+            use_cache=None,
+            output_attentions=None,
+            output_hidden_states=None,
+            return_dict=None,
     ):
 
         use_cache = use_cache if use_cache is not None else self.config.use_cache
@@ -962,21 +960,21 @@ class T5Model(T5PreTrainedModel):
     @add_start_docstrings_to_model_forward(T5_INPUTS_DOCSTRING)
     @replace_return_docstrings(output_type=Seq2SeqModelOutput, config_class=_CONFIG_FOR_DOC)
     def forward(
-        self,
-        input_ids=None,
-        attention_mask=None,
-        decoder_input_ids=None,
-        decoder_attention_mask=None,
-        encoder_outputs=None,
-        past_key_values=None,
-        head_mask=None,
-        inputs_embeds=None,
-        decoder_inputs_embeds=None,
-        use_cache=None,
-        output_attentions=None,
-        output_hidden_states=None,
-        return_dict=None,
-        **kwargs,
+            self,
+            input_ids=None,
+            attention_mask=None,
+            decoder_input_ids=None,
+            decoder_attention_mask=None,
+            encoder_outputs=None,
+            past_key_values=None,
+            head_mask=None,
+            inputs_embeds=None,
+            decoder_inputs_embeds=None,
+            use_cache=None,
+            output_attentions=None,
+            output_hidden_states=None,
+            return_dict=None,
+            **kwargs,
     ):
         r"""
         Returns:
@@ -1106,22 +1104,22 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
     @add_start_docstrings_to_model_forward(T5_INPUTS_DOCSTRING)
     @replace_return_docstrings(output_type=Seq2SeqLMOutput, config_class=_CONFIG_FOR_DOC)
     def forward(
-        self,
-        input_ids=None,
-        attention_mask=None,
-        decoder_input_ids=None,
-        decoder_attention_mask=None,
-        encoder_outputs=None,
-        past_key_values=None,
-        head_mask=None,
-        inputs_embeds=None,
-        decoder_inputs_embeds=None,
-        labels=None,
-        use_cache=None,
-        output_attentions=None,
-        output_hidden_states=None,
-        return_dict=None,
-        **kwargs,
+            self,
+            input_ids=None,
+            attention_mask=None,
+            decoder_input_ids=None,
+            decoder_attention_mask=None,
+            encoder_outputs=None,
+            past_key_values=None,
+            head_mask=None,
+            inputs_embeds=None,
+            decoder_inputs_embeds=None,
+            labels=None,
+            use_cache=None,
+            output_attentions=None,
+            output_hidden_states=None,
+            return_dict=None,
+            **kwargs,
     ):
         r"""
         labels (:obj:`torch.LongTensor` of shape :obj:`(batch_size,)`, `optional`):
@@ -1251,7 +1249,7 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
         )
 
     def prepare_inputs_for_generation(
-        self, input_ids, past=None, attention_mask=None, use_cache=None, encoder_outputs=None, **kwargs
+            self, input_ids, past=None, attention_mask=None, use_cache=None, encoder_outputs=None, **kwargs
     ):
 
         # cut decoder_input_ids if past is used

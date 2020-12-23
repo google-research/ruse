@@ -150,7 +150,6 @@ def main():
     # TODO: you should not do this, introduces bug.
     # train_dataset.set_format(type="torch", columns=['src_texts', 'tgt_texts'])
     training_args.remove_unused_columns = False
-
     eval_datasets = ({task: dataset_class.get(task).get_dataset(
         split="validation", n_obs=data_args.n_val, add_prefix=False if training_args.train_adapters else True)
                          for task in data_args.eval_tasks}

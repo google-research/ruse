@@ -915,7 +915,7 @@ sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=1)
 """
 
-
+"""
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "mp"
 short_keys = ["lr", 'r', 'l']
@@ -926,6 +926,7 @@ sweep = collections.OrderedDict({'learning_rate': [3e-2], # 3e-3, 3e-4, 2e-5, 3e
                                  "train_task_embeddings": [False],
                                  "output_dir": ["outputs/mixture1/meta-adapters-task-projector-new_sampler-num-gpus-4"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
+"""
 
 """
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
@@ -957,3 +958,51 @@ sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "output_dir": ["outputs/mixture1/meta-adapters-task-projector-new_sampler-tpu"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix) 
 """
+
+# Training the models on multiple tasks, we train both on multiple gpus and 1 gpu 
+# baseline on 1 gpu 
+basic_config_path = "configs/experiments/glue/finetune.json"
+job_prefix = "base"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "do_eval": [True],
+                                 "output_dir": ["outputs/glue/finetune/num-gpus-1"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=1)
+
+# baseline on 4 gpus
+basic_config_path = "configs/experiments/glue/finetune.json"
+job_prefix = "base"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "do_eval": [False],
+                                 "output_dir": ["outputs/glue/finetune/num-gpus-4"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
+
+# our model on 1 gpus 
+basic_config_path = "configs/experiments/glue/meta-task-emb.json"
+job_prefix = "our"
+short_keys = ["lr", "r", "ln", "l"]
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_layer_norms": [False, True],
+                                 "unfreeze_lm_head": [True, False],
+                                 "do_eval": [False],
+                                 'projected_task_embedding_dim': [64],
+                                 "train_task_embeddings": [True],
+                                 "output_dir": ["outputs/glue/adapters/num-gpus-1"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=1)
+
+
+# our model on 4 gpus
+basic_config_path = "configs/experiments/glue/meta-task-emb.json"
+job_prefix = "our"
+short_keys = ["lr", "r", "ln", "l"]
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_layer_norms": [False, True],
+                                 "unfreeze_lm_head": [True, False],
+                                 "do_eval": [False],
+                                 'projected_task_embedding_dim': [64],
+                                 "train_task_embeddings": [True],
+                                 "output_dir": ["outputs/glue/adapters/num-gpus-4"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)

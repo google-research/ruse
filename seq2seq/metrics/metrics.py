@@ -32,8 +32,10 @@ def accuracy(predictions, targets) -> dict:
 
 def pearson_corrcoef(predictions, targets)-> dict:
   """Computes Pearson correlation coefficient."""
-  print("@@@ predictions ", predictions)
-  print("@@@ targets ", targets)
+  # TODO: nicer to define postprocessor for the tasks.
+  from seq2seq.data import string_to_float
+  predictions = [string_to_float(prediction) for prediction in predictions]
+  targets = [string_to_float(target) for target in targets]
   return {"pearson_corrcoef":
               100 * scipy.stats.pearsonr(targets, predictions)[0]}
 
@@ -56,7 +58,7 @@ def f1_score_with_invalid(predictions, targets)-> dict:
   Returns:
     F1 score, where any prediction != 0 or 1 is counted as wrong.
   """
-  targets = [int(target) for  target in targets]
+  targets = [int(target) for target in targets]
   predictions = [int(prediction) if prediction.isnumeric() else prediction for prediction in predictions]
   targets, predictions = np.asarray(targets), np.asarray(predictions)
   # Get indices of invalid predictions

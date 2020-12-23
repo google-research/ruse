@@ -48,6 +48,13 @@ class AbstractTaskDataset(abc.ABC):
     {"train": "train", "validation": "validation", "test": "test"}
 
   def get_sampled_split(self, split, n_obs=None):
+    ###############################
+    # this is to check.
+    dataset = self.load_dataset(split=split)
+    if len(dataset) < n_obs:
+      n_obs = len(dataset)
+    ###############################
+
     split = self.split_to_data_split[split]
     if n_obs is not None:
       split = split + "[:{}]".format(n_obs)

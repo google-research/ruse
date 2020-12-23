@@ -220,3 +220,5 @@ class AdapterTrainingArguments:
   add_adapter_in_feed_forward: Optional[bool] = field(default=True, metadata={"help": "Includes adapter in feed forward."})
   add_adapter_in_self_attention: Optional[bool] = field(default=True, metadata={"help": "Include adapter in self-attention."})
   task_hidden_dim: Optional[int] = field(default=128, metadata={"help": "defines the hidden dimension for task embedding projector."})
+  conditional_layer_norm: Optional[bool] = field(default=False, metadata={"help": "Implements conditional layer norms "
+                                                                                  "modulated based on task embeddings."})

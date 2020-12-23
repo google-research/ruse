@@ -13,13 +13,14 @@
 # limitations under the License.
 """Implements Adapter Controller, a module that keeps multiple 
 layers of Adapters, and controls which adapter layer to use."""
+import torch 
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers.activations import get_activation
 
 from .adapter_configuration import AdapterConfig, MetaAdapterConfig, ParametricMetaAdapterConfig
 from .adapter_modeling import Adapter
-from .adapter_utils import HyperNetUpSampler, HyperNetDownSampler
+from .adapter_utils import HyperNetUpSampler, HyperNetDownSampler, LayerNormHyperNet
 
 
 # TODO: current model would not work with the AdapterController
@@ -132,10 +133,17 @@ class MetaAdapterController(nn.Module):
     self.activation_type = config.non_linearity.lower()
     self.add_layer_norm_before_adapter = config.add_layer_norm_before_adapter
     self.add_layer_norm_after_adapter = config.add_layer_norm_after_adapter
+    self.conditional_layer_norm = config.conditional_layer_norm
     if self.add_layer_norm_after_adapter:
-      self.post_layer_norm = nn.LayerNorm(self.input_dim)
+      if self.conditional_layer_norm:
+         self.post_layernorm_hypernet = LayerNormHyperNet(config)
+      else:
+         self.post_layer_norm = nn.LayerNorm(self.input_dim)
     if self.add_layer_norm_before_adapter:
-      self.pre_layer_norm = nn.LayerNorm(self.input_dim)
+      if self.conditional_layer_norm:
+         self.pre_layernorm_hypernet = LayerNormHyperNet(config)
+      else:
+         self.pre_layer_norm = nn.LayerNorm(self.input_dim)
 
   def call_adapter(self, inputs, task_embedding):
     weight_up, bias_up = self.meta_up_sampler(task_embedding)
@@ -145,6 +153,22 @@ class MetaAdapterController(nn.Module):
     output = F.linear(middle, weight=weight_up, bias=bias_up)
     return output
 
+  def apply_pre_layer_norm(self, inputs, task_embeddings):
+    """Applies pre layer norm to the inputs."""
+    if self.conditional_layer_norm:
+        weight, bias = self.pre_layernorm_hypernet(task_embeddings)
+        return torch.nn.functional.layer_norm(inputs, (self.input_dim,), weight=weight, bias=bias)
+    else:
+        return self.pre_layer_norm(inputs)
+  
+  def apply_post_layer_norm(self, inputs, task_embeddings):
+    """Applies post layer norm to the inputs."""
+    if self.conditional_layer_norm:
+        weight, bias = self.post_layernorm_hypernet(task_embeddings)
+        return torch.nn.functional.layer_norm(inputs, (self.input_dim,), weight=weight, bias=bias)
+    else:
+        return self.post_layer_norm(inputs)
+
   def forward(self, task_embedding, inputs):
     """Retrieves the adapter layer corresponding to the given
     task. It freezes the adapter layers for all the other tasks
@@ -152,13 +176,10 @@ class MetaAdapterController(nn.Module):
     :param task: the name of the current task.
     :param inputs: the inputs to feed in in the adapter layer.
     :return: outputs of the adapter layer."""
-    if self.add_layer_norm_before_adapter:
-      z = self.pre_layer_norm(inputs)
-    else:
-      z = inputs
+    z = self.apply_pre_layer_norm(inputs, task_embedding) if self.add_layer_norm_before_adapter else inputs
     outputs = self.call_adapter(z, task_embedding)
     if self.add_layer_norm_after_adapter:
-      outputs = self.post_layer_norm(outputs)
+      outputs = self.apply_post_layer_norm(outputs, task_embedding)
     outputs = outputs + inputs
     return outputs
 

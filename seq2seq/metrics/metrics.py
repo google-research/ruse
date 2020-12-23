@@ -56,6 +56,8 @@ def f1_score_with_invalid(targets, predictions)-> dict:
   # Get indices of invalid predictions
   invalid_idx_mask = np.logical_and(predictions != 0, predictions != 1)
   # For any prediction != 0 or 1, set it to the opposite of what the target is.
+  print("@@@ targets ", targets)
+  print("invalid idx ", invalid_idx_mask)
   predictions[invalid_idx_mask] = 1 - targets[invalid_idx_mask]
   return {"f1": 100 * sklearn.metrics.f1_score(targets, predictions)}
 
@@ -93,11 +95,12 @@ def build_compute_metrics_fn(task_names: List[str],
         bleu.update({"gen_len": gen_len})
         return bleu
 
+    """ 
     def classification_metrics(pred: EvalPrediction) -> Dict:
         pred_str, label_str = decode_pred(pred)
         acc: Dict = accuracy(pred_str, label_str)
         return acc
-
+    """
 
     def t5_wrapper_metrics(pred: EvalPrediction, metrics) -> Dict:
         pred_str, label_str = decode_pred(pred)
@@ -109,7 +112,8 @@ def build_compute_metrics_fn(task_names: List[str],
 
     def tasks_metrics(task) -> Dict:
         from data.tasks import TASK_MAPPING
-        return functools.partial(t5_wrapper_metrics, metrics=TASK_MAPPING[task].metrics) #compute_metrics_fn
+        print("@@@ task ", task)
+        return functools.partial(t5_wrapper_metrics, metrics=TASK_MAPPING[task].metrics)
 
     """
     def tasks_metrics(task=None) -> Dict:

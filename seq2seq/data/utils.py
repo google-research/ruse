@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import numpy as np
+from transformers import T5Tokenizer
 
 def round_stsb_target(label):
   """STSB maps two sentences to a floating point number between 1 and 5
@@ -28,3 +29,12 @@ def round_stsb_target(label):
     A preprocessed label.
   """
   return np.round((label * 5) / 5, decimals=1)
+
+def compute_task_max_decoding_length(word_list):
+  tokenizer = T5Tokenizer.from_pretrained('t5-base')
+  max_len = 0
+  for word in word_list:
+    ids = tokenizer.encode(word)
+    max_len = max(max_len, len(ids))
+  return max_len
+

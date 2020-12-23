@@ -19,18 +19,10 @@ from dataclasses import dataclass
 from typing import Callable, Dict, Mapping, List
 
 import datasets
-from transformers import T5Tokenizer
-from .utils import round_stsb_target
+from .utils import round_stsb_target, compute_task_max_decoding_length
 import numpy as np
 from seq2seq.metrics import metrics
 
-def compute_task_max_decoding_length(word_list):
-  tokenizer = T5Tokenizer.from_pretrained('t5-base')
-  max_len = 0
-  for word in word_list:
-    ids = tokenizer.encode(word)
-    max_len = max(max_len, len(ids))
-  return max_len
 
 
 @dataclass
@@ -116,13 +108,12 @@ class BoolQTaskDataset(AbstractTaskDataset):
 
 
 class SNLITaskDataset(AbstractTaskDataset):
-  task_specific_config = {'max_length': 5, 'num_beams': 4}
+  label_list = ["0", "1", "2"]
+  task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
   task = Task(name="snli", category="classification")
-  task_specific_config = {'max_length': 3}
   split_to_data_split = {"train": "train",
                          "validation": "validation",
                          "test": "test"}
-  label_list = ["0", "1", "2"]
 
   def preprocessor(self, example, add_prefix=True):
     src_texts = ["premise:", example["premise"], "hypothesis:", example["hypothesis"]]
@@ -130,18 +121,6 @@ class SNLITaskDataset(AbstractTaskDataset):
     return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
-class MNLITaskDataset(AbstractTaskDataset):
-  task_specific_config = {'max_length': 5, 'num_beams': 4}
-  task = Task(name="mnli", category="classification")
-  task_specific_config = {'max_length': 3}
-  split_to_data_split = {"train": "train", "validation": "validation_mismatched",
-                         "test": "validation_matched"}
-  label_list = ["0", "1", "2"]
-
-  def preprocessor(self, example, add_prefix=True):
-    src_texts = ["premise:", example["premise"], "hypothesis:", example["hypothesis"]]
-    tgt_texts = [example["label"]]
-    return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
 class IWSLT2017RONL(AbstractTaskDataset):
@@ -309,6 +288,7 @@ class COLATaskDataset(AbstractTaskDataset):
   task = Task(name="cola", category="classification")
   label_list = ["0", "1"]
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+  metrics = [metrics.matthews_corrcoef]
 
   def load_dataset(self, split):
     return datasets.load_dataset('glue', 'cola', split=split)
@@ -450,9 +430,7 @@ TASK_MAPPING = OrderedDict([
   ('qnli', QNLITaskDataset),
   ('rte', RTETaskDataset),
   ('wnli', WNLITaskDataset),
-  ('wmt16-en-fi', WMT16ENFITaskDataset),
-  ('mnli', MNLITaskDataset)
-]
+  ('wmt16-en-fi', WMT16ENFITaskDataset)]
 )
 
 

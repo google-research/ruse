@@ -1046,6 +1046,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=1)
 
 
+
 # our model on 4 gpus
 basic_config_path = "configs/experiments/glue/meta-task-emb.json"
 job_prefix = "our41"
@@ -1060,8 +1061,8 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "train_task_embeddings": [True],
                                  "output_dir": ["outputs/glue/adapters/num-gpus-4-with-eval-100"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
-"""
 
+"""
 
 # Tests the conditional layer norm.
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"

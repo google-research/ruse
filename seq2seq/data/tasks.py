@@ -95,7 +95,7 @@ class IMDBTaskDataset(AbstractTaskDataset):
 
 
 class BoolQTaskDataset(AbstractTaskDataset):
-  label_list = [False, True]
+  label_list = ["False", "True"]
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
   task = Task(name="boolq", category="classification")
   split_to_data_split = {"train": "train",

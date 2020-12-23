@@ -11,8 +11,8 @@
 "warmup_steps": 500,
 "eval_steps": 200,
 "overwrite_output_dir": true,
-"tasks": ["boolq", "rte", "cola", "mrpc", "qqp", "sst2", "stsb", "wnli", "mnli"],
-"eval_tasks": ["boolq", "stsb", "rte", "cola", "mrpc", "qqp", "sst2", "wnli", "mnli"],
+"tasks": ["boolq", "scitail"],
+"eval_tasks": ["boolq", "scitail"],
 "sampling": true,
 "label_smoothing": 0.1,
 "freeze_encoder":false,
@@ -42,8 +42,7 @@
 "train_task_embeddings": true,
 "hidden_dim": 256,
 "add_adapter_in_feed_forward": true,
-"add_adapter_in_self_attention": false,
-"conditional_layer_norm": true
+"add_adapter_in_self_attention": false
 }
 
 

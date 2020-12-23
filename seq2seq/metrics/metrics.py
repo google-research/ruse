@@ -42,8 +42,6 @@ def pearson_corrcoef(predictions, targets)-> dict:
 
 def spearman_corrcoef(predictions, targets)-> dict:
   """Computes Spearman correlation coefficient."""
-  print(predictions)
-  print(targets)
   return {"spearman_corrcoef":
               100 * scipy.stats.spearmanr(targets, predictions)[0]}
 

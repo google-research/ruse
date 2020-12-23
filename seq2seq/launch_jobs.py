@@ -1008,7 +1008,8 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
 """
 
-# Training the models on multiple tasks, we train both on multiple gpus and 1 gpu 
+# Training the models on multiple tasks, we train both on multiple gpus and 1 gpu for 100 epochs. 
+"""
 # baseline on 1 gpu 
 basic_config_path = "configs/experiments/glue/finetune.json"
 job_prefix = "base11"
@@ -1045,6 +1046,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=1)
 
 
+
 # our model on 4 gpus
 basic_config_path = "configs/experiments/glue/meta-task-emb.json"
 job_prefix = "our41"
@@ -1059,3 +1061,18 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "train_task_embeddings": [True],
                                  "output_dir": ["outputs/glue/adapters/num-gpus-4-with-eval-100"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
+
+"""
+
+# Tests the conditional layer norm.
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "c"
+short_keys = ["lr", 'r', 'l', 't']
+sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_lm_head": [True, False],
+                                 "train_task_embeddings": [False, True],
+                                 "conditional_layer_norm": [True],
+                                 'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
+                                 "output_dir": ["outputs/mixture1/meta-adapters-task-projector-conditional-layer-norm"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix)

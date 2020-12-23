@@ -108,7 +108,8 @@ def main():
                             "add_adapters_in_decoder",
                             "add_adapter_in_feed_forward",
                             "add_adapter_in_self_attention",
-                            "task_hidden_dim"
+                            "task_hidden_dim",
+                            "conditional_layer_norm"
                             )
     for p in extra_adapter_params:
         if hasattr(adapter_args, p):

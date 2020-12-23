@@ -32,8 +32,6 @@ class AdapterConfig(object):
   add_adapters_in_decoder = True
   add_adapter_in_feed_forward = True
   add_adapter_in_self_attention = True
-
-  # TODO: to be completed.
   conditional_layer_norm = False 
 
 

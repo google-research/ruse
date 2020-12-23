@@ -42,7 +42,8 @@
 "train_task_embeddings": true,
 "hidden_dim": 256,
 "add_adapter_in_feed_forward": true,
-"add_adapter_in_self_attention": false
+"add_adapter_in_self_attention": false,
+"conditional_layer_norm": true
 }
 
 

@@ -85,7 +85,8 @@ class IMDBTaskDataset(AbstractTaskDataset):
   task = Task(name="imdb", category="classification")
   split_to_data_split = {"train": "train", "validation": "test"}
   label_list = ["pos", "neg"]
-  task_specific_config = {'max_length': 3}
+  task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+  metrics = [metrics.accuracy]
 
   def preprocessor(self, example, add_prefix=True):
     src_texts = [example["text"]]
@@ -94,12 +95,13 @@ class IMDBTaskDataset(AbstractTaskDataset):
 
 
 class BoolQTaskDataset(AbstractTaskDataset):
-  task_specific_config = {'max_length': 4}
+  label_list = [False, True]
+  task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
   task = Task(name="boolq", category="classification")
   split_to_data_split = {"train": "train",
                          "validation": "validation",
                          "test": "validation"}
-  label_list = ["0", "1"]
+  metrics = [metrics.accuracy]
 
   def preprocessor(self, example, add_prefix=True):
     src_texts = ["question:", example["question"], "passage:", example["passage"]]
@@ -114,13 +116,12 @@ class SNLITaskDataset(AbstractTaskDataset):
   split_to_data_split = {"train": "train",
                          "validation": "validation",
                          "test": "test"}
+  metrics=[metrics.accuracy]
 
   def preprocessor(self, example, add_prefix=True):
     src_texts = ["premise:", example["premise"], "hypothesis:", example["hypothesis"]]
     tgt_texts = [example["label"]]
     return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
-
-
 
 
 class IWSLT2017RONL(AbstractTaskDataset):
@@ -229,6 +230,7 @@ class TRECTaskDataset(AbstractTaskDataset):
   task = Task(name="trec", category="classification")
   label_list = ["DESC", "ENTY", "ABBR", "HUM", "NUM", "LOC"]
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+  metrics = [metrics.accuracy]
 
   def load_dataset(self, split):
     return datasets.load_dataset("trec", split=split)
@@ -244,6 +246,7 @@ class YelpPolarityTaskDataset(AbstractTaskDataset):
   label_list = ["0", "1"]
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
   split_to_data_split = {"train": "train", "validation": "test", "test": "test"}
+  metrics = [metrics.accuracy]
 
   def load_dataset(self, split):
     return datasets.load_dataset("yelp_polarity", split=split)
@@ -258,6 +261,7 @@ class ScitailTaskDataset(AbstractTaskDataset):
   task = Task(name="scitail", category="classification")
   label_list = ["entailment", "neutral"]
   task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+  metrics = [metrics.accuracy]
 
   def load_dataset(self, split):
     dataset = datasets.load_dataset("scitail", "snli_format", split=split)

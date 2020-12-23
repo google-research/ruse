@@ -1,31 +1,31 @@
+import sys
+
 import copy
+import datasets
+import json
 import logging
 import os
-import sys
 from pathlib import Path
-import json
-import datasets
-from seq2seq.metrics  import build_compute_metrics_fn
 from third_party.models import T5Config, T5ForConditionalGeneration
 from third_party.trainers import T5Trainer
-from transformers import AutoTokenizer, HfArgumentParser, set_seed
-from transformers.trainer_utils import EvaluationStrategy
-
-from seq2seq.adapters import AdapterController, AutoAdapterConfig
-from seq2seq.data import AutoTask, TaskCollator
-from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments, \
-    AdapterTrainingArguments
 from third_party.utils import (
     check_output_dir,
     lmap,
     save_json,
     write_txt_file,
 )
+from transformers import AutoTokenizer, HfArgumentParser, set_seed
+from transformers.trainer_utils import EvaluationStrategy
+
+from seq2seq.adapters import AdapterController, AutoAdapterConfig
+from seq2seq.data import AutoTask, TaskCollator
+from seq2seq.metrics import build_compute_metrics_fn
+from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments, \
+    AdapterTrainingArguments
 from seq2seq.utils import T5CheckpointCallback, freezing_params
 from seq2seq.utils import upload, use_task_specific_params, reset_config
 
 logger = logging.getLogger(__name__)
-
 
 
 def main():
@@ -151,7 +151,6 @@ def main():
     # train_dataset.set_format(type="torch", columns=['src_texts', 'tgt_texts'])
     training_args.remove_unused_columns = False
 
-    # TODO: split varies.
     eval_datasets = ({task: dataset_class.get(task).get_dataset(
         split="validation", n_obs=data_args.n_val, add_prefix=False if training_args.train_adapters else True)
                          for task in data_args.eval_tasks}
@@ -165,14 +164,10 @@ def main():
         if training_args.do_predict
         else None
     )
-
-    # TODO: this needs to get fixed, for now we do not need it.
     # Initialize our Trainer
     compute_metrics_fn = (
         build_compute_metrics_fn(data_args.eval_tasks, tokenizer) if training_args.predict_with_generate else None
     )
-
-    # TODO: how does it get between different max_lengths?
     trainer = T5Trainer(
         model=model,
         config=config,
@@ -221,7 +216,7 @@ def main():
                             sub_module.set_task_to_adapter_map(task_to_adapter)
                 if adapter_args.adapter_config_name in ["meta-adapter", "parametric-meta-adapter"]:
                     model.task_embedding_controller.update_task_embeddings([eval_task],
-                      parametric=training_args.parametric_task_embedding)
+                                                                           parametric=training_args.parametric_task_embedding)
 
             # if training_args.eval_output_dir is not None:
             #    training_args.output_dir = training_args.eval_output_dir
@@ -272,9 +267,8 @@ def main():
             use_task_specific_params(trainer.model, eval_task)
             task_metric = trainer.evaluate()
             tasks_metric = {eval_task + "_" + k: v for k, v in task_metric.items()}
-            # TODO: should it be done in word_process_zero?
             if trainer.is_world_process_zero():
-               result.update(tasks_metric)
+                result.update(tasks_metric)
             reset_config(trainer.model, model_config)
 
         # logger.info(eval_datasets)
@@ -286,7 +280,6 @@ def main():
                 logger.info("  %s = %s", key, value)
             save_json(result, os.path.join(eval_output_dir, "eval_results.json"))  # training_args.output_dir
             eval_results.update(result)
-
             # Saves the results to a gs-bucket.
             if training_args.gcs_bucket is not None:
                 logger.info("***** Uploading results into gs-bucket *****")
@@ -297,18 +290,14 @@ def main():
 
     if training_args.do_predict:
         logging.info("*** Test ***")
-
         test_output = trainer.predict(test_dataset=test_dataset)
         test_metrics = {k.replace("eval", "test"): v for k, v in test_output.metrics.items()}
-
         if trainer.is_world_process_zero():
             logger.info("***** Test results *****")
             for key, value in test_metrics.items():
                 logger.info("  %s = %s", key, value)
-
             save_json(test_metrics, os.path.join(training_args.output_dir, "test_results.json"))
             eval_results.update(test_metrics)
-
             if training_args.predict_with_generate:
                 test_preds = tokenizer.batch_decode(
                     test_output.predictions, skip_special_tokens=True, clean_up_tokenization_spaces=True

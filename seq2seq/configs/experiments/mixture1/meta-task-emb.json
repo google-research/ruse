@@ -33,6 +33,7 @@
 "task_embedding_dir":"test_data/task_embeddings/n-train-all",
 "task_embedding_dim": 512,
 "gcs_bucket": "ruse-xcloud-bucket"
+
 }
 
 

@@ -962,7 +962,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 # Training the models on multiple tasks, we train both on multiple gpus and 1 gpu 
 # baseline on 1 gpu 
 basic_config_path = "configs/experiments/glue/finetune.json"
-job_prefix = "base"
+job_prefix = "base1"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
                                  "do_eval": [True],
@@ -971,7 +971,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=1)
 
 # baseline on 4 gpus
 basic_config_path = "configs/experiments/glue/finetune.json"
-job_prefix = "base"
+job_prefix = "base4"
 short_keys = ["lr"]
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
                                  "do_eval": [False],
@@ -980,7 +980,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
 
 # our model on 1 gpus 
 basic_config_path = "configs/experiments/glue/meta-task-emb.json"
-job_prefix = "our"
+job_prefix = "our1"
 short_keys = ["lr", "r", "ln", "l"]
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
                                  "reduction_factor": [8, 16],
@@ -995,7 +995,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=1)
 
 # our model on 4 gpus
 basic_config_path = "configs/experiments/glue/meta-task-emb.json"
-job_prefix = "our"
+job_prefix = "our4"
 short_keys = ["lr", "r", "ln", "l"]
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
                                  "reduction_factor": [8, 16],

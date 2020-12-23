@@ -2,7 +2,6 @@ import re
 
 from filelock import FileLock
 
-
 try:
     import nltk
 

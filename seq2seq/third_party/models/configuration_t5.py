@@ -17,7 +17,6 @@
 from .configuration_utils import PretrainedConfig
 from .utils import logging
 
-
 logger = logging.get_logger(__name__)
 
 T5_PRETRAINED_CONFIG_ARCHIVE_MAP = {
@@ -73,23 +72,23 @@ class T5Config(PretrainedConfig):
     model_type = "t5"
 
     def __init__(
-        self,
-        vocab_size=32128,
-        n_positions=512,
-        d_model=512,
-        d_kv=64,
-        d_ff=2048,
-        num_layers=6,
-        num_decoder_layers=None,
-        num_heads=8,
-        relative_attention_num_buckets=32,
-        dropout_rate=0.1,
-        layer_norm_epsilon=1e-6,
-        initializer_factor=1.0,
-        is_encoder_decoder=True,
-        pad_token_id=0,
-        eos_token_id=1,
-        **kwargs
+            self,
+            vocab_size=32128,
+            n_positions=512,
+            d_model=512,
+            d_kv=64,
+            d_ff=2048,
+            num_layers=6,
+            num_decoder_layers=None,
+            num_heads=8,
+            relative_attention_num_buckets=32,
+            dropout_rate=0.1,
+            layer_norm_epsilon=1e-6,
+            initializer_factor=1.0,
+            is_encoder_decoder=True,
+            pad_token_id=0,
+            eos_token_id=1,
+            **kwargs
     ):
         super().__init__(
             pad_token_id=pad_token_id,

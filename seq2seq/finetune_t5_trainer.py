@@ -196,16 +196,17 @@ def main():
     if training_args.do_eval:
         result = {}
         for eval_task, eval_dataset in eval_datasets.items():
-            config = T5Config.from_pretrained(
-                training_args.output_dir,  # "t5-base" for the baseline.
-                cache_dir=model_args.cache_dir)
-            model = T5ForConditionalGeneration.from_pretrained(
-                training_args.output_dir,  # "t5-base" for the baseline.
-                from_tf=".ckpt" in training_args.output_dir,
-                config=config,
-                cache_dir=model_args.cache_dir,
-                adapter_config=adapter_config
-            )
+            if trainer.is_world_process_zero():
+                config = T5Config.from_pretrained(
+                    training_args.output_dir,  # "t5-base" for the baseline.
+                    cache_dir=model_args.cache_dir)
+                model = T5ForConditionalGeneration.from_pretrained(
+                    training_args.output_dir,  # "t5-base" for the baseline.
+                    from_tf=".ckpt" in training_args.output_dir,
+                    config=config,
+                    cache_dir=model_args.cache_dir,
+                    adapter_config=adapter_config
+                )
             if training_args.train_adapters:
                 if adapter_args.adapter_config_name == "adapter" and data_args.adapters is not None:
                     for name, sub_module in model.named_modules():
@@ -216,7 +217,6 @@ def main():
                 if adapter_args.adapter_config_name in ["meta-adapter", "parametric-meta-adapter"]:
                     model.task_embedding_controller.update_task_embeddings([eval_task],
                                                                            parametric=training_args.parametric_task_embedding)
-
             # if training_args.eval_output_dir is not None:
             #    training_args.output_dir = training_args.eval_output_dir
             model_config = model.config
@@ -263,12 +263,13 @@ def main():
                 trainer.eval_dataset = eval_dataset
                 trainer.compute_metrics = compute_metrics_fn[eval_task]
 
-            use_task_specific_params(trainer.model, eval_task)
+            if trainer.is_world_process_zero():
+                use_task_specific_params(trainer.model, eval_task)
             task_metric = trainer.evaluate()
             tasks_metric = {eval_task + "_" + k: v for k, v in task_metric.items()}
             if trainer.is_world_process_zero():
                 result.update(tasks_metric)
-            reset_config(trainer.model, model_config)
+                reset_config(trainer.model, model_config)
 
         # logger.info(eval_datasets)
         eval_output_dir = training_args.output_dir if training_args.eval_output_dir is None else training_args.eval_output_dir

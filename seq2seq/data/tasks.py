@@ -67,7 +67,8 @@ class AbstractTaskDataset(abc.ABC):
                               remove_columns=dataset.column_names)
         return dataset
 
-    def seq2seq_format(self, src_strs, tgt_strs, add_prefix=False, prefix=None):
+    def seq2seq_format(self, src_strs: List[str], tgt_strs: List[str],
+                       add_prefix: bool=False, prefix:str=None):
         src_prefix = self.name if prefix is None else prefix
         src_strs = [src_prefix] + src_strs if add_prefix else src_strs
         return {"src_texts": ' '.join(src_strs),

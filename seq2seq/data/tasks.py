@@ -469,6 +469,25 @@ class HellaSwagTaskDataset(AbstractTaskDataset):
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
+
+class CommonsenseQaTaskDataset(AbstractTaskDataset):
+    name = "commonsense_qa"
+    label_list = ["A", "B", "C", "D", "E"]
+    task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+    metrics = [metrics.accuracy]
+
+    def preprocessor(self, example, add_prefix=True):
+        src_texts = ["question:", example["question"],
+                     "A:", example["choices"]["text"][0],
+                     "B:", example["choices"]["text"][1],
+                     "C:", example["choices"]["text"][2],
+                     "D:", example["choices"]["text"][3],
+                     "E:", example["choices"]["text"][4]]
+        tgt_texts = [str(example['answerKey'])]
+        return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
+
+
+
 TASK_MAPPING = OrderedDict([
     ('squad', SquadTaskDataset),
     ('imdb', IMDBTaskDataset),
@@ -497,7 +516,8 @@ TASK_MAPPING = OrderedDict([
     ('social_i_qa', SocialIQaTaskDataset),
     ('cosmos_qa', CosmosQaTaskDataset),
     ('winogrande', WinograndeTaskDataset),
-    ('hellaswag', HellaSwagTaskDataset)]
+    ('hellaswag', HellaSwagTaskDataset),
+    ('commonsense_qa',  CommonsenseQaTaskDataset)]
 )
 
 

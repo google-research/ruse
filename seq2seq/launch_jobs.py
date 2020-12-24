@@ -1139,8 +1139,8 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "do_eval": [True],
                                  "n_train": [-1],
                                  "n_val": [-1],
-                                 "num_train_epochs": [100],
-                                 "output_dir": ["outputs/glue/full/finetune/num-gpus-4-with-eval-100"]})
+                                 "max_steps": [262144],
+                                 "output_dir": ["outputs/glue/full/finetune/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
 
 # our model on 4 gpus
@@ -1154,9 +1154,9 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "do_eval": [True],
                                  "n_train": [-1],
                                  "n_val": [-1],
+                                 "max_steps": [262144],
                                  'projected_task_embedding_dim': [64],
-                                 "num_train_epochs": [100],
                                  "train_task_embeddings": [True],
-                                 "output_dir": ["outputs/glue/full/adapters/num-gpus-4-with-eval-100"]})
+                                 "output_dir": ["outputs/glue/full/adapters/"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
 

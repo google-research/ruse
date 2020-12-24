@@ -25,6 +25,19 @@ from .utils import round_stsb_target, compute_task_max_decoding_length
 
 
 class AbstractTaskDataset(abc.ABC):
+    """Defines the abstract class for all the tasks.
+    name: the name of the task.
+    task_specific_config: specifies the special configuration needs
+        to be passed to encoder when decoding each task. Since different
+        tasks, have different output space, the maximum decoding length
+        varies based on the tasks.
+    preprocessor: a processor to convert the given dataset to the sequence
+        to sequence format.
+    metrics: specifies the metrics to evaluate the task based on them.
+    split_to_data_split: since not all the time, different splits of the
+        datasets are available, we define a mapping from the wanted split
+        to the existing dataset splits.
+    """
     name = NotImplemented
     task_specific_config: Dict = NotImplemented
     preprocessor: Callable = NotImplemented

@@ -110,8 +110,8 @@ def download_all_evals(sweep, job_prefix, short_keys, output_dir):
   print(copy_commands)
   run_in_parallel(copy_commands)
 
-#acc_cols = ['cola_eval_acc',   'snli_eval_acc', 'yelp_polarity_eval_acc']
-acc_cols = ["qnli_eval_acc", "scitail_eval_acc", "boolq_eval_acc"]
+acc_cols = ['cola_eval_acc',   'snli_eval_acc', 'yelp_polarity_eval_acc']
+#acc_cols = ["qnli_eval_acc", "scitail_eval_acc", "boolq_eval_acc"]
 #acc_cols = [ "rte_eval_acc",  "sst2_eval_acc", "mrpc_eval_f1", "mrpc_eval_acc",  "stsb_eval_pearson_corrcoef", "stsb_eval_spearman_corrcoef", "qqp_eval_f1",   "qqp_eval_acc",  "mnli_eval_acc", "qnli_eval_acc", "wnli_eval_acc",   "cola_eval_mcc"]
 
 names_to_short_names={

@@ -1085,7 +1085,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 #    16 |                  0 |                       0 |          0.003  |        0.876968 |           0.915579 |         0.741817 |
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "c"
-short_keys = ["lr", 'n', 'e', 'l', 't']
+short_keys = ["l", 'n', 'e', 'l', 't']
 sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
                                  ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
                                                                          [8960, 1792, 896, 448, 224]),

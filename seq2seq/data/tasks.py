@@ -45,7 +45,7 @@ class AbstractTaskDataset(abc.ABC):
     split_to_data_split: Mapping[str, str] = \
         {"train": "train", "validation": "validation", "test": "test"}
 
-    def get_sampled_split(self, split:int, n_obs:int=None):
+    def get_sampled_split(self, split: int, n_obs: int = None):
         split = self.split_to_data_split[split]
         ###############################
         # this is to check.
@@ -57,7 +57,7 @@ class AbstractTaskDataset(abc.ABC):
             split = split + "[:{}]".format(n_obs)
         return split
 
-    def load_dataset(self, split:int):
+    def load_dataset(self, split: int):
         return datasets.load_dataset(self.name, split=split, script_version="master")
 
     def get_dataset(self, split, n_obs=None, add_prefix=True):
@@ -73,6 +73,7 @@ class AbstractTaskDataset(abc.ABC):
         return {"src_texts": ' '.join(src_strs),
                 "tgt_texts": ' '.join(tgt_strs),
                 "task": self.name}
+
 
 class IMDBTaskDataset(AbstractTaskDataset):
     name = "imdb"
@@ -487,7 +488,6 @@ class HellaSwagTaskDataset(AbstractTaskDataset):
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
-
 class CommonsenseQaTaskDataset(AbstractTaskDataset):
     name = "commonsense_qa"
     label_list = ["A", "B", "C", "D", "E"]
@@ -503,7 +503,6 @@ class CommonsenseQaTaskDataset(AbstractTaskDataset):
                      "E:", example["choices"]["text"][4]]
         tgt_texts = [str(example['answerKey'])]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
-
 
 
 TASK_MAPPING = OrderedDict([
@@ -534,7 +533,7 @@ TASK_MAPPING = OrderedDict([
     ('cosmos_qa', CosmosQaTaskDataset),
     ('winogrande', WinograndeTaskDataset),
     ('hellaswag', HellaSwagTaskDataset),
-    ('commonsense_qa',  CommonsenseQaTaskDataset)]
+    ('commonsense_qa', CommonsenseQaTaskDataset)]
 )
 
 

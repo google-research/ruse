@@ -14,7 +14,7 @@
 """Implements a distributed sampler to sample different tasks with
 temperature sampling in a way to make sure that the same task is
 selected in each core."""
-from typing import TypeVar, Optional
+from typing import TypeVar, Optional, List
 
 import numpy as np
 import torch
@@ -28,9 +28,22 @@ class MultiTaskBatchSampler(Sampler[T_co]):
     """Defines a sampler to sample multiple datasets with temperature sampling
     in a distributed fashion."""
 
-    def __init__(self, dataset_sizes, batch_size: int, temperature,
+    def __init__(self, dataset_sizes: List[int], batch_size: int, temperature: float,
                  num_replicas: Optional[int] = None, rank: Optional[int] = None,
                  seed: int = 0, shuffle: bool = True) -> None:
+        """Constructor for MultiTaskBatchSampler.
+        Args:
+            dataset_sizes: a list of integers, specifies the number of samples in
+                each dataset.
+            batch_size: integer, specifies the batch size.
+            temperature: float, temperature used for temperature sampling. The larger
+                the value, the datasets are sampled equally, and for value of 0, the datasets
+                will be sampled according to their number of samples.
+            num_replicas: integer, specifies the number of processes.
+            rank: integer, specifies the rank of the current process/
+            seed: integer, random seed.
+            shuffle: bool, if set to true, the datasets will be shuffled in each epoch.
+        """
         if num_replicas is None:
             if not dist.is_available():
                 raise RuntimeError("Requires distributed package to be available")

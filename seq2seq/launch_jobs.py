@@ -1083,6 +1083,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix)
 # transfer performance with conditional layer norms.
 # gsutil cp gs://ruse-xcloud-bucket/outputs/mixture1/meta-adapters-task-projector-conditional-layer-norm/c-lr-3e-03-r-16-l-false-t-false/
 #    16 |                  0 |                       0 |          0.003  |        0.876968 |           0.915579 |         0.741817 |
+"""
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "c"
 short_keys = ["l", 'n', 'e', 'l', 't']
@@ -1100,3 +1101,29 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4,
                                  "output_dir": ["c-lr-3e-03-r-16-l-false-t-false/"], 
                                  "eval_output_dir": ["outputs/eval-v/conditional-layer-norm"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")
+"""
+
+# 24 Dec
+# running our model and t5 on the new mixture.
+# baseline on 4 gpus
+basic_config_path = "configs/experiments/our_mixture/finetune.json"
+job_prefix = "base4"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "do_eval": [True],
+                                 "output_dir": ["outputs/our_mixture/finetune/num-gpus-4-with-eval"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
+
+# our model on 4 gpus
+basic_config_path = "configs/experiments/our_mixture/meta-task-emb.json"
+job_prefix = "our4"
+short_keys = ["lr", "r", "ln", "l"]
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_layer_norms": [False, True],
+                                 "unfreeze_lm_head": [True, False],
+                                 "do_eval": [True],
+                                 'projected_task_embedding_dim': [64],
+                                 "train_task_embeddings": [True],
+                                 "output_dir": ["outputs/our_mixture/adapters/num-gpus-4-with-eval"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)

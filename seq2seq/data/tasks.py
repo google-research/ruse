@@ -439,6 +439,21 @@ class CosmosQaTaskDataset(AbstractTaskDataset):
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
+class WinograndeTaskDataset(AbstractTaskDataset):
+    name = "winogrande_l"
+    label_list = ["1", "2"]
+    task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+    metrics = [metrics.accuracy]
+
+    def load_dataset(self, split):
+        return datasets.load_dataset('winogrande', 'winogrande_l', split=split)
+
+    def preprocessor(self, example, add_prefix=True):
+        src_texts = ["sentence:", example["sentence"], "option1:", example["option1"],
+                     "option2:", example["option2"]]
+        tgt_texts = [str(example['answer'])]
+        return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
+
 
 TASK_MAPPING = OrderedDict([
     ('squad', SquadTaskDataset),
@@ -466,7 +481,8 @@ TASK_MAPPING = OrderedDict([
     ('wnli', WNLITaskDataset),
     ('wmt16-en-fi', WMT16ENFITaskDataset),
     ('social_i_qa', SocialIQaTaskDataset),
-    ('cosmos_qa', CosmosQaTaskDataset)]
+    ('cosmos_qa', CosmosQaTaskDataset),
+    ('winogrande', WinograndeTaskDataset)]
 )
 
 

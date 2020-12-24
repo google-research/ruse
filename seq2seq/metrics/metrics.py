@@ -26,6 +26,11 @@ logger = getLogger(__name__)
 
 # TODO: nicer to define postprocessor for the tasks.
 
+def rouge(predictions, targets) -> dict:
+    return calculate_rouge(predictions, targets)
+
+def bleu(predictions, targets) -> dict:
+    return calculate_bleu(predictions, targets)
 
 def accuracy(predictions, targets) -> dict:
     """Computes the average accuracy."""
@@ -86,49 +91,20 @@ def build_compute_metrics_fn(task_names: List[str],
         label_str = lmap(str.strip, label_str)
         return pred_str, label_str
 
-    def summarization_metrics(pred: EvalPrediction) -> Dict:
-        pred_str, label_str = decode_pred(pred)
-        rouge: Dict = calculate_rouge(pred_str, label_str)
-        summ_len = np.round(np.mean(lmap(non_pad_len, pred.predictions)), 1)
-        rouge.update({"gen_len": summ_len})
-        return rouge
-
-    def translation_metrics(pred: EvalPrediction) -> Dict:
-        pred_str, label_str = decode_pred(pred)
-        bleu: Dict = calculate_bleu(pred_str, label_str)
-        gen_len = np.round(np.mean(lmap(non_pad_len, pred.predictions)), 1)
-        bleu.update({"gen_len": gen_len})
-        return bleu
-
-
-    def t5_wrapper_metrics(pred: EvalPrediction, metrics) -> Dict:
+    def compute_metrics(pred: EvalPrediction, metrics) -> Dict:
         pred_str, label_str = decode_pred(pred)
         eval_results = {}
         for metric in metrics:
             eval_results.update(metric(pred_str, label_str))
+            if metric.__name__ in ['bleu', 'rouge']:
+                gen_len = np.round(np.mean(lmap(non_pad_len, pred.predictions)), 1)
+                eval_results.update({"gen_len": gen_len})
         return eval_results
-
 
     def tasks_metrics(task) -> Dict:
         from data.tasks import TASK_MAPPING
-        return functools.partial(t5_wrapper_metrics, metrics=TASK_MAPPING[task].metrics)
+        return functools.partial(compute_metrics, metrics=TASK_MAPPING[task].metrics)
 
-    """
-    def tasks_metrics(task=None) -> Dict:
-        category = TASK_MAPPING[task].task.category
-        compute_metrics_fn = CATEGORY_EVALUATION_MAPPING[category]
-        logger.info(f"selected metric {compute_metrics_fn} for task {task}")
-        return compute_metrics_fn
-    
-    CATEGORY_EVALUATION_MAPPING = OrderedDict(
-        [('summarization', summarization_metrics),
-         ('translation', translation_metrics),
-         ('classification', classification_metrics)
-         ]
-    )
-    task_to_compute_metrics = {task: tasks_metrics(task) for task in task_names}
-    """
+    return {task: tasks_metrics(task) for task in task_names} 
 
-    task_to_compute_metrics = {task: tasks_metrics(task) for task in task_names}
-    return task_to_compute_metrics
 

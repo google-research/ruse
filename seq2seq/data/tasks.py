@@ -119,6 +119,7 @@ class IWSLT2017RONL(AbstractTaskDataset):
     name = "iwslt2017-ro-nl"
     task_specific_config = {'max_length': 300, 'num_beams': 4}
     pair = f"ro-nl"
+    metrics = [metrics.bleu]
 
     def load_dataset(self, split):
         return datasets.load_dataset("iwslt2017", 'iwslt2017-ro-nl', split=split)
@@ -134,6 +135,7 @@ class IWSLT2017ENNL(AbstractTaskDataset):
     name = "iwslt2017-en-nl"
     task_specific_config = {'max_length': 300, 'num_beams': 4}
     pair = f"en-nl"
+    metrics = [metrics.bleu]
 
     def load_dataset(self, split):
         return datasets.load_dataset("iwslt2017", 'iwslt2017-en-nl', split=split)
@@ -149,6 +151,7 @@ class WMT16ENROTaskDataset(AbstractTaskDataset):
     name = "wmt16-en-ro"
     task_specific_config = {'max_length': 300, 'num_beams': 4}
     pair = f"ro-en"
+    metrics = [metrics.bleu]
 
     def load_dataset(self, split):
         return datasets.load_dataset("wmt16", self.pair, split=split)
@@ -164,6 +167,7 @@ class WMT16ROENTaskDataset(AbstractTaskDataset):
     name = "wmt16-ro-en"
     task_specific_config = {'max_length': 300, 'num_beams': 4}
     pair = f"ro-en"
+    metrics = [metrics.bleu]
 
     def load_dataset(self, split):
         return datasets.load_dataset("wmt16", self.pair, split=split)
@@ -179,6 +183,7 @@ class WMT16ENCSTaskDataset(AbstractTaskDataset):
     name = "wmt16-en-cs"
     task_specific_config = {'max_length': 300, 'num_beams': 4}
     pair = f"cs-en"
+    metrics = [metrics.bleu]
 
     def load_dataset(self, split):
         return datasets.load_dataset("wmt16", self.pair, split=split)
@@ -194,6 +199,7 @@ class WMT16ENFITaskDataset(AbstractTaskDataset):
     name = "wmt16-en-fi"
     task_specific_config = {'max_length': 300, 'num_beams': 4}
     pair = f"fi-en"
+    metrics = [metrics.bleu]
 
     def load_dataset(self, split):
         return datasets.load_dataset("wmt16", self.pair, split=split)
@@ -209,6 +215,7 @@ class WMT14HIENTaskDataset(AbstractTaskDataset):
     name = "wmt14-hi-en"
     task_specific_config = {'max_length': 300, 'num_beams': 4}
     pair = f"hi-en"
+    metrics = [metrics.bleu]
 
     def load_dataset(self, split):
         return datasets.load_dataset("wmt14", self.pair, split=split)

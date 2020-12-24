@@ -28,6 +28,7 @@
 "temperature": 10,
 "do_train": true,
 "predict_with_generate": true,
+"do_eval": true,
 "n_train": 100,
 "task_embedding_dir":"test_data/task_embeddings/n-train-100",
 "task_embedding_dim": 512,

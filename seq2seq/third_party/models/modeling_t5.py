@@ -539,7 +539,6 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
         # Encode if needed (training, first prediction pass)
         if encoder_outputs is None:
             # Convert encoder inputs in embeddings if needed
-            print("@@@@@ inside model ", task)
             encoder_outputs = self.encoder(
                 input_ids=input_ids,
                 attention_mask=attention_mask,

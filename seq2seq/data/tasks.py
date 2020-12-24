@@ -126,7 +126,8 @@ class IWSLT2017RONL(AbstractTaskDataset):
     metrics = [metrics.bleu]
 
     def load_dataset(self, split):
-        return datasets.load_dataset("iwslt2017", 'iwslt2017-ro-nl', split=split)
+        return datasets.load_dataset("iwslt2017", 'iwslt2017-ro-nl',
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = [example['translation']["ro"]]
@@ -142,14 +143,14 @@ class IWSLT2017ENNL(AbstractTaskDataset):
     metrics = [metrics.bleu]
 
     def load_dataset(self, split):
-        return datasets.load_dataset("iwslt2017", 'iwslt2017-en-nl', split=split)
+        return datasets.load_dataset("iwslt2017", 'iwslt2017-en-nl',
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = [example['translation']["en"]]
         tgt_texts = [example['translation']["nl"]]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix,
                                    prefix="Translate English to Dutch")
-
 
 class WMT16ENROTaskDataset(AbstractTaskDataset):
     name = "wmt16-en-ro"
@@ -158,14 +159,14 @@ class WMT16ENROTaskDataset(AbstractTaskDataset):
     metrics = [metrics.bleu]
 
     def load_dataset(self, split):
-        return datasets.load_dataset("wmt16", self.pair, split=split)
+        return datasets.load_dataset("wmt16", self.pair,
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = [example['translation']["en"]]
         tgt_texts = [example['translation']["ro"]]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix,
                                    prefix="Translate English to Romanian")
-
 
 class WMT16ROENTaskDataset(AbstractTaskDataset):
     name = "wmt16-ro-en"
@@ -174,7 +175,8 @@ class WMT16ROENTaskDataset(AbstractTaskDataset):
     metrics = [metrics.bleu]
 
     def load_dataset(self, split):
-        return datasets.load_dataset("wmt16", self.pair, split=split)
+        return datasets.load_dataset("wmt16", self.pair,
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = [example['translation']["ro"]]
@@ -190,7 +192,8 @@ class WMT16ENCSTaskDataset(AbstractTaskDataset):
     metrics = [metrics.bleu]
 
     def load_dataset(self, split):
-        return datasets.load_dataset("wmt16", self.pair, split=split)
+        return datasets.load_dataset("wmt16", self.pair,
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = [example['translation']["en"]]
@@ -206,7 +209,8 @@ class WMT16ENFITaskDataset(AbstractTaskDataset):
     metrics = [metrics.bleu]
 
     def load_dataset(self, split):
-        return datasets.load_dataset("wmt16", self.pair, split=split)
+        return datasets.load_dataset("wmt16", self.pair,
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = [example['translation']["en"]]
@@ -222,7 +226,8 @@ class WMT14HIENTaskDataset(AbstractTaskDataset):
     metrics = [metrics.bleu]
 
     def load_dataset(self, split):
-        return datasets.load_dataset("wmt14", self.pair, split=split)
+        return datasets.load_dataset("wmt14", self.pair,
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = [example['translation']["en"]]
@@ -239,7 +244,7 @@ class TRECTaskDataset(AbstractTaskDataset):
     metrics = [metrics.accuracy]
 
     def load_dataset(self, split):
-        return datasets.load_dataset("trec", split=split)
+        return datasets.load_dataset("trec", split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence:", example['text']]
@@ -255,7 +260,8 @@ class YelpPolarityTaskDataset(AbstractTaskDataset):
     metrics = [metrics.accuracy]
 
     def load_dataset(self, split):
-        return datasets.load_dataset("yelp_polarity", split=split)
+        return datasets.load_dataset("yelp_polarity",
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence:", example['text']]
@@ -270,7 +276,8 @@ class ScitailTaskDataset(AbstractTaskDataset):
     metrics = [metrics.accuracy]
 
     def load_dataset(self, split):
-        dataset = datasets.load_dataset("scitail", "snli_format", split=split)
+        dataset = datasets.load_dataset("scitail", "snli_format",
+                                        split=split, script_version="master")
         return dataset
 
     def preprocessor(self, example, add_prefix=True):
@@ -286,7 +293,8 @@ class MRPCTaskDataset(AbstractTaskDataset):
     metrics = [metrics.f1_score_with_invalid, metrics.accuracy]
 
     def load_dataset(self, split):
-        return datasets.load_dataset('glue', 'mrpc', split=split)
+        return datasets.load_dataset('glue', 'mrpc',
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence1:", example['sentence1'],
@@ -302,7 +310,8 @@ class COLATaskDataset(AbstractTaskDataset):
     metrics = [metrics.matthews_corrcoef]
 
     def load_dataset(self, split):
-        return datasets.load_dataset('glue', 'cola', split=split)
+        return datasets.load_dataset('glue', 'cola',
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence:", example['sentence']]
@@ -317,7 +326,8 @@ class SST2TaskDataset(AbstractTaskDataset):
     metrics = [metrics.accuracy]
 
     def load_dataset(self, split):
-        return datasets.load_dataset('glue', 'sst2', split=split)
+        return datasets.load_dataset('glue', 'sst2', 
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence:", example['sentence']]
@@ -332,7 +342,8 @@ class STSBTaskDataset(AbstractTaskDataset):
     metrics = [metrics.pearson_corrcoef, metrics.spearman_corrcoef]
 
     def load_dataset(self, split):
-        return datasets.load_dataset('glue', 'stsb', split=split)
+        return datasets.load_dataset('glue', 'stsb',
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence1:", example['sentence1'],
@@ -348,7 +359,8 @@ class QQPTaskDataset(AbstractTaskDataset):
     metrics = [metrics.f1_score_with_invalid, metrics.accuracy]
 
     def load_dataset(self, split):
-        return datasets.load_dataset('glue', 'qqp', split=split)
+        return datasets.load_dataset('glue', 'qqp', 
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["question1:", example['question1'],
@@ -366,7 +378,7 @@ class MNLITaskDataset(AbstractTaskDataset):
     metrics = [metrics.accuracy]
 
     def load_dataset(self, split):
-        return datasets.load_dataset('glue', 'mnli', split=split)
+        return datasets.load_dataset('glue', 'mnli', split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["premise:", example['premise'],
@@ -382,7 +394,7 @@ class QNLITaskDataset(AbstractTaskDataset):
     metrics = [metrics.accuracy]
 
     def load_dataset(self, split):
-        return datasets.load_dataset('glue', 'qnli', split=split)
+        return datasets.load_dataset('glue', 'qnli', split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["question:", example['question'],
@@ -398,7 +410,8 @@ class RTETaskDataset(AbstractTaskDataset):
     metrics = [metrics.accuracy]
 
     def load_dataset(self, split):
-        return datasets.load_dataset('glue', 'rte', split=split)
+        return datasets.load_dataset('glue', 'rte',
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence1:", example['sentence1'],
@@ -414,7 +427,8 @@ class WNLITaskDataset(AbstractTaskDataset):
     metrics = [metrics.accuracy]
 
     def load_dataset(self, split):
-        return datasets.load_dataset('glue', 'wnli', split=split)
+        return datasets.load_dataset('glue', 'wnli',
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence1:", example['sentence1'],
@@ -463,7 +477,8 @@ class WinograndeTaskDataset(AbstractTaskDataset):
     metrics = [metrics.accuracy]
 
     def load_dataset(self, split):
-        return datasets.load_dataset('winogrande', 'winogrande_l', split=split)
+        return datasets.load_dataset('winogrande', 'winogrande_l',
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence:", example["sentence"],

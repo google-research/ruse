@@ -32,7 +32,7 @@ class AbstractTaskDataset(abc.ABC):
     split_to_data_split: Mapping[str, str] = \
         {"train": "train", "validation": "validation", "test": "test"}
 
-    def get_sampled_split(self, split, n_obs=None):
+    def get_sampled_split(self, split:int, n_obs:int=None):
         split = self.split_to_data_split[split]
         ###############################
         # this is to check.
@@ -44,7 +44,7 @@ class AbstractTaskDataset(abc.ABC):
             split = split + "[:{}]".format(n_obs)
         return split
 
-    def load_dataset(self, split):
+    def load_dataset(self, split:int):
         return datasets.load_dataset(self.name, split=split, script_version="master")
 
     def get_dataset(self, split, n_obs=None, add_prefix=True):

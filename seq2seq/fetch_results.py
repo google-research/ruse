@@ -1097,6 +1097,6 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4,
                                  'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
                                  "output_dir": ["c-lr-3e-03-r-16-l-false-t-false/"],
                                  "eval_output_dir": ["outputs/eval-v/conditional-layer-norm"]})
-params = ["n_finetune", "unfreeze_lm_head", "train_task_embeddings", "learning_rate"]
-download_all_evals(sweep, job_prefix, short_keys, sweep["eval_output_dir"][0])
+params = [ "unfreeze_lm_head", "train_task_embeddings",  "n_finetune", "learning_rate"]
+#download_all_evals(sweep, job_prefix, short_keys, sweep["eval_output_dir"][0])
 retrieve_results(sweep["eval_output_dir"][0], sweep, short_keys, job_prefix, params)

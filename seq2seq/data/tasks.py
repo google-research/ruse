@@ -61,27 +61,16 @@ class AbstractTaskDataset(abc.ABC):
                 "tgt_texts": ' '.join(tgt_strs),
                 "task": self.name}
 
-
-class SquadTaskDataset(AbstractTaskDataset):
-    name = "squad"
-    split_to_data_split = {"train": "train", "validation": "validation"}
-
-    def preprocessor(self, example, add_prefix=True):
-        src_texts = ["question:", example["question"], "context:", example["context"]]
-        tgt_texts = [example["answers"]["text"][0]]
-        return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
-
-
 class IMDBTaskDataset(AbstractTaskDataset):
     name = "imdb"
     split_to_data_split = {"train": "train", "validation": "test"}
-    label_list = ["pos", "neg"]
+    label_list = ["0", "1"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = [example["text"]]
-        tgt_texts = [example["label"]]
+        tgt_texts = [str(example["label"])]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
@@ -229,7 +218,7 @@ class WMT14HIENTaskDataset(AbstractTaskDataset):
 
 class TRECTaskDataset(AbstractTaskDataset):
     name = "trec"
-    label_list = ["DESC", "ENTY", "ABBR", "HUM", "NUM", "LOC"]
+    label_list = ["0", "1", "2", "3", "4", "5"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
 
@@ -238,7 +227,7 @@ class TRECTaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence:", example['text']]
-        tgt_texts = [example['label-coarse']]
+        tgt_texts = [str(example['label-coarse'])]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
@@ -271,6 +260,7 @@ class ScitailTaskDataset(AbstractTaskDataset):
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence1:", example['sentence1'], "sentence2:", example["sentence2"]]
         tgt_texts = [str(example['gold_label'])]
+        print(tgt_texts)
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
@@ -504,7 +494,6 @@ class CommonsenseQaTaskDataset(AbstractTaskDataset):
 
 
 TASK_MAPPING = OrderedDict([
-    ('squad', SquadTaskDataset),
     ('imdb', IMDBTaskDataset),
     ('boolq', BoolQTaskDataset),
     ('snli', SNLITaskDataset),

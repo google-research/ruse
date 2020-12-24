@@ -220,6 +220,7 @@ class TRECTaskDataset(AbstractTaskDataset):
     name = "trec"
     label_list = ["0", "1", "2", "3", "4", "5"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+    split_to_data_split = {"train": "train", "validation": "test", "test": "test"}
     metrics = [metrics.accuracy]
 
     def load_dataset(self, split):
@@ -260,7 +261,6 @@ class ScitailTaskDataset(AbstractTaskDataset):
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence1:", example['sentence1'], "sentence2:", example["sentence2"]]
         tgt_texts = [str(example['gold_label'])]
-        print(tgt_texts)
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 

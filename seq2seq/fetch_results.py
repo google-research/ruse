@@ -965,6 +965,7 @@ params = [ "learning_rate"]
 retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
 """
 
+"""
 # baseline on 4 gpus
 basic_config_path = "configs/experiments/glue/finetune.json"
 job_prefix = "base4"
@@ -975,6 +976,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
 download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
 params = [ "learning_rate"]
 retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+"""
 
 """
 # our model on 1 gpus 
@@ -993,7 +995,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
 params = [ "learning_rate", "unfreeze_lm_head", "unfreeze_layer_norms", "reduction_factor"]
 retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
 """
-
+"""
 # our model on 4 gpus
 basic_config_path = "configs/experiments/glue/meta-task-emb.json"
 job_prefix = "our4"
@@ -1009,4 +1011,68 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
 params = [ "learning_rate", "unfreeze_lm_head", "unfreeze_layer_norms", "reduction_factor"]
 download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
 retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+"""
 
+"""
+# conditional layer norm
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "c"
+short_keys = ["lr", 'r', 'l', 't']
+sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_lm_head": [True, False],
+                                 "train_task_embeddings": [False, True],
+                                 "conditional_layer_norm": [True],
+                                 'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
+                                 "output_dir": ["outputs/mixture1/meta-adapters-task-projector-conditional-layer-norm"]})
+params = [ "learning_rate", "unfreeze_lm_head", "train_task_embeddings", "reduction_factor"]
+download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+#retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+"""
+
+"""
+# baseline on 4 gpus
+basic_config_path = "configs/experiments/glue/finetune.json"
+job_prefix = "base41"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "do_eval": [True],
+                                 "num_train_epochs": [100],
+                                 "output_dir": ["outputs/glue/finetune/num-gpus-4-with-eval-100"]})
+params = [ "learning_rate"]
+download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+
+
+# our model on 4 gpus
+basic_config_path = "configs/experiments/glue/meta-task-emb.json"
+job_prefix = "our41"
+short_keys = ["lr", "r", "ln", "l"]
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_layer_norms": [False, True],
+                                 "unfreeze_lm_head": [True, False],
+                                 "do_eval": [True],
+                                 'projected_task_embedding_dim': [64],
+                                 "num_train_epochs": [100],
+                                 "train_task_embeddings": [True],
+                                 "output_dir": ["outputs/glue/adapters/num-gpus-4-with-eval-100"]})
+params = [ "learning_rate", "reduction_factor", "unfreeze_layer_norms", "unfreeze_lm_head"]
+download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)
+"""
+
+# Tests the conditional layer norm.
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "c"
+short_keys = ["lr", 'r', 'l', 't']
+sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_lm_head": [True, False],
+                                 "train_task_embeddings": [False, True],
+                                 "conditional_layer_norm": [True],
+                                 'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
+                                 "output_dir": ["outputs/mixture1/meta-adapters-task-projector-conditional-layer-norm"]})
+params = ["reduction_factor", "unfreeze_lm_head", "train_task_embeddings", "learning_rate"]
+download_all_evals(sweep, job_prefix, short_keys, sweep["output_dir"][0])
+retrieve_results(sweep["output_dir"][0], sweep, short_keys, job_prefix, params)

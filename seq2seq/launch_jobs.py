@@ -1065,6 +1065,7 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
 """
 
 # Tests the conditional layer norm.
+"""
 basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
 job_prefix = "c"
 short_keys = ["lr", 'r', 'l', 't']
@@ -1076,3 +1077,26 @@ sweep = collections.OrderedDict({'learning_rate': [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
                                  "output_dir": ["outputs/mixture1/meta-adapters-task-projector-conditional-layer-norm"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix)
+"""
+
+
+# transfer performance with conditional layer norms.
+# gsutil cp gs://ruse-xcloud-bucket/outputs/mixture1/meta-adapters-task-projector-conditional-layer-norm/c-lr-3e-03-r-16-l-false-t-false/
+#    16 |                  0 |                       0 |          0.003  |        0.876968 |           0.915579 |         0.741817 |
+basic_config_path = "configs/experiments/mixture1/meta-task-emb.json"
+job_prefix = "c"
+short_keys = ["lr", 'n', 'e', 'l', 't']
+sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 ('n_finetune', 'num_train_epochs'): zip([100, 500, 1000, 2000, 4000],
+                                                                         [8960, 1792, 896, 448, 224]),
+                                 "unfreeze_lm_head": [False, True],
+                                 "train_task_embeddings": [False, True],
+                                 "do_finetune": [True],
+                                 "do_train": [False],
+                                 "eval_tasks": [["yelp_polarity", "cola", "snli"]],
+                                 "reduction_factor": [16],
+                                 "conditional_layer_norm": [True],
+                                 'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
+                                 "output_dir": ["c-lr-3e-03-r-16-l-false-t-false/"]})
+                                 "eval_output_dir": ["outputs/eval-v/conditional-layer-norm"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")

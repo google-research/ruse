@@ -412,8 +412,32 @@ class WNLITaskDataset(AbstractTaskDataset):
 
 
 class SocialIQaTaskDataset(AbstractTaskDataset):
-    name = "socialiqa"
+    name = "social_i_qa"
     label_list = ["1", "2", "3"]
+    task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+    metrics = [metrics.accuracy]
+
+    def preprocessor(self, example, add_prefix=True):
+        src_texts = ["question:", example["question"], "context:", example["context"],
+                     "answerA:", example["answerA"], "answerB:", example["answerB"],
+                     "answerC:", example["answerC"]]
+        tgt_texts = [example['label'].rstrip()]
+        return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
+
+
+class CosmosQaTaskDataset(AbstractTaskDataset):
+    name = "cosmos_qa"
+    label_list = ["0", "1", "2", "3"]
+    task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+    metrics = [metrics.accuracy]
+
+    def preprocessor(self, example, add_prefix=True):
+        src_texts = ["question:", example["question"], "context:", example["context"],
+                     "answer0:", example["answer0"], "answer1:", example["answer1"],
+                     "answer2:", example["answer2"], "answer3:", example["answer3"]]
+        tgt_texts = [str(example['label'])]
+        return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
+
 
 
 TASK_MAPPING = OrderedDict([
@@ -440,7 +464,9 @@ TASK_MAPPING = OrderedDict([
     ('qnli', QNLITaskDataset),
     ('rte', RTETaskDataset),
     ('wnli', WNLITaskDataset),
-    ('wmt16-en-fi', WMT16ENFITaskDataset)]
+    ('wmt16-en-fi', WMT16ENFITaskDataset),
+    ('social_i_qa', SocialIQaTaskDataset),
+    ('cosmos_qa', CosmosQaTaskDataset)]
 )
 
 

@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
 import numpy as np
 import scipy
-from logging import getLogger
 import sklearn
+from logging import getLogger
 from third_party.utils import calculate_rouge, calculate_bleu, lmap
 from transformers import EvalPrediction, PreTrainedTokenizer
 from typing import Callable, Dict, List, Tuple
-import functools
 
 logger = getLogger(__name__)
 
@@ -29,50 +29,53 @@ logger = getLogger(__name__)
 def rouge(predictions, targets) -> dict:
     return calculate_rouge(predictions, targets)
 
+
 def bleu(predictions, targets) -> dict:
     return calculate_bleu(predictions, targets)
+
 
 def accuracy(predictions, targets) -> dict:
     """Computes the average accuracy."""
     return {"acc": (np.array(predictions) == np.array(targets)).mean()}
 
-def pearson_corrcoef(predictions, targets)-> dict:
-  """Computes Pearson correlation coefficient."""
-  from seq2seq.data import string_to_float
-  predictions = [string_to_float(prediction) for prediction in predictions]
-  targets = [string_to_float(target) for target in targets]
-  return {"pearson_corrcoef":
-              100 * scipy.stats.pearsonr(targets, predictions)[0]}
+
+def pearson_corrcoef(predictions, targets) -> dict:
+    """Computes Pearson correlation coefficient."""
+    from seq2seq.data import string_to_float
+    predictions = [string_to_float(prediction) for prediction in predictions]
+    targets = [string_to_float(target) for target in targets]
+    return {"pearson_corrcoef":
+                100 * scipy.stats.pearsonr(targets, predictions)[0]}
 
 
-def spearman_corrcoef(predictions, targets)-> dict:
-  """Computes Spearman correlation coefficient."""
-  return {"spearman_corrcoef":
-              100 * scipy.stats.spearmanr(targets, predictions)[0]}
+def spearman_corrcoef(predictions, targets) -> dict:
+    """Computes Spearman correlation coefficient."""
+    return {"spearman_corrcoef":
+                100 * scipy.stats.spearmanr(targets, predictions)[0]}
 
 
 # TODO: conversion to int is necessary?
 # This is from T5 paper.
-def f1_score_with_invalid(predictions, targets)-> dict:
-  """Compute F1 score, but any prediction != 0 or 1 is counted as incorrect.
-  Args:
-    targets: np.ndarray of targets, either 0 or 1
-    predictions: np.ndarray of predictions, any integer value
-  Returns:
-    F1 score, where any prediction != 0 or 1 is counted as wrong.
-  """
-  targets = [int(target) for target in targets]
-  predictions = [int(prediction) if prediction.isnumeric() else prediction for prediction in predictions]
-  targets, predictions = np.asarray(targets), np.asarray(predictions)
-  # Get indices of invalid predictions
-  invalid_idx_mask = np.logical_and(predictions != 0, predictions != 1)
-  # For any prediction != 0 or 1, set it to the opposite of what the target is.
-  predictions[invalid_idx_mask] = 1 - targets[invalid_idx_mask]
-  predictions = [int(prediction) for prediction in predictions]
-  return {"f1": 100 * sklearn.metrics.f1_score(targets, predictions)}
+def f1_score_with_invalid(predictions, targets) -> dict:
+    """Compute F1 score, but any prediction != 0 or 1 is counted as incorrect.
+    Args:
+      targets: np.ndarray of targets, either 0 or 1
+      predictions: np.ndarray of predictions, any integer value
+    Returns:
+      F1 score, where any prediction != 0 or 1 is counted as wrong.
+    """
+    targets = [int(target) for target in targets]
+    predictions = [int(prediction) if prediction.isnumeric() else prediction for prediction in predictions]
+    targets, predictions = np.asarray(targets), np.asarray(predictions)
+    # Get indices of invalid predictions
+    invalid_idx_mask = np.logical_and(predictions != 0, predictions != 1)
+    # For any prediction != 0 or 1, set it to the opposite of what the target is.
+    predictions[invalid_idx_mask] = 1 - targets[invalid_idx_mask]
+    predictions = [int(prediction) for prediction in predictions]
+    return {"f1": 100 * sklearn.metrics.f1_score(targets, predictions)}
 
 
-def matthews_corrcoef(predictions, targets)-> dict:
+def matthews_corrcoef(predictions, targets) -> dict:
     """Computes the Matthews correlation coefficient."""
     return {"mcc": 100 * sklearn.metrics.matthews_corrcoef(targets, predictions)}
 
@@ -105,6 +108,4 @@ def build_compute_metrics_fn(task_names: List[str],
         from data.tasks import TASK_MAPPING
         return functools.partial(compute_metrics, metrics=TASK_MAPPING[task].metrics)
 
-    return {task: tasks_metrics(task) for task in task_names} 
-
-
+    return {task: tasks_metrics(task) for task in task_names}

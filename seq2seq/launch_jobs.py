@@ -1097,6 +1097,6 @@ sweep = collections.OrderedDict({'learning_rate': [1e-2, 3e-1, 3e-2, 3e-3, 3e-4,
                                  "reduction_factor": [16],
                                  "conditional_layer_norm": [True],
                                  'task_embedding_dir': ["test_data/task_embeddings/n-train-100"],
-                                 "output_dir": ["c-lr-3e-03-r-16-l-false-t-false/"]})
+                                 "output_dir": ["c-lr-3e-03-r-16-l-false-t-false/"], 
                                  "eval_output_dir": ["outputs/eval-v/conditional-layer-norm"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval_output_dir")

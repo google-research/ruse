@@ -455,6 +455,20 @@ class WinograndeTaskDataset(AbstractTaskDataset):
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 
+class HellaSwagTaskDataset(AbstractTaskDataset):
+    name = "hellaswag"
+    label_list = ["0", "1", "2", "3"]
+    task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
+    metrics = [metrics.accuracy]
+
+    def preprocessor(self, example, add_prefix=True):
+        src_texts = ["ctx:", example["ctx"], "ending1:", example["endings"][0],
+                     "ending2:", example["endings"][1], "ending3:", example["endings"][2],
+                     "ending4:", example["endings"][3]]
+        tgt_texts = [str(example['label'])]
+        return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
+
+
 TASK_MAPPING = OrderedDict([
     ('squad', SquadTaskDataset),
     ('imdb', IMDBTaskDataset),
@@ -482,7 +496,8 @@ TASK_MAPPING = OrderedDict([
     ('wmt16-en-fi', WMT16ENFITaskDataset),
     ('social_i_qa', SocialIQaTaskDataset),
     ('cosmos_qa', CosmosQaTaskDataset),
-    ('winogrande', WinograndeTaskDataset)]
+    ('winogrande', WinograndeTaskDataset),
+    ('hellaswag', HellaSwagTaskDataset)]
 )
 
 

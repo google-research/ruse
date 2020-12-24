@@ -1,0 +1,37 @@
+{
+"model_name_or_path": "t5-small",
+"tokenizer_name": "t5-small",
+"learning_rate": 1e-2,
+"output_dir": "outputs/mixture1/meta-adapter/task-emb/",
+"max_source_length": 128,
+"max_target_length": 128 ,
+"val_max_target_length":128,
+"test_max_target_length":128,
+"num_train_epochs": 20,
+"warmup_steps": 500,
+"eval_steps": 200,
+"overwrite_output_dir": true,
+"tasks": ["imdb", "snli", "scitail", "boolq", "mrpc", "trec", "yelp_polarity", "qqp", "social_i_qa", "cosmos_qa", "winogrande", "hellaswag", "commonsense_qa"],
+"eval_tasks": ["imdb", "snli", "scitail", "boolq", "mrpc", "trec", "yelp_polarity", "qqp", "social_i_qa", "cosmos_qa", "winogrande", "hellaswag", "commonsense_qa"],
+"sampling": true,
+"label_smoothing": 0.1,
+"freeze_encoder":false,
+"freeze_embeds":false,
+"per_device_train_batch_size":64,
+"per_device_eval_batch_size":64,
+"save_steps": 1000,
+"logging_first_step":true,
+"logging_steps": 200,
+"save_total_limit": 1,
+"temperature": 10,
+"do_train": true,
+"predict_with_generate": true,
+"n_train": 9000,
+"task_embedding_dir":"test_data/task_embeddings/n-train-100",
+"task_embedding_dim": 512,
+"gcs_bucket": "ruse-xcloud-bucket"
+}
+
+
+
+

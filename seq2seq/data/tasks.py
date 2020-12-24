@@ -126,7 +126,7 @@ class SNLITaskDataset(AbstractTaskDataset):
 
   def preprocessor(self, example, add_prefix=True):
     src_texts = ["premise:", example["premise"], "hypothesis:", example["hypothesis"]]
-    tgt_texts = [example["label"]]
+    tgt_texts = [str(example["label"])]
     return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 

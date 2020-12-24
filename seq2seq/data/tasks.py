@@ -284,7 +284,8 @@ class MRPCTaskDataset(AbstractTaskDataset):
         return datasets.load_dataset('glue', 'mrpc', split=split)
 
     def preprocessor(self, example, add_prefix=True):
-        src_texts = ["sentence1:", example['sentence1'], "sentence2:", example["sentence2"]]
+        src_texts = ["sentence1:", example['sentence1'],
+                     "sentence2:", example["sentence2"]]
         tgt_texts = [str(example['label'])]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
@@ -329,7 +330,8 @@ class STSBTaskDataset(AbstractTaskDataset):
         return datasets.load_dataset('glue', 'stsb', split=split)
 
     def preprocessor(self, example, add_prefix=True):
-        src_texts = ["sentence1:", example['sentence1'], "sentence2:", example["sentence2"]]
+        src_texts = ["sentence1:", example['sentence1'],
+                     "sentence2:", example["sentence2"]]
         tgt_texts = [str(round_stsb_target(example['label']))]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
@@ -344,7 +346,8 @@ class QQPTaskDataset(AbstractTaskDataset):
         return datasets.load_dataset('glue', 'qqp', split=split)
 
     def preprocessor(self, example, add_prefix=True):
-        src_texts = ["question1:", example['question1'], "question2:", example["question2"]]
+        src_texts = ["question1:", example['question1'],
+                     "question2:", example["question2"]]
         tgt_texts = [str(example['label'])]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
@@ -361,7 +364,8 @@ class MNLITaskDataset(AbstractTaskDataset):
         return datasets.load_dataset('glue', 'mnli', split=split)
 
     def preprocessor(self, example, add_prefix=True):
-        src_texts = ["premise:", example['premise'], "hypothesis", example["hypothesis"]]
+        src_texts = ["premise:", example['premise'],
+                     "hypothesis", example["hypothesis"]]
         tgt_texts = [str(example['label'])]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
@@ -376,7 +380,8 @@ class QNLITaskDataset(AbstractTaskDataset):
         return datasets.load_dataset('glue', 'qnli', split=split)
 
     def preprocessor(self, example, add_prefix=True):
-        src_texts = ["question:", example['question'], "sentence:", example["sentence"]]
+        src_texts = ["question:", example['question'],
+                     "sentence:", example["sentence"]]
         tgt_texts = [str(example['label'])]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
@@ -391,7 +396,8 @@ class RTETaskDataset(AbstractTaskDataset):
         return datasets.load_dataset('glue', 'rte', split=split)
 
     def preprocessor(self, example, add_prefix=True):
-        src_texts = ["sentence1:", example['sentence1'], "sentence2:", example["sentence2"]]
+        src_texts = ["sentence1:", example['sentence1'],
+                     "sentence2:", example["sentence2"]]
         tgt_texts = [str(example['label'])]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
@@ -406,7 +412,8 @@ class WNLITaskDataset(AbstractTaskDataset):
         return datasets.load_dataset('glue', 'wnli', split=split)
 
     def preprocessor(self, example, add_prefix=True):
-        src_texts = ["sentence1:", example['sentence1'], "sentence2:", example["sentence2"]]
+        src_texts = ["sentence1:", example['sentence1'],
+                     "sentence2:", example["sentence2"]]
         tgt_texts = [str(example['label'])]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
@@ -418,8 +425,10 @@ class SocialIQaTaskDataset(AbstractTaskDataset):
     metrics = [metrics.accuracy]
 
     def preprocessor(self, example, add_prefix=True):
-        src_texts = ["question:", example["question"], "context:", example["context"],
-                     "answerA:", example["answerA"], "answerB:", example["answerB"],
+        src_texts = ["question:", example["question"],
+                     "context:", example["context"],
+                     "answerA:", example["answerA"],
+                     "answerB:", example["answerB"],
                      "answerC:", example["answerC"]]
         tgt_texts = [example['label'].rstrip()]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
@@ -432,9 +441,12 @@ class CosmosQaTaskDataset(AbstractTaskDataset):
     metrics = [metrics.accuracy]
 
     def preprocessor(self, example, add_prefix=True):
-        src_texts = ["question:", example["question"], "context:", example["context"],
-                     "answer0:", example["answer0"], "answer1:", example["answer1"],
-                     "answer2:", example["answer2"], "answer3:", example["answer3"]]
+        src_texts = ["question:", example["question"],
+                     "context:", example["context"],
+                     "answer0:", example["answer0"],
+                     "answer1:", example["answer1"],
+                     "answer2:", example["answer2"],
+                     "answer3:", example["answer3"]]
         tgt_texts = [str(example['label'])]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
@@ -449,7 +461,8 @@ class WinograndeTaskDataset(AbstractTaskDataset):
         return datasets.load_dataset('winogrande', 'winogrande_l', split=split)
 
     def preprocessor(self, example, add_prefix=True):
-        src_texts = ["sentence:", example["sentence"], "option1:", example["option1"],
+        src_texts = ["sentence:", example["sentence"],
+                     "option1:", example["option1"],
                      "option2:", example["option2"]]
         tgt_texts = [str(example['answer'])]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
@@ -462,9 +475,11 @@ class HellaSwagTaskDataset(AbstractTaskDataset):
     metrics = [metrics.accuracy]
 
     def preprocessor(self, example, add_prefix=True):
-        src_texts = ["ctx:", example["ctx"], "ending1:", example["endings"][0],
-                     "ending2:", example["endings"][1], "ending3:", example["endings"][2],
-                     "ending4:", example["endings"][3]]
+        src_texts = ["ctx:", example["ctx"],
+                     "ending0:", example["endings"][0],
+                     "ending1:", example["endings"][1],
+                     "ending2:", example["endings"][2],
+                     "ending3:", example["endings"][3]]
         tgt_texts = [str(example['label'])]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 

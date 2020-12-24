@@ -1105,7 +1105,8 @@ do_sweep(basic_config_path, sweep, short_keys, job_prefix, output_dir_name="eval
 
 # 24 Dec
 # running our model and t5 on the new mixture.
-# baseline on 4 gpus
+"""
+# baseline.
 basic_config_path = "configs/experiments/our_mixture/finetune.json"
 job_prefix = "base4"
 short_keys = ["lr"]
@@ -1114,7 +1115,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "output_dir": ["outputs/our_mixture/finetune/num-gpus-4-with-eval"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
 
-# our model on 4 gpus
+# Our model.
 basic_config_path = "configs/experiments/our_mixture/meta-task-emb.json"
 job_prefix = "our4"
 short_keys = ["lr", "r", "ln", "l"]
@@ -1127,3 +1128,35 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "train_task_embeddings": [True],
                                  "output_dir": ["outputs/our_mixture/adapters/num-gpus-4-with-eval"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
+"""
+
+# running the models on the whole GLUE dataset.
+# baseline on 4 gpus
+basic_config_path = "configs/experiments/glue/finetune.json"
+job_prefix = "base41"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "do_eval": [True],
+                                 "n_train": [-1],
+                                 "n_val": [-1],
+                                 "num_train_epochs": [100],
+                                 "output_dir": ["outputs/glue/full/finetune/num-gpus-4-with-eval-100"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
+
+# our model on 4 gpus
+basic_config_path = "configs/experiments/glue/meta-task-emb.json"
+job_prefix = "our41"
+short_keys = ["lr", "r", "ln", "l"]
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_layer_norms": [False, True],
+                                 "unfreeze_lm_head": [True, False],
+                                 "do_eval": [True],
+                                 "n_train": [-1],
+                                 "n_val": [-1],
+                                 'projected_task_embedding_dim': [64],
+                                 "num_train_epochs": [100],
+                                 "train_task_embeddings": [True],
+                                 "output_dir": ["outputs/glue/full/adapters/num-gpus-4-with-eval-100"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
+

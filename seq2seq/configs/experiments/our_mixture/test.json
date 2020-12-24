@@ -31,8 +31,7 @@
 "n_train": 100,
 "task_embedding_dir":"test_data/task_embeddings/n-train-100",
 "task_embedding_dim": 512,
-"gcs_bucket": "ruse-xcloud-bucket",
-"evaluation_strategy": "steps"
+"gcs_bucket": "ruse-xcloud-bucket"
 }
 
 

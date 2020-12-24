@@ -442,7 +442,7 @@ class CosmosQaTaskDataset(AbstractTaskDataset):
 
 
 class WinograndeTaskDataset(AbstractTaskDataset):
-    name = "winogrande_l"
+    name = "winogrande"
     label_list = ["1", "2"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]

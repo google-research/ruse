@@ -152,6 +152,7 @@ class TaskEmbeddingController(nn.Module):
         self.task_to_embeddings[task] = task_embedding if not parametric else nn.Parameter(task_embedding)
 
   def forward(self, task):
+      print("#### task ", task)
       task_embedding = self.task_to_embeddings[task]
       if self.train_task_embeddings:
         return self.task_hyper_net(task_embedding)

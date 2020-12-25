@@ -165,15 +165,19 @@ def main():
     # TODO: you should not do this, introduces bug.
     # train_dataset.set_format(type="torch", columns=['src_texts', 'tgt_texts'])
     training_args.remove_unused_columns = False
-    eval_datasets = ({task: dataset_class.get(task).get_dataset(
-        split="validation", n_obs=data_args.n_val, add_prefix=False if training_args.train_adapters else True)
-                    for task in data_args.eval_tasks}
-                    if training_args.do_eval or training_args.evaluation_strategy != EvaluationStrategy.NO
-                    else None
+    eval_datasets = ({task: dataset_class.get(task, seed=data_args.data_seed).get_dataset(
+        split="validation", n_obs=data_args.n_val,
+        add_prefix=False if training_args.train_adapters else True,
+        split_validation_test=training_args.split_validation_test)
+        for task in data_args.eval_tasks}
+        if training_args.do_eval or training_args.evaluation_strategy != EvaluationStrategy.NO
+        else None
     )
     test_dataset = (
-        {task: dataset_class.get(task).get_dataset(
-            split="test", n_obs=data_args.n_test, add_prefix=False if training_args.train_adapters else True)
+        {task: dataset_class.get(task, seed=data_args.data_seed).get_dataset(
+            split="test", n_obs=data_args.n_test,
+            add_prefix=False if training_args.train_adapters else True,
+            split_validation_test=training_args.split_validation_test)
             for task in data_args.eval_tasks} if training_args.do_test else None
     )
     # Initialize our Trainer
@@ -193,7 +197,6 @@ def main():
         dataset_sizes=dataset_sizes if training_args.do_train else None,
         callbacks=[T5CheckpointCallback()]
     )
-
 
     # Training
     if training_args.do_train:

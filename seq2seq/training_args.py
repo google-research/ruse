@@ -104,7 +104,13 @@ class Seq2SeqTrainingArguments(TrainingArguments):
   optimize_from_scratch: Optional[bool] = field(default=False,
                                                 metadata={"help": "If set, this does not load the optimizers from"
                                                                   "the given model path."})
-
+  split_validation_test: Optional[bool] = field(default=False, metadata={"help": "If set, for the datasets which do not" 
+                                                                  "have the test set, we use validation set as their"
+                                                                  "test set and make a validation set from either"
+                                                                  "splitting the validation set into half (for smaller"
+                                                                  "than 10K samples datasets), or by using 1K examples"
+                                                                  "from training set as validation set (for larger"
+                                                                  " datasets)."})
 @dataclass
 class ModelArguments:
   """
@@ -186,13 +192,6 @@ class DataTrainingArguments:
     default=True,
     metadata={"help": "If only pad tokens should be ignored. This assumes that `config.pad_token_id` is defined."},
   )
-  split_validation_test: Optional[bool] = field(default=False, metadata={"help": "If set, for the datasets which do not" 
-                                                                  "have the test set, we use validation set as their"
-                                                                  "test set and make a validation set from either"
-                                                                  "splitting the validation set into half (for smaller"
-                                                                  "than 10K samples datasets), or by using 1K examples"
-                                                                  "from training set as validation set (for larger"
-                                                                  " datasets)."})
   data_seed: Optional[int] = field(default=42, metadata={"help": "The seed used to subsample the datasets."})
 
 

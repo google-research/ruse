@@ -9,7 +9,7 @@
 "test_max_target_length":128,
 "num_train_epochs": 3,
 "warmup_steps": 500,
-"eval_steps": 200,
+"eval_steps": 10,
 "overwrite_output_dir": true,
 "tasks": ["boolq", "rte", "cola", "mrpc", "qqp", "sst2", "stsb", "wnli", "mnli"],
 "eval_tasks": ["boolq", "stsb", "rte", "cola", "mrpc", "qqp", "sst2", "wnli", "mnli"],

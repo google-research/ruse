@@ -233,9 +233,6 @@ class T5Trainer(Trainer):
                 prediction_loss_only=True if self.compute_metrics is None else None,
                 metric_key_prefix=metric_key_prefix
             )
-
-            self.log(output.metrics)
-
             if self.args.tpu_metrics_debug or self.args.debug:
                 # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
                 xm.master_print(met.metrics_report())
@@ -244,6 +241,8 @@ class T5Trainer(Trainer):
 
             tasks_metric = {eval_task + "_" + k: v for k, v in output.metrics.items()}
             if self.is_world_process_zero():
+                for key in sorted(tasks_metric.keys()):
+                    logger.info(f"  {key} = {tasks_metric[key]}")
                 results.update(tasks_metric)
                 reset_config(self.model, model_config)
         return results

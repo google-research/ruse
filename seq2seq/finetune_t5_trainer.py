@@ -11,6 +11,7 @@ from third_party.utils import (
     check_output_dir,
     save_json,
 )
+from dataclasses import asdict
 from transformers import AutoTokenizer, HfArgumentParser, set_seed
 from transformers.trainer_utils import EvaluationStrategy
 
@@ -29,18 +30,35 @@ def handle_metrics(split, metrics, output_dir, gcs_bucket=None):
     Log and save metrics
 
     Args:
-    - split: one of train, val, test
-    - metrics: metrics dict
-    - output_dir: where to save the metrics
+        split: one of train, val, test
+        metrics: metrics dict
+        output_dir: where to save the metrics
     """
-
     logger.info(f"***** {split} metrics *****")
     for key in sorted(metrics.keys()):
         logger.info(f"  {key} = {metrics[key]}")
-    save_json(metrics, os.path.join(output_dir, f"{split}_results.json"))
+    save_json_file(metrics, f"{split}_results.json", output_dir, gcs_bucket)
+
+
+def save_json_file(json_dict, outfile_name, output_dir, gcs_bucket=None):
+    save_json(json_dict, os.path.join(output_dir, outfile_name))
     if gcs_bucket is not None:
         logger.info("***** Uploading results into gs-bucket *****")
         upload(output_dir, gcs_bucket)
+
+
+def get_training_args(arguments_list):
+    """
+    Concatenate all training arguments.
+    Args:
+        arguments_list: list of dataclasses.
+    Return:
+        arguments: concatenated arguments.
+    """
+    all_arguments = {}
+    for arguments in arguments_list:
+        all_arguments.update(asdict(arguments))
+    return all_arguments
 
 
 def main():
@@ -63,6 +81,8 @@ def main():
             json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args, adapter_args = parser.parse_args_into_dataclasses()
+
+
     check_output_dir(training_args)
 
     # Setup logging
@@ -198,6 +218,10 @@ def main():
         callbacks=[T5CheckpointCallback()]
     )
 
+    if trainer.is_world_process_zero():
+        arguments = get_training_args([model_args, data_args, training_args, adapter_args])
+        save_json_file(arguments, 'arguments.json', training_args.output_dir, training_args.gcs_bucket)
+
     # Training
     if training_args.do_train:
         trainer.train(
@@ -249,6 +273,7 @@ def main():
         if trainer.is_world_process_zero():
             handle_metrics("test", metrics, training_args.output_dir, training_args.gcs_bucket)
             all_metrics.update(metrics)
+
 
     return all_metrics
 

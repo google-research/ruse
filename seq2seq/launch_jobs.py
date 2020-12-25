@@ -1193,7 +1193,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "output_dir": ["outputs/our_mixture/full/adapters/num-gpus-4-with-eval"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
 """
-
+"""
 # running models with t5-base
 basic_config_path = "configs/experiments/our_mixture/finetune.json"
 job_prefix = "base4"
@@ -1226,3 +1226,81 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "train_task_embeddings": [True],
                                  "output_dir": ["outputs/our_mixture/full-base/adapters/num-gpus-4-with-eval"]})
 do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=4)
+"""
+
+# running the same experiment as above on 8 gpus
+# running models with t5-base
+"""
+basic_config_path = "configs/experiments/our_mixture/finetune.json"
+job_prefix = "bg8"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "do_eval": [True],
+                                 "n_train": [-1],
+                                 "n_val": [-1],
+                                 "model_name_or_path": ["t5-base"],
+                                 "tokenizer_name": ["t5-base"],
+                                 "max_steps": [262144],
+                                 "per_device_train_batch_size":[32],
+                                 "per_device_eval_batch_size":[32],
+                                 "output_dir": ["outputs/our_mixture/full-base/finetune/num-gpus-8-with-eval"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=8)
+
+# Our model.
+basic_config_path = "configs/experiments/our_mixture/meta-task-emb.json"
+job_prefix = "og8"
+short_keys = ["lr", "r", "ln", "l"]
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_layer_norms": [False, True],
+                                 "unfreeze_lm_head": [True, False],
+                                 "do_eval": [True],
+                                 "n_train": [-1],
+                                 "n_val": [-1],
+                                 "model_name_or_path": ["t5-base"],
+                                 "tokenizer_name": ["t5-base"],
+                                 "max_steps": [262144],
+                                 "per_device_train_batch_size":[32],
+                                 "per_device_eval_batch_size":[32],
+                                 'projected_task_embedding_dim': [64],
+                                 "train_task_embeddings": [True],
+                                 "output_dir": ["outputs/our_mixture/full-base/adapters/num-gpus-8-with-eval"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=8)
+"""
+
+# running models with t5-base
+basic_config_path = "configs/experiments/our_mixture/finetune.json"
+job_prefix = "bt"
+short_keys = ["lr"]
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "do_eval": [True],
+                                 "n_train": [-1],
+                                 "n_val": [-1],
+                                 "model_name_or_path": ["t5-base"],
+                                 "tokenizer_name": ["t5-base"],
+                                 "max_steps": [262144],
+                                 "per_device_train_batch_size":[64],
+                                 "per_device_eval_batch_size":[64],
+                                 "output_dir": ["outputs/our_mixture/full-base/finetune/tpu-with-eval"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=0)
+
+# Our model.
+basic_config_path = "configs/experiments/our_mixture/meta-task-emb.json"
+job_prefix = "ot"
+short_keys = ["lr", "r", "ln", "l"]
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "reduction_factor": [8, 16],
+                                 "unfreeze_layer_norms": [False, True],
+                                 "unfreeze_lm_head": [True, False],
+                                 "do_eval": [True],
+                                 "n_train": [-1],
+                                 "n_val": [-1],
+                                 "model_name_or_path": ["t5-base"],
+                                 "tokenizer_name": ["t5-base"],
+                                 "max_steps": [262144],
+                                 "per_device_train_batch_size":[64],
+                                 "per_device_eval_batch_size":[64],
+                                 'projected_task_embedding_dim': [64],
+                                 "train_task_embeddings": [True],
+                                 "output_dir": ["outputs/our_mixture/full-base/adapters/tpu-with-eval"]})
+do_sweep(basic_config_path, sweep, short_keys, job_prefix, num_gpus=0)

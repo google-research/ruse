@@ -40,7 +40,8 @@ def make_name(prefix, keys, values):
   return name[:-1]
 
 
-def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name="output_dir", failed_jobs=[], num_gpus=1):
+def do_sweep(parent_config_path, sweep,  job_prefix, short_keys=None, output_dir_name="output_dir",
+             failed_jobs=[], num_gpus=1, ordered_name=False):
   temp_configs_dir = "temp_configs"
   if not os.path.exists(temp_configs_dir):
      os.makedirs(temp_configs_dir)
@@ -50,11 +51,17 @@ def do_sweep(parent_config_path, sweep, short_keys, job_prefix, output_dir_name=
   keys = flatten(list(sweep.keys()))
   options = [flatten(option) for option in list(itertools.product(*values))]
 
+  i = 0
   commands = []
   for option in options:
     config = copy.deepcopy(parent_config)
     config.update({key: value for key, value in zip(keys, option)})
-    name = make_name(job_prefix, short_keys, option)
+    if ordered_name:
+        name = job_prefix+"-"+str(i)
+        i = i + 1
+    else:
+        name = make_name(job_prefix, short_keys, option)
+
     print("### name ", name)
     if output_dir_name in sweep: #parent_config:
       parent_output_dir = sweep[output_dir_name][0]

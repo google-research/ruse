@@ -143,7 +143,6 @@ class DataTrainingArguments:
   """
   Arguments pertaining to what data we are going to input our model for training and eval.
   """
-  sampling: bool = field(default=False, metadata={"help": "Whether to sample training datasets."})
   tasks: Optional[List[str]] = field(
     default="MRPC",
     metadata={"help": "Task name from the list of registered tasks."},

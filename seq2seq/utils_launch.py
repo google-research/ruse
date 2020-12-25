@@ -87,7 +87,7 @@ def myfunc(x):
 
 def run_in_parallel(commands):
   processes = set()
-  max_processes = 8
+  max_processes = 4
   for name in commands:
     processes.add(subprocess.Popen(name, shell=True, stdout=subprocess.PIPE))
     if len(processes) >= max_processes:

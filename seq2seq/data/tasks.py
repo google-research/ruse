@@ -663,9 +663,9 @@ TASK_MAPPING = OrderedDict([
 
 class AutoTask:
     @classmethod
-    def get(self, task_name, **kwargs):
+    def get(self, task_name, seed=42):
         if task_name in TASK_MAPPING:
-            return TASK_MAPPING[task_name](**kwargs)
+            return TASK_MAPPING[task_name](seed)
 
         raise ValueError(
             "Unrecognized task {} for AutoTask Model: {}.\n"

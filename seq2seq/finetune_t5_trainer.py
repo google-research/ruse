@@ -87,7 +87,6 @@ def main():
                           "projection_length", "only_projection_bottleneck",
                           "concat_projection_token", "train_adapters")
     for p in extra_model_params:
-        # TODO(rabeeh): this is a bug, if you set something to false, it wont be called.
         if getattr(training_args, p, None):
             assert hasattr(config, p), f"({config.__class__.__name__}) doesn't have a `{p}` attribute"
             setattr(config, p, getattr(training_args, p))
@@ -141,9 +140,9 @@ def main():
     if training_args.do_train:
         freezing_params(model, training_args, model_args)
 
-    dataset_class = AutoTask(seed=data_args.data_seed)
+    dataset_class = AutoTask
     if training_args.do_train:
-        train_datasets = [dataset_class.get(task).get_dataset(
+        train_datasets = [dataset_class.get(task, seed=data_args.data_seed).get_dataset(
             split="train", n_obs=data_args.n_train, add_prefix=False if training_args.train_adapters else True)
             for task in data_args.tasks]
         dataset_sizes = [len(train_dataset) for train_dataset in train_datasets]

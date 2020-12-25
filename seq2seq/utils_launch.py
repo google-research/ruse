@@ -110,9 +110,13 @@ def download_all_evals(sweep, job_prefix, short_keys, output_dir):
   print(copy_commands)
   run_in_parallel(copy_commands)
 
-acc_cols = ['cola_eval_mcc',   'snli_eval_acc', 'yelp_polarity_eval_acc']
+#acc_cols = ['cola_eval_mcc',   'snli_eval_acc', 'yelp_polarity_eval_acc']
 #acc_cols = ["qnli_eval_acc", "scitail_eval_acc", "boolq_eval_acc"]
 #acc_cols = [ "rte_eval_acc",  "sst2_eval_acc", "mrpc_eval_f1", "mrpc_eval_acc",  "stsb_eval_pearson_corrcoef", "stsb_eval_spearman_corrcoef", "qqp_eval_f1",   "qqp_eval_acc",  "mnli_eval_acc", "qnli_eval_acc", "wnli_eval_acc",   "cola_eval_mcc"]
+
+
+
+
 
 names_to_short_names={
 "rte_eval_acc": "rte (acc)",
@@ -126,10 +130,32 @@ names_to_short_names={
 "mnli_eval_acc": "mnli(acc)",
 "qnli_eval_acc": "qnli(acc)",
 "wnli_eval_acc": "wnli (acc)",
-"cola_eval_mcc": "cola (mcc)"}
+"cola_eval_mcc": "cola (mcc)",
+"snli_eval_acc": "snli (acc)", 
+"scitail_eval_acc": "scitail (acc)",
+ "boolq_eval_acc": "boolq (acc)",
+  "mrpc_eval_f1": "mrpc (f1)", 
+   "mrpc_eval_acc": "mrpc (acc)",
+    "trec_eval_acc": "trec (acc)",
+     "yelp_polarity_eval_acc": "yelp (acc)",
+    "qqp_eval_f1" : "qqp (f1)", 
+    "qqp_eval_acc": "qqp (acc)",
+     "social_i_qa_eval_acc": "social_iqa (acc)",
+    "cosmos_qa_eval_acc": "cosmosqa (acc)",
+     "winogrande_eval_acc": "winogrande (acc)",
+      "hellaswag_eval_acc": "hellaswag (acc)",
+       "commonsense_qa_eval_acc": "commonsenseqa (acc)",
+       "unfreeze_lm_head": "lm" ,
+       "unfreeze_layer_norms": "ln",
+       "reduction_factor": "r"
+}
 
 
 def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
+  acc_cols = ["snli_eval_acc", "scitail_eval_acc", "boolq_eval_acc", "mrpc_eval_f1", 
+   "mrpc_eval_acc", "trec_eval_acc", "yelp_polarity_eval_acc",
+    "qqp_eval_f1", "qqp_eval_acc",  "social_i_qa_eval_acc",
+    "cosmos_qa_eval_acc", "winogrande_eval_acc", "hellaswag_eval_acc", "commonsense_qa_eval_acc"]
   print(job_prefix)
   df = pd.DataFrame()
   keys = flatten(list(sweep.keys()))
@@ -147,11 +173,15 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
     except FileNotFoundError:
       print("File not found ", eval_path)
   #print("##### df ", df)
+  acc_cols = list(set.intersection(set(df.columns.tolist()), set(acc_cols)))
   df = df[params+acc_cols]
   if len(params) != 0:
     df = df.sort_values(by=params)
   #df['task_embedding_dir'] = df.apply(lambda x: myfunc(x.task_embedding_dir), axis=1)
-  print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
+  #print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
+  
+
+
   # computing the maximum.
   #
   dfs = []

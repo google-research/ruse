@@ -91,7 +91,7 @@ class Seq2SeqTrainingArguments(TrainingArguments):
                                                         "value for sampling across the multiple datasets."})
   train_adapters: Optional[bool] = field(default=False, metadata={"help":
                                                           "Train an adapter instead of the full model."})
-  do_finetune: bool = field(default=False, metadata={"help": "Whether to do further finetuning on the evaluation dataset training set before final evaluation."})
+  do_test: bool = field(default=False, metadata={"help": "Whether to comptue evaluation metrics on the test sets."})
   parametric_task_embedding: bool = field(default=False,
                                                     metadata={"help": "If set, transform the task-embedding to a parameter in case of meta-adapter."})
   eval_output_dir: Optional[str] = field(default=None,
@@ -101,6 +101,9 @@ class Seq2SeqTrainingArguments(TrainingArguments):
   generate_classifier_weights: Optional[bool] = field(default=False,
                                                       metadata={"help": "If set, generates the weights of the classifier"
                                                                         "by using a hyper-network."})
+  optimize_from_scratch: Optional[bool] = field(default=False,
+                                                metadata={"help": "If set, this does not load the optimizers from"
+                                                                  "the given model path."})
 
 @dataclass
 class ModelArguments:
@@ -183,8 +186,6 @@ class DataTrainingArguments:
     default=True,
     metadata={"help": "If only pad tokens should be ignored. This assumes that `config.pad_token_id` is defined."},
   )
-  n_finetune: Optional[int] = field(default=-1, metadata={"help": "# train examples from the evaluation set used for"
-                                                                  "few shot transfer results. -1 means use all."})
   split_validation_test: Optional[bool] = field(default=False, metadata={"help": "If set, for the datasets which do not" 
                                                                   "have the test set, we use validation set as their"
                                                                   "test set and make a validation set from either"

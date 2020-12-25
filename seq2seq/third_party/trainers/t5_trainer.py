@@ -14,6 +14,7 @@
 
 """Implements a T5 trainer class doing training and evaluation."""
 
+import collections
 import torch
 from torch import nn
 from torch.utils.data.dataloader import DataLoader
@@ -31,7 +32,9 @@ from transformers.optimization import (
     get_polynomial_decay_schedule_with_warmup,
 )
 from typing import Any, Dict, Optional, Tuple, Union
+from torch.utils.data.dataset import Dataset
 
+from seq2seq.utils import upload, use_task_specific_params, reset_config
 from seq2seq.data import MultiTaskBatchSampler
 from .trainer import Trainer
 
@@ -48,10 +51,11 @@ arg_to_scheduler = {
 
 if is_torch_tpu_available():
     import torch_xla.core.xla_model as xm
+    import torch_xla.debug.metrics as met
 
 
 class T5Trainer(Trainer):
-    def __init__(self, config=None, data_args=None, dataset_sizes=None, *args, **kwargs):
+    def __init__(self, config=None, data_args=None, dataset_sizes=None,  multi_task_compute_metrics=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if config is None:
@@ -62,6 +66,7 @@ class T5Trainer(Trainer):
         else:
             self.config = config
 
+        self. multi_task_compute_metrics = multi_task_compute_metrics
         self.dataset_sizes = dataset_sizes
         self.data_args = data_args
         self.vocab_size = self.config.tgt_vocab_size if isinstance(self.config, FSMTConfig) else self.config.vocab_size
@@ -181,6 +186,68 @@ class T5Trainer(Trainer):
         labels = inputs.pop("labels")
         loss, _ = self._compute_loss(model, inputs, labels)
         return loss
+
+
+    def evaluate(self, eval_datasets: Optional[Dict[str, Dataset]] = None, metric_key_prefix: str = "eval") -> Dict[str, float]:
+        """
+        Run evaluation and returns metrics.
+
+        The calling script will be responsible for providing a method to compute metrics, as they are task-dependent
+        (pass it to the init :obj:`compute_metrics` argument).
+
+        You can also subclass and override this method to inject custom behavior.
+
+        Args:
+            eval_dataset (:obj:`Dataset`, `optional`):
+                Pass a dataset if you wish to override :obj:`self.eval_dataset`. If it is an :obj:`datasets.Dataset`,
+                columns not accepted by the ``model.forward()`` method are automatically removed. It must implement the
+                :obj:`__len__` method.
+            metric_key_prefix (:obj:`str`, `optional`, defaults to :obj:`"eval"`):
+                An optional prefix to be used as the metrics key prefix. For example the metrics "bleu" will be named
+                "eval_bleu" if the prefix is "eval" (default)
+
+        Returns:
+            A dictionary containing the evaluation loss and the potential metrics computed from the predictions. The
+            dictionary also contains the epoch number which comes from the training state.
+        """
+        results = {}
+        if eval_datasets is None:
+            eval_datasets = self.eval_dataset
+
+        for eval_task, eval_dataset in eval_datasets.items():
+            self.compute_metrics = self.multi_task_compute_metrics[eval_task]
+            model_config = self.model.config
+            if self.is_world_process_zero():
+                use_task_specific_params(self.model, eval_task)
+
+            if eval_dataset is not None and not isinstance(eval_dataset, collections.abc.Sized):
+                raise ValueError("eval_dataset must implement __len__")
+
+            eval_dataloader = self.get_eval_dataloader(eval_dataset)
+
+            output = self.prediction_loop(
+                eval_dataloader,
+                description="Evaluation",
+                # No point gathering the predictions if there are no metrics, otherwise we defer to
+                # self.args.prediction_loss_only
+                prediction_loss_only=True if self.compute_metrics is None else None,
+                metric_key_prefix=metric_key_prefix
+            )
+
+            self.log(output.metrics)
+
+            if self.args.tpu_metrics_debug or self.args.debug:
+                # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
+                xm.master_print(met.metrics_report())
+
+            self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, output.metrics)
+
+            tasks_metric = {eval_task + "_" + k: v for k, v in output.metrics.items()}
+            if self.is_world_process_zero():
+                results.update(tasks_metric)
+                reset_config(self.model, model_config)
+        return results
+
 
     def prediction_step(
             self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]],

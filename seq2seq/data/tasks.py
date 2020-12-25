@@ -17,12 +17,15 @@ from collections import OrderedDict
 import abc
 import datasets
 import functools
+import logging
 import numpy as np
-from typing import Callable, Dict, Mapping, List
 import torch
+from typing import Callable, Dict, Mapping, List
 
 from seq2seq.metrics import metrics
 from .utils import round_stsb_target, compute_task_max_decoding_length
+
+logger = logging.getLogger(__name__)
 
 
 class AbstractTaskDataset(abc.ABC):
@@ -46,30 +49,97 @@ class AbstractTaskDataset(abc.ABC):
     split_to_data_split: Mapping[str, str] = \
         {"train": "train", "validation": "validation", "test": "test"}
 
+    small_datasets_without_all_splits = ["cola", "wnli", "rte", "trec",
+                                         "mrpc", "stsb", "imdb", "boolq", "commonsense_qa"]
+    large_data_without_all_splits = ["yelp_polarity", "qqp",
+                                     "social_i_qa", "cosmos_qa", "winogrande", "hellaswag", "sst2"]
+
+    def __init__(self, seed=42):
+        self.seed = seed
+
     def get_sampled_split(self, split: int, n_obs: int = None):
+        # If the requested number of observation is more than dataset
+        # size we reset it to the maximum available.
         split = self.split_to_data_split[split]
-        ###############################
-        # this is to check.
-        dataset = self.load_dataset(split=split)
-        if len(dataset) < n_obs:
-            n_obs = len(dataset)
-        ###############################
+        dataset = self.load_dataset(split)
+        total_size = len(dataset)
+        n_obs = self.check_n_obs(n_obs, total_size)
         if n_obs is not None:
             split = split + "[:{}]".format(n_obs)
         return split
 
+    def check_n_obs(self, n_obs, total_size):
+        if n_obs is not None and n_obs > total_size:
+            n_obs = total_size
+            logger.warning("n_obs is set to %s", n_obs)
+        return n_obs
+
+    def select_dataset_samples(self, indices, dataset, n_obs: int = None):
+        """
+        Given a dataset for the split, obtains the sample indices for this split
+        and returns the subsampled dataset.
+        :param indices: the selected indices.
+        :param dataset: dataset corresponding to this split.
+        :return: subsampled dataset.
+        """
+        n_obs = self.check_n_obs(n_obs, len(indices))
+        indices = indices[:n_obs] if n_obs is not None else indices
+        return dataset.select(indices)
+
     def load_dataset(self, split: int):
         return datasets.load_dataset(self.name, split=split, script_version="master")
 
-    def get_dataset(self, split, n_obs=None, add_prefix=True):
-        split = self.get_sampled_split(split, n_obs)
-        dataset = self.load_dataset(split=split)
-        dataset = dataset.map(functools.partial(self.preprocessor, add_prefix=add_prefix),
-                              remove_columns=dataset.column_names)
-        return dataset
+    def get_train_split_indices(self, split):
+        generator = torch.Generator()
+        generator.manual_seed(self.seed)
+        mapped_split = self.split_to_data_split["train"]
+        dataset = self.load_dataset(mapped_split)
+        train_size = len(dataset)
+        indices = torch.randperm(train_size, generator=generator).tolist()
+        validation_size = 1000
+        if split == "validation":
+            return indices[:validation_size]
+        else:
+            return indices[validation_size:]
+
+    def get_half_validation_indices(self, split):
+        generator = torch.Generator()
+        generator.manual_seed(self.seed)
+        mapped_split = self.split_to_data_split["validation"]
+        dataset = self.load_dataset(mapped_split)
+        validation_size = len(dataset)
+        indices = torch.randperm(validation_size, generator=generator).tolist()
+        if split == "validation":
+            return indices[:(validation_size // 2)]
+        else:
+            return indices[validation_size // 2:]
+
+    def get_dataset(self, split, n_obs=None, add_prefix=True, split_validation_test=False):
+        # For small datasets (n_samples < 10K) without test set, we divide validation set to
+        # half, use one half as test set and one half as validation set.
+        if split_validation_test and self.name in self.small_datasets_without_all_splits \
+                and split != "train":
+            mapped_split = self.split_to_data_split["validation"]
+            dataset = self.load_dataset(split=mapped_split)
+            indices = self.get_half_validation_indices(split)
+            dataset = self.select_dataset_samples(indices, dataset, n_obs)
+        # For larger datasets (n_samples > 10K), we divide training set into 1K as
+        # validation and the rest as training set, keeping the original validation
+        # set as the test set.
+        elif split_validation_test and self.name in self.large_data_without_all_splits \
+                and split != "test":
+            dataset = self.load_dataset(split="train")
+            indices = self.get_train_split_indices(split)
+            dataset = self.select_dataset_samples(indices, dataset, n_obs)
+        else:
+            #split = self.split_to_data_split[split]
+            split = self.get_sampled_split(split, n_obs)
+            dataset = self.load_dataset(split=split)
+        return dataset.map(functools.partial(self.preprocessor, add_prefix=add_prefix),
+                           remove_columns=dataset.column_names)
 
     def seq2seq_format(self, src_strs: List[str], tgt_strs: List[str],
-                       add_prefix: bool=False, prefix:str=None):
+                       add_prefix: bool = False, prefix: str = None):
         src_prefix = self.name if prefix is None else prefix
         src_strs = [src_prefix] + src_strs if add_prefix else src_strs
         return {"src_texts": ' '.join(src_strs),
@@ -79,7 +149,9 @@ class AbstractTaskDataset(abc.ABC):
 
 class IMDBTaskDataset(AbstractTaskDataset):
     name = "imdb"
-    split_to_data_split = {"train": "train", "validation": "test"}
+    split_to_data_split = {"train": "train",
+                           "validation": "test",
+                           "test": "test"}
     label_list = ["0", "1"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
@@ -109,9 +181,6 @@ class SNLITaskDataset(AbstractTaskDataset):
     name = "snli"
     label_list = ["0", "1", "2"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
-    split_to_data_split = {"train": "train",
-                           "validation": "validation",
-                           "test": "test"}
     metrics = [metrics.accuracy]
 
     def preprocessor(self, example, add_prefix=True):
@@ -153,6 +222,7 @@ class IWSLT2017ENNL(AbstractTaskDataset):
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix,
                                    prefix="Translate English to Dutch")
 
+
 class WMT16ENROTaskDataset(AbstractTaskDataset):
     name = "wmt16-en-ro"
     task_specific_config = {'max_length': 300, 'num_beams': 4}
@@ -168,6 +238,7 @@ class WMT16ENROTaskDataset(AbstractTaskDataset):
         tgt_texts = [example['translation']["ro"]]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix,
                                    prefix="Translate English to Romanian")
+
 
 class WMT16ROENTaskDataset(AbstractTaskDataset):
     name = "wmt16-ro-en"
@@ -241,7 +312,9 @@ class TRECTaskDataset(AbstractTaskDataset):
     name = "trec"
     label_list = ["0", "1", "2", "3", "4", "5"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
-    split_to_data_split = {"train": "train", "validation": "test", "test": "test"}
+    split_to_data_split = {"train": "train",
+                           "validation": "test",
+                           "test": "test"}
     metrics = [metrics.accuracy]
 
     def load_dataset(self, split):
@@ -257,7 +330,9 @@ class YelpPolarityTaskDataset(AbstractTaskDataset):
     name = "yelp_polarity"
     label_list = ["0", "1"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
-    split_to_data_split = {"train": "train", "validation": "test", "test": "test"}
+    split_to_data_split = {"train": "train",
+                           "validation": "test",
+                           "test": "test"}
     metrics = [metrics.accuracy]
 
     def load_dataset(self, split):
@@ -277,9 +352,8 @@ class ScitailTaskDataset(AbstractTaskDataset):
     metrics = [metrics.accuracy]
 
     def load_dataset(self, split):
-        dataset = datasets.load_dataset("scitail", "snli_format",
-                                        split=split, script_version="master")
-        return dataset
+        return datasets.load_dataset("scitail", "snli_format",
+                                     split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence1:", example['sentence1'], "sentence2:", example["sentence2"]]
@@ -292,6 +366,9 @@ class MRPCTaskDataset(AbstractTaskDataset):
     label_list = ["0", "1"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.f1_score_with_invalid, metrics.accuracy]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
     def load_dataset(self, split):
         return datasets.load_dataset('glue', 'mrpc',
@@ -309,6 +386,9 @@ class COLATaskDataset(AbstractTaskDataset):
     label_list = ["0", "1"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.matthews_corrcoef]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
     def load_dataset(self, split):
         return datasets.load_dataset('glue', 'cola',
@@ -327,7 +407,7 @@ class SST2TaskDataset(AbstractTaskDataset):
     metrics = [metrics.accuracy]
 
     def load_dataset(self, split):
-        return datasets.load_dataset('glue', 'sst2', 
+        return datasets.load_dataset('glue', 'sst2',
                                      split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
@@ -341,6 +421,9 @@ class STSBTaskDataset(AbstractTaskDataset):
     label_list = [str(np.round(label, decimals=1)) for label in np.arange(0, 5.2, 0.2)]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.pearson_corrcoef, metrics.spearman_corrcoef]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
     def load_dataset(self, split):
         return datasets.load_dataset('glue', 'stsb',
@@ -358,9 +441,12 @@ class QQPTaskDataset(AbstractTaskDataset):
     label_list = ["0", "1"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.f1_score_with_invalid, metrics.accuracy]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
     def load_dataset(self, split):
-        return datasets.load_dataset('glue', 'qqp', 
+        return datasets.load_dataset('glue', 'qqp',
                                      split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
@@ -374,7 +460,8 @@ class MNLITaskDataset(AbstractTaskDataset):
     name = "mnli"
     label_list = ["0", "1", "2"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
-    split_to_data_split = {"train": "train", "validation": "validation_mismatched",
+    split_to_data_split = {"train": "train",
+                           "validation": "validation_mismatched",
                            "test": "validation_matched"}
     metrics = [metrics.accuracy]
 
@@ -409,6 +496,9 @@ class RTETaskDataset(AbstractTaskDataset):
     label_list = ["0", "1"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
     def load_dataset(self, split):
         return datasets.load_dataset('glue', 'rte',
@@ -426,53 +516,12 @@ class WNLITaskDataset(AbstractTaskDataset):
     label_list = ["0", "1"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
-    seed = 42
-    split_to_split = {"validation": "validation", "test": "validation"}
-    @property
-    def train_size(self):
-        if not hasattr(self, '_train_size'):
-            self._train_size = len(self.load_dataset("train"))
-        return self._train_size
-
-    @property
-    def validation_size(self):
-        if not hasattr(self, '_validation_size'):
-            self._validation_size = len(self.load_dataset("validation"))
-        return self._validation_size
-
-    @property
-    def test_size(self):
-        if not hasattr(self, '_test_size'):
-            self._test_size = len(self.load_dataset("test"))
-        return self._test_size
-
-
-    @property
-    def generator(self):
-        if not hasattr(self, '_generator'):
-            self._generator = torch.Generator()
-            self._generator.manual_seed(self.seed)
-        return self._generator
-
-    def train_indices(self):
-        return range(self.train_size)
-
-    def validation_indices(self):
-        indices = torch.randperm(self.validation_size, generator=self.generator).tolist()
-        return indices[:self.validation_size / 2]
-
-    def test_indices(self):
-        indices = torch.randperm(self.validation_size, generator=self.generator).tolist()
-        return indices[self.validation_size / 2:]
-
-    def load_dataset(self, split, split_validation_test=False):
-        dataset = datasets.load_dataset('glue', 'wnli',
-            split=split if not split_validation_test else self.split_to_split[split],
-            script_version="master")
-        if split_validation_test:
-            dataset = dataset.select(eval("self."+split+"_indices"))
-        return dataset
+    def load_dataset(self, split):
+        return datasets.load_dataset('glue', 'wnli', split=split, script_version="master")
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence1:", example['sentence1'],
@@ -486,6 +535,9 @@ class SocialIQaTaskDataset(AbstractTaskDataset):
     label_list = ["1", "2", "3"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["question:", example["question"],
@@ -502,6 +554,9 @@ class CosmosQaTaskDataset(AbstractTaskDataset):
     label_list = ["0", "1", "2", "3"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["question:", example["question"],
@@ -519,6 +574,9 @@ class WinograndeTaskDataset(AbstractTaskDataset):
     label_list = ["1", "2"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
     def load_dataset(self, split):
         return datasets.load_dataset('winogrande', 'winogrande_l',
@@ -537,6 +595,9 @@ class HellaSwagTaskDataset(AbstractTaskDataset):
     label_list = ["0", "1", "2", "3"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["ctx:", example["ctx"],
@@ -553,6 +614,9 @@ class CommonsenseQaTaskDataset(AbstractTaskDataset):
     label_list = ["A", "B", "C", "D", "E"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["question:", example["question"],
@@ -599,9 +663,9 @@ TASK_MAPPING = OrderedDict([
 
 class AutoTask:
     @classmethod
-    def get(self, task_name):
+    def get(self, task_name, **kwargs):
         if task_name in TASK_MAPPING:
-            return TASK_MAPPING[task_name]()
+            return TASK_MAPPING[task_name](**kwargs)
 
         raise ValueError(
             "Unrecognized task {} for AutoTask Model: {}.\n"

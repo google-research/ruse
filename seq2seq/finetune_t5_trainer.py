@@ -141,7 +141,7 @@ def main():
     if training_args.do_train:
         freezing_params(model, training_args, model_args)
 
-    dataset_class = AutoTask
+    dataset_class = AutoTask(seed=data_args.data_seed)
     if training_args.do_train:
         train_datasets = [dataset_class.get(task).get_dataset(
             split="train", n_obs=data_args.n_train, add_prefix=False if training_args.train_adapters else True)

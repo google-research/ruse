@@ -192,6 +192,9 @@ class DataTrainingArguments:
                                                                   "than 10K samples datasets), or by using 1K examples"
                                                                   "from training set as validation set (for larger"
                                                                   " datasets)."})
+  data_seed: Optional[int] = field(default=42, metadata={"help": "The seed used to subsample the datasets."})
+
+
 @dataclass
 class AdapterTrainingArguments:
   adapter_config_name: Optional[str] = field(

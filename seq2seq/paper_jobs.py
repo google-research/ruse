@@ -59,7 +59,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "predict_with_generate": [False],
                                  "do_eval": [False],
                                  "do_test": [False],
-                                 "evaluation_strategy": [None],
+                                 "evaluation_strategy": ["no"],
                                  "prediction_loss_only": [True],
                                  "output_dir": ["outputs/paper_results/test/tpu/glue/finetune/"]})
 do_sweep(basic_config_path, sweep, job_prefix="glue-finetune-tpu", num_gpus=0, ordered_name=True)

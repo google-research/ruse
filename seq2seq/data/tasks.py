@@ -425,7 +425,7 @@ class WNLITaskDataset(AbstractTaskDataset):
     label_list = ["0", "1"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
-
+    
     def load_dataset(self, split):
         return datasets.load_dataset('glue', 'wnli',
                                      split=split, script_version="master")

@@ -185,7 +185,7 @@ class DataTrainingArguments:
   )
   n_finetune: Optional[int] = field(default=-1, metadata={"help": "# train examples from the evaluation set used for"
                                                                   "few shot transfer results. -1 means use all."})
-  val_test_split: Optional[bool] = field(default=False, metadata={"help": "If set, for the datasets which do not" 
+  split_validation_test: Optional[bool] = field(default=False, metadata={"help": "If set, for the datasets which do not" 
                                                                   "have the test set, we use validation set as their"
                                                                   "test set and make a validation set from either"
                                                                   "splitting the validation set into half (for smaller"

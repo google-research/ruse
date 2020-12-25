@@ -19,6 +19,7 @@ import datasets
 import functools
 import numpy as np
 from typing import Callable, Dict, Mapping, List
+import torch
 
 from seq2seq.metrics import metrics
 from .utils import round_stsb_target, compute_task_max_decoding_length
@@ -425,10 +426,53 @@ class WNLITaskDataset(AbstractTaskDataset):
     label_list = ["0", "1"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
-    
-    def load_dataset(self, split):
-        return datasets.load_dataset('glue', 'wnli',
-                                     split=split, script_version="master")
+
+    seed = 42
+    split_to_split = {"validation": "validation", "test": "validation"}
+    @property
+    def train_size(self):
+        if not hasattr(self, '_train_size'):
+            self._train_size = len(self.load_dataset("train"))
+        return self._train_size
+
+    @property
+    def validation_size(self):
+        if not hasattr(self, '_validation_size'):
+            self._validation_size = len(self.load_dataset("validation"))
+        return self._validation_size
+
+    @property
+    def test_size(self):
+        if not hasattr(self, '_test_size'):
+            self._test_size = len(self.load_dataset("test"))
+        return self._test_size
+
+
+    @property
+    def generator(self):
+        if not hasattr(self, '_generator'):
+            self._generator = torch.Generator()
+            self._generator.manual_seed(self.seed)
+        return self._generator
+
+    def train_indices(self):
+        return range(self.train_size)
+
+    def validation_indices(self):
+        indices = torch.randperm(self.validation_size, generator=self.generator).tolist()
+        return indices[:self.validation_size / 2]
+
+    def test_indices(self):
+        indices = torch.randperm(self.validation_size, generator=self.generator).tolist()
+        return indices[self.validation_size / 2:]
+
+    def load_dataset(self, split, split_validation_test=False):
+        dataset = datasets.load_dataset('glue', 'wnli',
+            split=split if not split_validation_test else self.split_to_split[split],
+            script_version="master")
+        if split_validation_test:
+            dataset = dataset.select(eval("self."+split+"_indices"))
+        return dataset
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence1:", example['sentence1'],

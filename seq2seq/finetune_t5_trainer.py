@@ -30,7 +30,7 @@ def handle_metrics(split, metrics, output_dir, gcs_bucket=None):
     Log and save metrics
 
     Args:
-        split: one of train, val, test
+        split: one of train, val, test, or arguments.
         metrics: metrics dict
         output_dir: where to save the metrics
     """
@@ -41,6 +41,9 @@ def handle_metrics(split, metrics, output_dir, gcs_bucket=None):
 
 
 def save_json_file(json_dict, outfile_name, output_dir, gcs_bucket=None):
+    """
+    Saves a json file.
+    """
     save_json(json_dict, os.path.join(output_dir, outfile_name))
     if gcs_bucket is not None:
         logger.info("***** Uploading results into gs-bucket *****")
@@ -58,6 +61,7 @@ def get_training_args(arguments_list):
     all_arguments = {}
     for arguments in arguments_list:
         all_arguments.update(asdict(arguments))
+    all_arguments.pop("evaluation_strategy")
     return all_arguments
 
 
@@ -217,10 +221,9 @@ def main():
         dataset_sizes=dataset_sizes if training_args.do_train else None,
         callbacks=[T5CheckpointCallback()]
     )
-
     if trainer.is_world_process_zero():
         arguments = get_training_args([model_args, data_args, training_args, adapter_args])
-        save_json_file(arguments, 'arguments.json', training_args.output_dir, training_args.gcs_bucket)
+        handle_metrics("arguments", arguments, training_args.output_dir, training_args.gcs_bucket)
 
     # Training
     if training_args.do_train:

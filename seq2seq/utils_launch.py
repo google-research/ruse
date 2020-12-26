@@ -146,36 +146,63 @@ def download_all_evals(sweep, job_prefix, short_keys, output_dir, ordered_name=F
 
 
 names_to_short_names={
-"rte_eval_acc": "rte (acc)",
-"sst2_eval_acc": "sst2 (acc)",
-"mrpc_eval_f1": "mrpc (f1)",
-"mrpc_eval_acc":"mrpc (acc)",
-"stsb_eval_pearson_corrcoef": "stsb (pearson)",
-"stsb_eval_spearman_corrcoef": "stsb (spearman)",
-"qqp_eval_f1": "qqp (f1)",
-"qqp_eval_acc": "qqp(acc)",
-"mnli_eval_acc": "mnli(acc)",
-"qnli_eval_acc": "qnli(acc)",
-"wnli_eval_acc": "wnli (acc)",
-"cola_eval_mcc": "cola (mcc)",
-"snli_eval_acc": "snli (acc)", 
-"scitail_eval_acc": "scitail (acc)",
- "boolq_eval_acc": "boolq (acc)",
-  "mrpc_eval_f1": "mrpc (f1)", 
-   "mrpc_eval_acc": "mrpc (acc)",
-    "trec_eval_acc": "trec (acc)",
-     "yelp_polarity_eval_acc": "yelp (acc)",
-    "qqp_eval_f1" : "qqp (f1)", 
-    "qqp_eval_acc": "qqp (acc)",
-     "social_i_qa_eval_acc": "social_iqa (acc)",
-    "cosmos_qa_eval_acc": "cosmosqa (acc)",
-     "winogrande_eval_acc": "winogrande (acc)",
-      "hellaswag_eval_acc": "hellaswag (acc)",
-       "commonsense_qa_eval_acc": "commonsenseqa (acc)",
-       "unfreeze_lm_head": "lm" ,
-       "unfreeze_layer_norms": "ln",
-       "reduction_factor": "r",
-    "conditional_layer_norm": "cln"
+"rte_val_acc": "rte (acc)",
+"sst2_val_acc": "sst2 (acc)",
+"mrpc_val_f1": "mrpc (f1)",
+"mrpc_val_acc":"mrpc (acc)",
+"stsb_val_pearson_corrcoef": "stsb (pearson)",
+"stsb_val_spearman_corrcoef": "stsb (spearman)",
+"qqp_val_f1": "qqp (f1)",
+"qqp_val_acc": "qqp(acc)",
+"mnli_val_acc": "mnli(acc)",
+"qnli_val_acc": "qnli(acc)",
+"wnli_val_acc": "wnli (acc)",
+"cola_val_mcc": "cola (mcc)",
+"snli_val_acc": "snli (acc)",
+"scitail_val_acc": "scitail (acc)",
+"boolq_val_acc": "boolq (acc)",
+"mrpc_val_f1": "mrpc (f1)",
+"mrpc_val_acc": "mrpc (acc)",
+"trec_val_acc": "trec (acc)",
+"yelp_polarity_val_acc": "yelp (acc)",
+"qqp_val_f1" : "qqp (f1)",
+"qqp_val_acc": "qqp (acc)",
+"social_i_qa_val_acc": "social_iqa (acc)",
+"cosmos_qa_val_acc": "cosmosqa (acc)",
+"winogrande_val_acc": "winogrande (acc)",
+"hellaswag_val_acc": "hellaswag (acc)",
+"commonsense_qa_val_acc": "commonsenseqa (acc)",
+
+"rte_test_acc": "rte (acc)",
+"sst2_test_acc": "sst2 (acc)",
+"mrpc_test_f1": "mrpc (f1)",
+"mrpc_test_acc":"mrpc (acc)",
+"stsb_test_pearson_corrcoef": "stsb (pearson)",
+"stsb_test_spearman_corrcoef": "stsb (spearman)",
+"qqp_test_f1": "qqp (f1)",
+"qqp_test_acc": "qqp(acc)",
+"mnli_test_acc": "mnli(acc)",
+"qnli_test_acc": "qnli(acc)",
+"wnli_test_acc": "wnli (acc)",
+"cola_test_mcc": "cola (mcc)",
+"snli_test_acc": "snli (acc)",
+"scitail_test_acc": "scitail (acc)",
+"boolq_test_acc": "boolq (acc)",
+"mrpc_test_f1": "mrpc (f1)",
+"mrpc_test_acc": "mrpc (acc)",
+"trec_test_acc": "trec (acc)",
+"yelp_polarity_test_acc": "yelp (acc)",
+"qqp_test_f1" : "qqp (f1)",
+"qqp_test_acc": "qqp (acc)",
+"social_i_qa_test_acc": "social_iqa (acc)",
+"cosmos_qa_test_acc": "cosmosqa (acc)",
+"winogrande_test_acc": "winogrande (acc)",
+"hellaswag_test_acc": "hellaswag (acc)",
+"commonsense_qa_test_acc": "commonsenseqa (acc)",
+"unfreeze_lm_head": "lm" ,
+"unfreeze_layer_norms": "ln",
+"reduction_factor": "r",
+"conditional_layer_norm": "cln"
 }
 
 names = ["snli_{0}_acc", "scitail_{0}_acc", "boolq_{0}_acc", "mrpc_{0}_f1",
@@ -222,7 +249,8 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], order
   if len(params) != 0:
     df = df.sort_values(by=params)
   #df['task_embedding_dir'] = df.apply(lambda x: myfunc(x.task_embedding_dir), axis=1)
-  #print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
+  #df = df.rename(columns=names_to_short_names)
+  print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
   # computing the maximum.
   dfs = []
   results_dict = {}
@@ -245,13 +273,13 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], order
         right = dfs[i]
         table = pd.merge(table, right, on=params_max)
     acc_cols_names.sort()
-    table = table[acc_cols_names]
+    table = table[params_max+acc_cols_names]
   else:
     print("inside else")
     acc_cols_names.sort()
     print(acc_cols_names)
     table = pd.DataFrame.from_dict(results_dict)
-    table = table[acc_cols_names]
+    table = table[acc_cols_names+params_max]
     #table = table.sort_values(by=acc_cols_names)
   table = table.rename(columns=names_to_short_names)
   print(tabulate(table, headers='keys', tablefmt='pipe', showindex=False))

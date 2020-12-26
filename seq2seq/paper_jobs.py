@@ -37,8 +37,8 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
 #do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 params = ["learning_rate", "unfreeze_lm_head", "conditional_layer_norm",  "reduction_factor"] #, "learning_rate"]
 #download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
-retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='val_results.json')
-retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='test_results.json')
+#retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='val_results.json')
+#retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='test_results.json')
 
 ## finetune
 #job_prefix="glue-finetune"
@@ -59,8 +59,50 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
 #do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 params = ["learning_rate"]
 #download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
-retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='val_results.json')
-retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='test_results.json')
+#retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='val_results.json')
+#retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='test_results.json')
+
+
+# the goal of this experiment is to sweep over more parameters for our model and find the best.
+#job_prefix= "glue-adapters"
+job_prefix= "fusion-adapters"
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "tasks": [FUSION_TASKS], #
+                                 #"tasks": [GLUE_TASKS],
+                                 "eval_tasks": [FUSION_TASKS], #
+                                 #"eval_tasks": [GLUE_TASKS],
+                                 "model_name_or_path": ["t5-small"],
+                                 "tokenizer_name": ["t5-small"],
+                                 "num_train_epochs": [5],
+                                 "per_device_train_batch_size": [64],
+                                 "per_device_eval_batch_size": [64],
+                                 # for training adapters.
+                                 "add_layer_norm_before_adapter":[True, False],
+                                 "add_layer_norm_after_adapter": [True, False],
+                                 "train_adapters": [True],                                                         
+                                 "reduction_factor": [8, 4], #16],
+                                 "evaluation_strategy": ["no"],
+                                 #"hidden_dim": [64, 128, 256],
+                                 "projected_task_embedding_dim": [64],
+                                 #"add_adapters_in_decoder": [True, False],
+                                 "conditional_layer_norm": [True], #, False],
+                                 "unfreeze_lm_head": [True, False],
+                                 "adapter_config_name": ["meta-adapter"],
+                                 "unfreeze_layer_norms": [True, False],
+                                 "train_task_embeddings": [True], #, False],
+                                 "non_linearity": ["gelu_new"],
+                                 "output_dir": ["outputs/paper_results/more_test/fusion/adapters/"]})
+                                 #"output_dir": ["outputs/paper_results/more_test/glue/adapters/"]})
+do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#params = ["learning_rate", "unfreeze_lm_head", "conditional_layer_norm",  "reduction_factor"] #, "learning_rate"]
+#download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
+#retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='val_results.json')
+#retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='test_results.json')
+
+
+
+
+
 
 
 # testing the tpu speed 

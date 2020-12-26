@@ -25,7 +25,7 @@ from transformers.modeling_t5 import (T5PreTrainedModel, T5LayerNorm, T5Block,
 from transformers.utils import logging
 
 from seq2seq.adapters import AutoAdapterController
-from seq2seq.adapters import MetaAdapterConfig, ParametricMetaAdapterConfig
+from seq2seq.adapters import MetaAdapterConfig
 from seq2seq.adapters import TaskEmbeddingController
 from seq2seq.models.poolings import AutoPooling
 from seq2seq.models.projections import AutoProjection
@@ -43,8 +43,7 @@ class T5LayerFF(nn.Module):
         self.train_adapters = config.train_adapters and adapter_config.add_adapter_in_feed_forward
         if self.train_adapters:
             self.adapter_controller = AutoAdapterController.get(adapter_config)
-            self.is_meta_adapter = True if isinstance(adapter_config,
-                                                      (MetaAdapterConfig, ParametricMetaAdapterConfig)) else False
+            self.is_meta_adapter = True if isinstance(adapter_config, MetaAdapterConfig) else False
 
     def forward(self, hidden_states, task=None, task_embedding=None):
         norm_x = self.layer_norm(hidden_states)
@@ -69,8 +68,7 @@ class T5LayerSelfAttention(nn.Module):
         self.train_adapters = config.train_adapters and adapter_config.add_adapter_in_self_attention
         if self.train_adapters:
             self.adapter_controller = AutoAdapterController.get(adapter_config)
-            self.is_meta_adapter = True if isinstance(adapter_config,
-                                                      (MetaAdapterConfig, ParametricMetaAdapterConfig)) else False
+            self.is_meta_adapter = True if isinstance(adapter_config, MetaAdapterConfig) else False
 
     def forward(
             self,

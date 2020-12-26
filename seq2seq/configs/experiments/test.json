@@ -43,6 +43,6 @@
 "conditional_layer_norm": true,
 "split_validation_test": true,
 "one_layer_adapter_hyper_net": true,
-"adapter_hyper_net_with_bias": true}
+"adapter_hyper_net_with_bias": false}
 
 

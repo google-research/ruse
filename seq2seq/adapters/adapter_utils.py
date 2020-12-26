@@ -56,6 +56,7 @@ class AdapterHyperNet(nn.Module):
         self.task_embedding_dim = config.projected_task_embedding_dim if config.train_task_embeddings else config.task_embedding_dim
         self.one_layer_adapter_hyper_net = config.one_layer_adapter_hyper_net
         self.adapter_hyper_net_with_bias = config.adapter_hyper_net_with_bias
+        self.one_layer_adapter_hyper_net_with_linear = config.one_layer_adapter_hyper_net_with_linear
         if self.one_layer_adapter_hyper_net:
             self.weight_generator = nn.Parameter(torch.Tensor(self.task_embedding_dim,
                                                               self.input_dim, self.output_dim))
@@ -66,6 +67,11 @@ class AdapterHyperNet(nn.Module):
             nn.init.normal_(self.weight_generator, std=1e-2)
             if self.bias_generator is not None:
                 nn.init.zeros_(self.bias_generator)
+        elif self.one_layer_adapter_hyper_net_with_linear:
+            self.weight_generator = nn.Sequential(
+                linear_layer(self.task_embedding_dim, self.input_dim * self.output_dim))
+            self.bias_generator = nn.Sequential(
+                linear_layer(self.task_embedding_dim, self.input_dim))
         else:
             self.weight_generator = nn.Sequential(
                 linear_layer(self.task_embedding_dim, self.hidden_dim),

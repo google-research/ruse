@@ -2,7 +2,7 @@
 "model_name_or_path": "t5-small",
 "tokenizer_name": "t5-small",
 "learning_rate": 1e-2,
-"output_dir": "outputs/test1/gelu-both-true-with-bias-with/",
+"output_dir": "outputs/test1/gelu-both-true-with-bias-with-false-false-true/",
 "max_source_length": 128,
 "max_target_length": 128 ,
 "val_max_target_length":128,
@@ -42,7 +42,7 @@
 "train_task_embeddings": true,
 "conditional_layer_norm": true,
 "split_validation_test": true,
-"one_layer_adapter_hyper_net": false,
-"adapter_hyper_net_with_bias": false}
+"one_layer_adapter_hyper_net_with_linear": true
+}
 
 

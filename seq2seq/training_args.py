@@ -232,3 +232,6 @@ class AdapterTrainingArguments:
                                                                                         "hyper-net for adapters."})
   adapter_hyper_net_with_bias: Optional[bool] = field(default=False, metadata={"help": "if set, uses bias for one layer "
                                                                                        "adapter hyper-net."})
+  one_layer_adapter_hyper_net_with_linear: Optional[bool] = field(default=False, metadata={"help": "If specified "
+                                                                                                   "uses one linear layer for "
+                                                                                                   "obtaining the adapters weight."})

@@ -150,7 +150,8 @@ def main():
                             "task_hidden_dim",
                             "conditional_layer_norm",
                             "one_layer_adapter_hyper_net",
-                            "adapter_hyper_net_with_bias"
+                            "adapter_hyper_net_with_bias",
+                            "one_layer_adapter_hyper_net_with_linear"
                             )
     for p in extra_adapter_params:
         if hasattr(adapter_args, p):

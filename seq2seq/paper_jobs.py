@@ -1,5 +1,5 @@
 import collections
-from utils_launch import do_sweep
+from utils_launch import do_sweep, download_all_evals, retrieve_results
 
 FUSION_TASKS=["imdb", "snli", "scitail", "boolq", "mrpc", "trec", "yelp_polarity", "qqp", "social_i_qa", "cosmos_qa", "winogrande", "hellaswag", "commonsense_qa"]
 GLUE_TASKS=["rte", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "wnli", "cola"]
@@ -8,12 +8,12 @@ GLUE_TASKS=["rte", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "wnli", "cola"
 ###########################
 basic_config_path = "configs/paper_experiments/config.json"
 ## adapters
-
+job_prefix= "glue-adapters"
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
-                                 "tasks": [FUSION_TASKS], #
-                                 #"tasks": [GLUE_TASKS],
-                                 "eval_tasks": [FUSION_TASKS], #
-                                 #"eval_tasks": [GLUE_TASKS],
+                                 #"tasks": [FUSION_TASKS], #
+                                 "tasks": [GLUE_TASKS],
+                                 #"eval_tasks": [FUSION_TASKS], #
+                                 "eval_tasks": [GLUE_TASKS],
                                  "model_name_or_path": ["t5-small"],
                                  "tokenizer_name": ["t5-small"],
                                  "num_train_epochs": [5],
@@ -31,27 +31,37 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "adapter_config_name": ["meta-adapter"],
                                  "train_task_embeddings": [True], #, False],
                                  "non_linearity": ["gelu_new"],
-                                 "output_dir": ["outputs/paper_results/test/fusion/adapters/"]}) 
-                                 #"output_dir": ["outputs/paper_results/test/glue/adapters/"]})
-do_sweep(basic_config_path, sweep, job_prefix="fusion-adapters", num_gpus=4, ordered_name=True) # glue-adapters
+                                 #"output_dir": ["outputs/paper_results/test/fusion/adapters/"]})
+                                 "output_dir": ["outputs/paper_results/test/glue/adapters/"]})
+#do_sweep(basic_config_path, sweep, job_prefix="fusion-adapters", num_gpus=4, ordered_name=True) # glue-adapters
 #do_sweep(basic_config_path, sweep, job_prefix="glue-adapters", num_gpus=4, ordered_name=True) # glue-adapters
+params = ["unfreeze_lm_head", "conditional_layer_norm",  "reduction_factor", "learning_rate"]
+#download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
+retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='val_results.json')
+retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='test_results.json')
 
 ## finetune
+job_prefix="glue-finetune"
+#job_prefix = "fusion-finetune"
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
-                                 "tasks": [FUSION_TASKS], #
-                                 #"tasks": [GLUE_TASKS],
-                                 "eval_tasks": [FUSION_TASKS], 
-                                 #"eval_tasks": [GLUE_TASKS],
+                                 #"tasks": [FUSION_TASKS], #
+                                 "tasks": [GLUE_TASKS],
+                                 #"eval_tasks": [FUSION_TASKS],
+                                 "eval_tasks": [GLUE_TASKS],
                                  "model_name_or_path": ["t5-small"],
                                  "tokenizer_name": ["t5-small"],
                                  "num_train_epochs": [5],
                                  "per_device_train_batch_size": [64],
                                  "per_device_eval_batch_size": [64],
                                  "evaluation_strategy": ["no"],
-                                 "output_dir": ["outputs/paper_results/test/fusion/finetune/"]})
-                                 #"output_dir": ["outputs/paper_results/test/glue/finetune/"]})
-do_sweep(basic_config_path, sweep, job_prefix="fusion-finetune", num_gpus=4, ordered_name=True)
-#do_sweep(basic_config_path, sweep, job_prefix="glue-finetune", num_gpus=4, ordered_name=True) 
+                                 #"output_dir": ["outputs/paper_results/test/fusion/finetune/"]})
+                                 "output_dir": ["outputs/paper_results/test/glue/finetune/"]})
+#do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+params = ["learning_rate"]
+#download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
+retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='val_results.json')
+retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='test_results.json')
+
 
 # testing the tpu speed 
 """

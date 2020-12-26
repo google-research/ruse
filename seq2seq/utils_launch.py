@@ -100,21 +100,43 @@ def run_in_parallel(commands):
         p.wait()
 
 
-def download_all_evals(sweep, job_prefix, short_keys, output_dir):
+def copy_command(experiment_output_dir, bucket, copy_commands, file_name="eval_results.json"):
+        eval_path = os.path.join(experiment_output_dir, file_name)
+        if not os.path.exists(experiment_output_dir):
+            os.makedirs(experiment_output_dir)
+        if not os.path.exists(eval_path):
+            copy_commands.append(f"gsutil cp {bucket}/{eval_path} {experiment_output_dir}/{file_name}")
+            print(copy_commands)
+
+def download_all_evals(sweep, job_prefix, short_keys, output_dir, ordered_name=False):
   values = list(sweep.values())
   options = [flatten(option) for option in list(itertools.product(*values))]
   bucket = "gs://ruse-xcloud-bucket"
   copy_commands = []
+  i = 0 
   for option in options:
-    name = make_name(job_prefix, short_keys, option)
+    if ordered_name:
+        name = job_prefix+"-"+str(i)
+        i = i + 1
+    else:
+        name = make_name(job_prefix, short_keys, option)
     experiment_output_dir = os.path.join(output_dir, name)
-    eval_path = os.path.join(experiment_output_dir, 'eval_results.json')
-    if not os.path.exists(experiment_output_dir):
-      os.makedirs(experiment_output_dir)
-    if not os.path.exists(eval_path):
-      #copy_commands.append(["gsutil", "cp", f"{bucket}/{eval_path}", f"{experiment_output_dir}/eval_results.json"])
-      copy_commands.append(f"gsutil cp {bucket}/{eval_path} {experiment_output_dir}/eval_results.json")
-  print(copy_commands)
+    if ordered_name:
+        copy_command(experiment_output_dir, bucket, copy_commands, file_name="test_results.json")
+        copy_command(experiment_output_dir, bucket, copy_commands, file_name="val_results.json")
+        copy_command(experiment_output_dir, bucket, copy_commands, file_name="arguments_results.json")
+        #download("test_results.json", "val_results.json", "arguments_results.json")
+    else:
+        copy_command(experiment_output_dir, bucket, copy_commands, file_name="eval_results.json")
+        """
+        eval_path = os.path.join(experiment_output_dir, 'eval_results.json')
+        if not os.path.exists(experiment_output_dir):
+            os.makedirs(experiment_output_dir)
+        if not os.path.exists(eval_path):
+            copy_commands.append(f"gsutil cp {bucket}/{eval_path} {experiment_output_dir}/eval_results.json")
+            print(copy_commands)
+        """
+
   run_in_parallel(copy_commands)
 
 
@@ -152,30 +174,41 @@ names_to_short_names={
        "commonsense_qa_eval_acc": "commonsenseqa (acc)",
        "unfreeze_lm_head": "lm" ,
        "unfreeze_layer_norms": "ln",
-       "reduction_factor": "r"
+       "reduction_factor": "r",
+    "conditional_layer_norm": "cln"
 }
 
+names = ["snli_{0}_acc", "scitail_{0}_acc", "boolq_{0}_acc", "mrpc_{0}_f1",
+         "mrpc_{0}_acc", "trec_{0}_acc", "yelp_polarity_{0}_acc",
+         "qqp_{0}_f1", "qqp_{0}_acc", "social_i_qa_{0}_acc", "cosmos_qa_{0}_acc",
+         "winogrande_{0}_acc", "hellaswag_{0}_acc", "commonsense_qa_{0}_acc",
+         'cola_{0}_mcc', "qnli_{0}_acc", "rte_{0}_acc", "sst2_{0}_acc",
+         "stsb_{0}_pearson_corrcoef", "stsb_{0}_spearman_corrcoef",
+         "mnli_eval_acc", "wnli_{0}_acc"]
 
-def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
-  acc_cols = ["snli_eval_acc", "scitail_eval_acc", "boolq_eval_acc", "mrpc_eval_f1", 
-   "mrpc_eval_acc", "trec_eval_acc", "yelp_polarity_eval_acc",
-    "qqp_eval_f1", "qqp_eval_acc",  "social_i_qa_eval_acc",
-    "cosmos_qa_eval_acc", "winogrande_eval_acc", "hellaswag_eval_acc", "commonsense_qa_eval_acc", 
-              'cola_eval_mcc',   'snli_eval_acc', 'yelp_polarity_eval_acc',
-              "qnli_eval_acc", "scitail_eval_acc", "boolq_eval_acc",
-              "rte_eval_acc",  "sst2_eval_acc", "mrpc_eval_f1", "mrpc_eval_acc", 
-              "stsb_eval_pearson_corrcoef", "stsb_eval_spearman_corrcoef",
-              "qqp_eval_f1",   "qqp_eval_acc",  "mnli_eval_acc",
-              "qnli_eval_acc", "wnli_eval_acc",   "cola_eval_mcc"]
+
+def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], ordered_name=False, filename="val_results.json"):
+  acc_cols = []
+  for acc_col in names:
+        metrics = [acc_col.format(name) for name in ["val", "eval", "test"]]
+        acc_cols = acc_cols + metrics
   print(job_prefix)
   df = pd.DataFrame()
   keys = flatten(list(sweep.keys()))
   values = list(sweep.values())
   options = [flatten(option) for option in list(itertools.product(*values))]
+  i = 0
   for option in options:
-    name = make_name(job_prefix, short_keys, option)
+    if ordered_name:
+        name = job_prefix + "-" + str(i)
+        i = i + 1
+    else:
+        name = make_name(job_prefix, short_keys, option)
     experiment_output_dir = os.path.join(output_dir, name)
-    eval_path = os.path.join(experiment_output_dir, 'eval_results.json')
+    if ordered_name:
+        eval_path = os.path.join(experiment_output_dir, filename)
+    else:
+        eval_path = os.path.join(experiment_output_dir, 'eval_results.json')
     try:
       with open(eval_path, "r") as infile:
         results = json.loads(infile.read())
@@ -184,20 +217,16 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
     except FileNotFoundError:
       print("File not found ", eval_path)
   #print("##### df ", df)
-  acc_cols = list(set.intersection(set(df.columns.tolist()), set(acc_cols)))
-  df = df[params+acc_cols]
+  acc_cols_names = list(set.intersection(set(df.columns.tolist()), set(acc_cols)))
+  df = df[params+acc_cols_names]
   if len(params) != 0:
     df = df.sort_values(by=params)
   #df['task_embedding_dir'] = df.apply(lambda x: myfunc(x.task_embedding_dir), axis=1)
   #print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
-  
-
-
   # computing the maximum.
-  #
   dfs = []
   results_dict = {}
-  for acc_col in acc_cols:
+  for acc_col in acc_cols_names:
      params_max = [p  for p in params if p !="learning_rate"]
      if len(params_max) == 0:
         df1 = df.loc[df[acc_col].idxmax()][params_max+[acc_col]]
@@ -210,11 +239,19 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[]):
         dfs.append(df1)
 
   if len(params_max) != 0:
+    print("inside if")
     table = dfs[0]
     for i in range(1, len(dfs)):
         right = dfs[i]
         table = pd.merge(table, right, on=params_max)
+    acc_cols_names.sort()
+    table = table[acc_cols_names]
   else:
+    print("inside else")
+    acc_cols_names.sort()
+    print(acc_cols_names)
     table = pd.DataFrame.from_dict(results_dict)
+    table = table[acc_cols_names]
+    #table = table.sort_values(by=acc_cols_names)
   table = table.rename(columns=names_to_short_names)
   print(tabulate(table, headers='keys', tablefmt='pipe', showindex=False))

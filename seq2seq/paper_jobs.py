@@ -7,6 +7,7 @@ GLUE_TASKS=["rte", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "cola"] # T5 d
 # experiment on GLUE.
 ###########################
 basic_config_path = "configs/paper_experiments/config.json"
+"""
 ## adapters
 #job_prefix= "glue-adapters"
 job_prefix= "fusion-adapters"
@@ -61,8 +62,9 @@ params = ["learning_rate"]
 #download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
 #retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='val_results.json')
 #retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='test_results.json')
+"""
 
-
+"""
 # the goal of this experiment is to sweep over more parameters for our model and find the best.
 #job_prefix= "glue-adapters"
 job_prefix= "fusion-adapters"
@@ -98,8 +100,112 @@ do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_na
 #download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
 #retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='val_results.json')
 #retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='test_results.json')
+"""
 
 
+# goal: test less reductions.
+"""
+#job_prefix= "glue-adapters"
+job_prefix= "fusion-adapters"
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "tasks": [FUSION_TASKS], #
+                                 #"tasks": [GLUE_TASKS],
+                                 "eval_tasks": [FUSION_TASKS], #
+                                 #"eval_tasks": [GLUE_TASKS],
+                                 "model_name_or_path": ["t5-small"],
+                                 "tokenizer_name": ["t5-small"],
+                                 "num_train_epochs": [5],
+                                 "per_device_train_batch_size": [64],
+                                 "per_device_eval_batch_size": [64],
+                                 # for training adapters.
+                                 "train_adapters": [True],                                                         
+                                 "reduction_factor": [4, 2],
+                                 "evaluation_strategy": ["no"],
+                                 #"hidden_dim": [64, 128, 256],
+                                 "projected_task_embedding_dim": [64],
+                                 #"add_adapters_in_decoder": [True, False],
+                                 "conditional_layer_norm": [True], #, False],
+                                 "unfreeze_lm_head": [True], #False],
+                                 "adapter_config_name": ["meta-adapter"],
+                                 "train_task_embeddings": [True], #, False],
+                                 "non_linearity": ["gelu_new"],
+                                 "output_dir": ["outputs/paper_results/test_reductions_more/fusion/adapters/"]})
+                                 #"output_dir": ["outputs/paper_results/test/glue/adapters/"]})
+do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#params = ["learning_rate", "unfreeze_lm_head", "conditional_layer_norm",  "reduction_factor"] #, "learning_rate"]
+#download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
+#retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='val_results.json')
+#retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='test_results.json')
+"""
+
+# goal: test if one linear layer is better
+#job_prefix= "glue-adapters"
+job_prefix= "fusion-adapters-l"
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "tasks": [FUSION_TASKS], #
+                                 #"tasks": [GLUE_TASKS],
+                                 "eval_tasks": [FUSION_TASKS], #
+                                 #"eval_tasks": [GLUE_TASKS],
+                                 "model_name_or_path": ["t5-small"],
+                                 "tokenizer_name": ["t5-small"],
+                                 "num_train_epochs": [5],
+                                 "per_device_train_batch_size": [64],
+                                 "per_device_eval_batch_size": [64],
+                                 # for training adapters.
+                                 "train_adapters": [True],                                                         
+                                 "reduction_factor": [8],
+                                 "evaluation_strategy": ["no"],
+                                 #"hidden_dim": [64, 128, 256],
+                                 "projected_task_embedding_dim": [64],
+                                 #"add_adapters_in_decoder": [True, False],
+                                 "conditional_layer_norm": [True], #, False],
+                                 "unfreeze_lm_head": [True], #False],
+                                 "adapter_config_name": ["meta-adapter"],
+                                 "train_task_embeddings": [True], #, False],
+                                 "non_linearity": ["gelu_new"],
+                                 "one_layer_adapter_hyper_net_with_linear": [True],
+                                 "output_dir": ["outputs/paper_results/test_one_linear_layer/fusion/adapters/"]})
+                                 #"output_dir": ["outputs/paper_results/test/glue/adapters/"]})
+do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#params = ["learning_rate", "unfreeze_lm_head", "conditional_layer_norm",  "reduction_factor"] #, "learning_rate"]
+#download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
+#retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='val_results.json')
+#retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='test_results.json')
+
+
+# goal: test if adapters in decoder are needed.
+#job_prefix= "glue-adapters"
+job_prefix= "fusion-adapters-d"
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "tasks": [FUSION_TASKS], #
+                                 #"tasks": [GLUE_TASKS],
+                                 "eval_tasks": [FUSION_TASKS], #
+                                 #"eval_tasks": [GLUE_TASKS],
+                                 "model_name_or_path": ["t5-small"],
+                                 "tokenizer_name": ["t5-small"],
+                                 "num_train_epochs": [5],
+                                 "per_device_train_batch_size": [64],
+                                 "per_device_eval_batch_size": [64],
+                                 # for training adapters.
+                                 "train_adapters": [True],                                                         
+                                 "reduction_factor": [8],
+                                 "evaluation_strategy": ["no"],
+                                 #"hidden_dim": [64, 128, 256],
+                                 "projected_task_embedding_dim": [64],
+                                 #"add_adapters_in_decoder": [True, False],
+                                 "conditional_layer_norm": [True], #, False],
+                                 "unfreeze_lm_head": [True], #False],
+                                 "adapter_config_name": ["meta-adapter"],
+                                 "train_task_embeddings": [True], #, False],
+                                 "non_linearity": ["gelu_new"],
+                                 "add_adapters_in_decoder": [False],
+                                 "output_dir": ["outputs/paper_results/test_adapter_in_decoder/fusion/adapters/"]})
+                                 #"output_dir": ["outputs/paper_results/test/glue/adapters/"]})
+do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#params = ["learning_rate", "unfreeze_lm_head", "conditional_layer_norm",  "reduction_factor"] #, "learning_rate"]
+#download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
+#retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='val_results.json')
+#retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='test_results.json')
 
 
 

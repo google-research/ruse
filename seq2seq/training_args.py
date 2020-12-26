@@ -228,3 +228,7 @@ class AdapterTrainingArguments:
   task_hidden_dim: Optional[int] = field(default=128, metadata={"help": "defines the hidden dimension for task embedding projector."})
   conditional_layer_norm: Optional[bool] = field(default=False, metadata={"help": "Implements conditional layer norms "
                                                                                   "modulated based on task embeddings."})
+  one_layer_adapter_hyper_net: Optional[bool] = field(default=False, metadata={"help": "If set, this uses one layer"
+                                                                                        "hyper-net for adapters."})
+  adapter_hyper_net_with_bias: Optional[bool] = field(default=False, metadata={"help": "if set, uses bias for one layer "
+                                                                                       "adapter hyper-net."})

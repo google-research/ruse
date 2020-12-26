@@ -44,23 +44,13 @@ class MetaAdapterConfig(AdapterConfig):
   train_task_embeddings = False
   projected_task_embedding_dim = 64
   task_hidden_dim = 128
-
-
-class ParametricMetaAdapterConfig(AdapterConfig):
-  """Implements meta adapter configuration, in which a hyper-network generates the
-  parameters of adapter layers. Task embeddings are parameters in this case."""
-  hidden_dim = 128
-  task_embedding_dir = None
-  task_embedding_dim = 64
-  train_task_embeddings = False
-  projected_task_embedding_dim = 64
-  task_hidden_dim = 128
+  one_layer_adapter_hyper_net = False
+  adapter_hyper_net_with_bias = False
 
 
 ADAPTER_CONFFIG_MAPPING = OrderedDict(
   [("adapter", AdapterConfig),
-   ("meta-adapter", MetaAdapterConfig),
-   ("parametric-meta-adapter", ParametricMetaAdapterConfig)])
+   ("meta-adapter", MetaAdapterConfig)])
 
 
 class AutoAdapterConfig(nn.Module):

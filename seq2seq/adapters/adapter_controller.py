@@ -18,7 +18,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from transformers.activations import get_activation
 
-from .adapter_configuration import AdapterConfig, MetaAdapterConfig, ParametricMetaAdapterConfig
+from .adapter_configuration import AdapterConfig, MetaAdapterConfig
 from .adapter_modeling import Adapter
 from .adapter_utils import HyperNetUpSampler, HyperNetDownSampler, LayerNormHyperNet
 
@@ -190,9 +190,7 @@ class AutoAdapterController(nn.Module):
 
   @classmethod
   def get(cls, config):
-    if isinstance(config, ParametricMetaAdapterConfig):
-      return MetaAdapterController(config)
-    elif isinstance(config, MetaAdapterConfig):
+    if isinstance(config, MetaAdapterConfig):
       return MetaAdapterController(config)
     elif isinstance(config, AdapterConfig):
       return AdapterController(config)

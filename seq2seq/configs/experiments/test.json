@@ -2,7 +2,7 @@
 "model_name_or_path": "t5-small",
 "tokenizer_name": "t5-small",
 "learning_rate": 1e-2,
-"output_dir": "outputs/test1/gelu_test2/",
+"output_dir": "outputs/test1/gelu-both-true-with-bias/",
 "max_source_length": 128,
 "max_target_length": 128 ,
 "val_max_target_length":128,
@@ -24,7 +24,7 @@
 "logging_steps": 200,
 "save_total_limit": 1,
 "train_adapters": true,
-"adapter_config_name":"parametric-meta-adapter",
+"adapter_config_name":"meta-adapter",
 "temperature": 10,
 "do_eval": true,
 "predict_with_generate": true,
@@ -41,8 +41,8 @@
 "unfreeze_layer_norms": false,
 "train_task_embeddings": true,
 "conditional_layer_norm": true,
-"split_validation_test": true
-}
-
+"split_validation_test": true,
+"one_layer_adapter_hyper_net": true,
+"adapter_hyper_net_with_bias": true}
 
 

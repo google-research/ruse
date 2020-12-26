@@ -148,7 +148,9 @@ def main():
                             "add_adapter_in_feed_forward",
                             "add_adapter_in_self_attention",
                             "task_hidden_dim",
-                            "conditional_layer_norm"
+                            "conditional_layer_norm",
+                            "one_layer_adapter_hyper_net",
+                            "adapter_hyper_net_with_bias"
                             )
     for p in extra_adapter_params:
         if hasattr(adapter_args, p):
@@ -274,7 +276,7 @@ def main():
                                        zip(data_args.eval_tasks, data_args.adapters)}
                     if isinstance(sub_module, AdapterController):
                         sub_module.set_task_to_adapter_map(task_to_adapter)
-            if adapter_args.adapter_config_name in ["meta-adapter", "parametric-meta-adapter"]:
+            if adapter_args.adapter_config_name in ["meta-adapter"]:
                 model.task_embedding_controller.update_task_embeddings(eval_datasets.keys(),
                     parametric=training_args.parametric_task_embedding)
 

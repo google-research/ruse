@@ -51,7 +51,7 @@ class AbstractTaskDataset(abc.ABC):
 
     small_datasets_without_all_splits = ["cola", "wnli", "rte", "trec",
                                          "mrpc", "stsb", "imdb", "boolq", "commonsense_qa"]
-    large_data_without_all_splits = ["yelp_polarity", "qqp",
+    large_data_without_all_splits = ["yelp_polarity", "qqp", "qnli",
                                      "social_i_qa", "cosmos_qa", "winogrande", "hellaswag", "sst2"]
 
     def __init__(self, seed=42):

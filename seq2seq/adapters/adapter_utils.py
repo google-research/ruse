@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """Implementation of different activation functions and hyper-network layers."""
-import math
+
 
 import numpy as np
 import os
@@ -44,103 +44,46 @@ def linear_layer(input_dim, output_dim, std=1e-2):
     return linear
 
 
-# TODO: this can be removed and become one.
-class HyperNetDownSampler(nn.Module):
-    """This module generates the down sampler's weights for the meta adapter
-    layers."""
+class AdapterHyperNet(nn.Module):
+    """This module generates the weights for the meta adapter layers."""
 
-    def __init__(self, config):
-        super(HyperNetDownSampler, self).__init__()
+    def __init__(self, config, input_dim, output_dim):
+        super(AdapterHyperNet, self).__init__()
         self.hidden_dim = config.hidden_dim
-        self.input_dim = config.input_dim
-        self.down_sample_size = self.input_dim // config.reduction_factor
-        self.task_embedding_dim = config.projected_task_embedding_dim if config.train_task_embeddings else config.task_embedding_dim
-        self.one_layer_adapter_hyper_net = config.one_layer_adapter_hyper_net
-
-        self.one_layer_adapter_hyper_net = config.one_layer_adapter_hyper_net
-        self.adapter_hyper_net_with_bias = config.adapter_hyper_net_with_bias
-        if self.one_layer_adapter_hyper_net:
-            self.weight_generator = nn.Parameter(torch.Tensor(self.task_embedding_dim,
-                                                              self.down_sample_size, self.input_dim))
-            if self.adapter_hyper_net_with_bias:
-                self.bias_generator = nn.Parameter(torch.Tensor(self.task_embedding_dim, self.down_sample_size))
-            else:
-                self.register_parameter('bias_generator', None)
-            self.reset_parameters()
-        else:
-            self.weight_generator = nn.Sequential(
-                linear_layer(self.task_embedding_dim, self.hidden_dim),
-                linear_layer(self.hidden_dim, self.input_dim * self.down_sample_size))
-            self.bias_generator = nn.Sequential(
-                linear_layer(self.task_embedding_dim, self.hidden_dim),
-                linear_layer(self.hidden_dim, self.down_sample_size))
-
-    def reset_parameters(self):
-        nn.init.kaiming_uniform_(self.weight_generator, a=math.sqrt(5))
-        if self.bias_generator is not None:
-            fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight_generator)
-            bound = 1 / math.sqrt(fan_in)
-            nn.init.uniform_(self.bias_generator, -bound, bound)
-
-    def forward(self, task_embedding):
-        task_embedding = task_embedding.view(-1)
-        if self.one_layer_adapter_hyper_net:
-            bias = None
-            weight = torch.matmul(task_embedding, self.weight_generator.view(self.task_embedding_dim, -1)
-                                  ).view(self.down_sample_size, self.input_dim)
-            if self.adapter_hyper_net_with_bias:
-                bias = torch.matmul(task_embedding, self.bias_generator)
-        else:
-            weight = self.weight_generator(task_embedding).view(self.down_sample_size, self.input_dim)
-            bias = self.bias_generator(task_embedding).view(-1)
-        return weight, bias
-
-
-class HyperNetUpSampler(nn.Module):
-    """This module generates the up sampler's weight for the meta adapter layers."""
-
-    def __init__(self, config):
-        super(HyperNetUpSampler, self).__init__()
-        self.hidden_dim = config.hidden_dim
-        self.input_dim = config.input_dim
-        self.down_sample_size = self.input_dim // config.reduction_factor
+        self.input_dim = input_dim
+        self.output_dim = output_dim
         self.train_task_embeddings = config.train_task_embeddings
         self.task_embedding_dim = config.projected_task_embedding_dim if config.train_task_embeddings else config.task_embedding_dim
         self.one_layer_adapter_hyper_net = config.one_layer_adapter_hyper_net
         self.adapter_hyper_net_with_bias = config.adapter_hyper_net_with_bias
         if self.one_layer_adapter_hyper_net:
             self.weight_generator = nn.Parameter(torch.Tensor(self.task_embedding_dim,
-                                                              self.input_dim, self.down_sample_size))
+                                                              self.input_dim, self.output_dim))
             if self.adapter_hyper_net_with_bias:
                 self.bias_generator = nn.Parameter(torch.Tensor(self.task_embedding_dim, self.input_dim))
             else:
                 self.register_parameter('bias_generator', None)
-            self.reset_parameters()
+            nn.init.normal_(self.weight_generator, std=1e-2)
+            if self.bias_generator is not None:
+                nn.init.zeros_(self.bias_generator)
         else:
             self.weight_generator = nn.Sequential(
                 linear_layer(self.task_embedding_dim, self.hidden_dim),
-                linear_layer(self.hidden_dim, self.input_dim * self.down_sample_size))
+                linear_layer(self.hidden_dim, self.input_dim * self.output_dim))
             self.bias_generator = nn.Sequential(
                 linear_layer(self.task_embedding_dim, self.hidden_dim),
                 linear_layer(self.hidden_dim, self.input_dim))
-
-    def reset_parameters(self):
-        nn.init.kaiming_uniform_(self.weight_generator, a=math.sqrt(5))
-        if self.bias_generator is not None:
-            fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight_generator)
-            bound = 1 / math.sqrt(fan_in)
-            nn.init.uniform_(self.bias_generator, -bound, bound)
 
     def forward(self, task_embedding):
         task_embedding = task_embedding.view(-1)
         if self.one_layer_adapter_hyper_net:
             bias = None
             weight = torch.matmul(task_embedding, self.weight_generator.view(self.task_embedding_dim, -1)
-                                  ).view(self.input_dim, self.down_sample_size)
+                                  ).view(self.input_dim, self.output_dim)
             if self.adapter_hyper_net_with_bias:
                 bias = torch.matmul(task_embedding, self.bias_generator)
         else:
-            weight = self.weight_generator(task_embedding).view(self.input_dim, self.down_sample_size)
+            weight = self.weight_generator(task_embedding).view(self.input_dim, self.output_dim)
             bias = self.bias_generator(task_embedding).view(-1)
         return weight, bias
 

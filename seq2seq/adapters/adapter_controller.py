@@ -20,7 +20,7 @@ from transformers.activations import get_activation
 
 from .adapter_configuration import AdapterConfig, MetaAdapterConfig
 from .adapter_modeling import Adapter
-from .adapter_utils import HyperNetUpSampler, HyperNetDownSampler, LayerNormHyperNet
+from .adapter_utils import AdapterHyperNet, LayerNormHyperNet
 
 
 # TODO: current model would not work with the AdapterController
@@ -128,8 +128,9 @@ class MetaAdapterController(nn.Module):
     self.adapters = nn.ModuleDict(dict())
     self.config = config
     self.input_dim = config.input_dim
-    self.meta_up_sampler = HyperNetUpSampler(config)
-    self.meta_down_sampler = HyperNetDownSampler(config)
+    self.down_sample_size = self.input_dim // config.reduction_factor
+    self.meta_up_sampler = AdapterHyperNet(config, self.input_dim, self.down_sample_size)
+    self.meta_down_sampler = AdapterHyperNet(config, self.down_sample_size, self.input_dim)
     self.activation_type = config.non_linearity.lower()
     self.add_layer_norm_before_adapter = config.add_layer_norm_before_adapter
     self.add_layer_norm_after_adapter = config.add_layer_norm_after_adapter

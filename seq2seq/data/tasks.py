@@ -205,7 +205,6 @@ class IWSLT2017RONL(AbstractTaskDataset):
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix,
                                    prefix="Translate Romanian to Dutch")
 
-
 class IWSLT2017ENNL(AbstractTaskDataset):
     name = "iwslt2017-en-nl"
     task_specific_config = {'max_length': 300, 'num_beams': 4}
@@ -483,6 +482,9 @@ class QNLITaskDataset(AbstractTaskDataset):
     label_list = ["0", "1"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
     def load_dataset(self, split):
         return datasets.load_dataset('glue', 'qnli', split=split, script_version="master")

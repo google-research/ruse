@@ -51,7 +51,7 @@ class AbstractTaskDataset(abc.ABC):
 
     small_datasets_without_all_splits = ["cola", "wnli", "rte", "trec",
                                          "mrpc", "stsb", "imdb", "boolq", "commonsense_qa"]
-    large_data_without_all_splits = ["yelp_polarity", "qqp",
+    large_data_without_all_splits = ["yelp_polarity", "qqp", "qnli",
                                      "social_i_qa", "cosmos_qa", "winogrande", "hellaswag", "sst2"]
 
     def __init__(self, seed=42):
@@ -204,7 +204,6 @@ class IWSLT2017RONL(AbstractTaskDataset):
         tgt_texts = [example['translation']["nl"]]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix,
                                    prefix="Translate Romanian to Dutch")
-
 
 class IWSLT2017ENNL(AbstractTaskDataset):
     name = "iwslt2017-en-nl"
@@ -405,6 +404,9 @@ class SST2TaskDataset(AbstractTaskDataset):
     label_list = ["0", "1"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
     def load_dataset(self, split):
         return datasets.load_dataset('glue', 'sst2',
@@ -480,6 +482,9 @@ class QNLITaskDataset(AbstractTaskDataset):
     label_list = ["0", "1"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
     def load_dataset(self, split):
         return datasets.load_dataset('glue', 'qnli', split=split, script_version="master")

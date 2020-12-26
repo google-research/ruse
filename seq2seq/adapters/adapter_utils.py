@@ -53,9 +53,11 @@ class HyperNetDownSampler(nn.Module):
     self.down_sample_size = self.input_dim // config.reduction_factor
     self.task_embedding_dim = config.projected_task_embedding_dim if config.train_task_embeddings else config.task_embedding_dim
     self.weight_generator = nn.Sequential(
+    #linear_layer(self.task_embedding_dim, self.input_dim*self.down_sample_size))
       linear_layer(self.task_embedding_dim, self.hidden_dim),
       linear_layer(self.hidden_dim, self.input_dim * self.down_sample_size))
     self.bias_generator = nn.Sequential(
+      #linear_layer(self.task_embedding_dim, self.down_sample_size))
       linear_layer(self.task_embedding_dim, self.hidden_dim),
       linear_layer(self.hidden_dim, self.down_sample_size))
 
@@ -77,9 +79,11 @@ class HyperNetUpSampler(nn.Module):
     self.train_task_embeddings = config.train_task_embeddings
     self.task_embedding_dim = config.projected_task_embedding_dim if config.train_task_embeddings else config.task_embedding_dim
     self.weight_generator = nn.Sequential(
+    #linear_layer(self.task_embedding_dim, self.input_dim*self.down_sample_size))
       linear_layer(self.task_embedding_dim, self.hidden_dim),
       linear_layer(self.hidden_dim, self.input_dim * self.down_sample_size))
     self.bias_generator = nn.Sequential(
+      #linear_layer(self.task_embedding_dim, self.input_dim))
       linear_layer(self.task_embedding_dim, self.hidden_dim),
       linear_layer(self.hidden_dim, self.input_dim))
 
@@ -117,6 +121,7 @@ class LayerNormHyperNet(nn.Module):
 
   def forward(self, input):
     return self.weight_generator(input), self.bias_generator(input)
+
 
 
 class TaskEmbeddingController(nn.Module):

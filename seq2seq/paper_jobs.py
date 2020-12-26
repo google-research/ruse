@@ -2,7 +2,7 @@ import collections
 from utils_launch import do_sweep, download_all_evals, retrieve_results
 
 FUSION_TASKS=["imdb", "snli", "scitail", "boolq", "mrpc", "trec", "yelp_polarity", "qqp", "social_i_qa", "cosmos_qa", "winogrande", "hellaswag", "commonsense_qa"]
-GLUE_TASKS=["rte", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "wnli", "cola"]
+GLUE_TASKS=["rte", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "cola"] # T5 does not train on wnli
 ###########################
 # experiment on GLUE.
 ###########################

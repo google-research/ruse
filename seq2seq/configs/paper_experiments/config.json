@@ -29,7 +29,8 @@
 "task_embedding_dim": 512,
 "gcs_bucket": "ruse-xcloud-bucket",
 "split_validation_test": true,
-"evaluation_strategy": "steps"
+"evaluation_strategy": "steps",
+"non_linearity": "gelu_new"
 }
 
 

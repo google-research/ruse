@@ -1,4 +1,5 @@
 import sys
+import torch 
 
 import datasets
 import json
@@ -227,10 +228,22 @@ def main():
 
     # Training
     if training_args.do_train:
+        ######################
+        #torch.cuda.synchronize()  # wait for move to complete
+        #start = torch.cuda.Event(enable_timing=True)
+        #end = torch.cuda.Event(enable_timing=True)
+        #start.record()
+        ######################
         trainer.train(
             model_path=model_args.model_name_or_path if (os.path.isdir(model_args.model_name_or_path) and not
             training_args.optimize_from_scratch) else None
         )
+        ######################
+        #torch.cuda.synchronize()  # wait for all_reduce to complete
+        #end.record()
+        #total_time = {"total_time": start.elapsed_time(end)}
+        #print(total_time)
+        ######################
 
         trainer.save_model()
         # For convenience, we also re-save the tokenizer to the same directory,

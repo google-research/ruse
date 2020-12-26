@@ -405,6 +405,9 @@ class SST2TaskDataset(AbstractTaskDataset):
     label_list = ["0", "1"]
     task_specific_config = {'max_length': compute_task_max_decoding_length(label_list)}
     metrics = [metrics.accuracy]
+    split_to_data_split = {"train": "train",
+                           "validation": "validation",
+                           "test": "validation"}
 
     def load_dataset(self, split):
         return datasets.load_dataset('glue', 'sst2',

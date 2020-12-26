@@ -123,6 +123,7 @@ class LayerNormHyperNet(nn.Module):
     return self.weight_generator(input), self.bias_generator(input)
 
 
+
 class TaskEmbeddingController(nn.Module):
   def __init__(self, config):
     super(TaskEmbeddingController, self).__init__()

@@ -49,10 +49,7 @@ class T5LayerFF(nn.Module):
         norm_x = self.layer_norm(hidden_states)
         y = self.DenseReluDense(norm_x)
         if self.train_adapters:
-            if not self.is_meta_adapter:
-                y = self.adapter_controller(task, y)
-            else:
-                y = self.adapter_controller(task_embedding, y)
+            y = self.adapter_controller(task if not self.is_meta_adapter else task_embedding, y)
         layer_output = hidden_states + self.dropout(y)
         return layer_output
 
@@ -94,10 +91,7 @@ class T5LayerSelfAttention(nn.Module):
         )
         y = attention_output[0]
         if self.train_adapters:
-            if not self.is_meta_adapter:
-                y = self.adapter_controller(task, y)
-            else:
-                y = self.adapter_controller(task_embedding, y)
+            y = self.adapter_controller(task if not self.is_meta_adapter else task_embedding, y)
         layer_output = hidden_states + self.dropout(y)
         outputs = (layer_output,) + attention_output[1:]  # add attentions if we output them
         return outputs

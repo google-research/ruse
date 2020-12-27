@@ -58,4 +58,18 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "evaluation_strategy": ["no"],
                                  "output_dir": ["outputs/paper_results/test/{0}/finetune_single_task/".format("glue" if "glue" in job_prefix else "fusion")]})
 #do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
-get_results(sweep, single_task=True, tasks=GLUE_TASKS)
+#get_results(sweep, single_task=True, tasks=GLUE_TASKS)
+
+job_prefix="glue-finetune-single"
+#job_prefix = "fusion-finetune-single"
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 ("tasks", "eval_tasks"): get_tuple_single_tasks(GLUE_TASKS if "glue" in job_prefix else FUSION_TASKS),
+                                 "model_name_or_path": ["t5-small"],
+                                 "tokenizer_name": ["t5-small"],
+                                 "max_steps": [262144],
+                                 "per_device_train_batch_size": [64],
+                                 "per_device_eval_batch_size": [64],
+                                 "evaluation_strategy": ["no"],
+                                 "output_dir": ["outputs/paper_results/full_training/{0}/finetune_single_task/".format("glue" if "glue" in job_prefix else "fusion")]})
+do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#get_results(sweep, single_task=True, tasks=GLUE_TASKS)

@@ -43,7 +43,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "non_linearity": ["gelu_new"],
                                  "output_dir": ["outputs/paper_results/test/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
 #do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
-get_results(sweep)
+#get_results(sweep)
 
 ## finetune
 job_prefix="glue-finetune"
@@ -59,7 +59,23 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "evaluation_strategy": ["no"],
                                  "output_dir": ["outputs/paper_results/test/{0}/finetune/".format("glue" if "glue" in job_prefix else "fusion")]})
 #do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
-get_results(sweep)
+#get_results(sweep)
+
+## finetune
+job_prefix="glue-finetune"
+#job_prefix = "fusion-finetune"
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "tasks": ([GLUE_TASKS] if "glue" in job_prefix else [FUSION_TASKS]),
+                                 "eval_tasks": ([GLUE_TASKS] if "glue" in job_prefix else [FUSION_TASKS]),
+                                 "model_name_or_path": ["t5-small"],
+                                 "tokenizer_name": ["t5-small"],
+                                 "max_steps": [262144],
+                                 "per_device_train_batch_size": [64],
+                                 "per_device_eval_batch_size": [64],
+                                 "evaluation_strategy": ["no"],
+                                 "output_dir": ["outputs/paper_results/full_training/{0}/finetune/".format("glue" if "glue" in job_prefix else "fusion")]})
+do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#get_results(sweep)
 
 
 # the goal of this experiment is to sweep over more parameters for our model and find the best.

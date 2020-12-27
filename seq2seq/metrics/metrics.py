@@ -36,7 +36,7 @@ def bleu(predictions, targets) -> dict:
 
 def accuracy(predictions, targets) -> dict:
     """Computes the average accuracy."""
-    return {"acc": (np.array(predictions) == np.array(targets)).mean()}
+    return {"acc": 100*((np.array(predictions) == np.array(targets)).mean())}
 
 
 def pearson_corrcoef(predictions, targets) -> dict:

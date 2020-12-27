@@ -245,6 +245,8 @@ class T5Trainer(Trainer):
                     logger.info(f"  {key} = {tasks_metric[key]}")
                 results.update(tasks_metric)
                 reset_config(self.model, model_config)
+
+        self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, results)
         return results
 
 

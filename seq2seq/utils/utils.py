@@ -17,7 +17,7 @@ logger = getLogger(__name__)
 
 def upload(upload_dir: str, gcs_bucket: str) -> None:
     """Uploads the local upload_dir to the gs bucket."""
-    os.system("/root/google-cloud-sdk/bin/gsutil  rm -r {}".format(
+    os.system("/root/google-cloud-sdk/bin/gsutil -m rm -r {}".format(
         os.path.join("gs://" + gcs_bucket, upload_dir)))
     os.system("/root/google-cloud-sdk/bin/gsutil -m cp -r {} {}".format(
         upload_dir,

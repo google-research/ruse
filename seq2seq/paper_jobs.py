@@ -4,7 +4,7 @@ from utils_launch import do_sweep, download_all_evals, retrieve_results
 def get_results(sweep, params=None):
     if params is None:
         params = [k for k, v in sweep.items() if len(v) >= 2]
-    #download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
+    download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
     retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='val_results.json')
     retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='test_results.json')
 

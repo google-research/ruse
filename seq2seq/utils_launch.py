@@ -161,11 +161,7 @@ names_to_short_names={
 "qqp_val_f1" : "qqp (f1)",
 "qqp_val_acc": "qqp (acc)",
 "social_i_qa_val_acc": "social_iqa (acc)",
-<<<<<<< HEAD
-"cosmos_qa_val_acc": "coqa (acc)",
-=======
 "cosmos_qa_val_acc": "cosmosqa (acc)",
->>>>>>> b8cd72ae1800c649e903e09893a1123fa79f38d6
 "winogrande_val_acc": "wino (acc)",
 "hellaswag_val_acc": "hswag (acc)",
 "commonsense_qa_val_acc": "csqa (acc)",
@@ -192,11 +188,7 @@ names_to_short_names={
 "qqp_test_f1" : "qqp (f1)",
 "qqp_test_acc": "qqp (acc)",
 "social_i_qa_test_acc": "social_iqa (acc)",
-<<<<<<< HEAD
-"cosmos_qa_test_acc": "coqa (acc)",
-=======
 "cosmos_qa_test_acc": "cosmosqa (acc)",
->>>>>>> b8cd72ae1800c649e903e09893a1123fa79f38d6
 "winogrande_test_acc": "wino (acc)",
 "hellaswag_test_acc": "hswag (acc)",
 "commonsense_qa_test_acc": "csqa (acc)",

@@ -1,5 +1,5 @@
 import collections
-from utils_launch import do_sweep, download_all_evals, retrieve_results
+from seq2seq.utils_launch import do_sweep, download_all_evals, retrieve_results
 
 def get_results(sweep, params=None):
     if params is None:

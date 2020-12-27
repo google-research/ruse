@@ -1,12 +1,14 @@
 import collections
-from utils_launch import do_sweep, download_all_evals, retrieve_results
+from seq2seq.utils_launch import do_sweep, download_all_evals, retrieve_results
 
 def get_results(sweep, params=None):
     if params is None:
         params = [k for k, v in sweep.items() if len(v) >= 2]
     download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
-    retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='val_results.json')
-    retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True, filename='test_results.json')
+    retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True,
+                         filename='val_results.json')
+    retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True,
+                         filename='test_results.json')
 
 
 FUSION_TASKS=["imdb", "snli", "scitail", "boolq", "mrpc", "trec", "yelp_polarity", "qqp", "social_i_qa", "cosmos_qa", "winogrande", "hellaswag", "commonsense_qa"]
@@ -17,8 +19,8 @@ GLUE_TASKS=["rte", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "cola"] # T5 d
 basic_config_path = "configs/paper_experiments/config.json"
 
 ## adapters
-#job_prefix= "glue-adapters"
-job_prefix= "fusion-adapters"
+job_prefix= "glue-adapters"
+#job_prefix= "fusion-adapters"
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
                                  "tasks": ([GLUE_TASKS] if "glue" in job_prefix else [FUSION_TASKS]),
                                  "eval_tasks": ([GLUE_TASKS] if "glue" in job_prefix else [FUSION_TASKS]),
@@ -41,11 +43,11 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "non_linearity": ["gelu_new"],
                                  "output_dir": ["outputs/paper_results/test/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
 #do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
-#get_results(sweep)
+get_results(sweep)
 
 ## finetune
-#job_prefix="glue-finetune"
-job_prefix = "fusion-finetune"
+job_prefix="glue-finetune"
+#job_prefix = "fusion-finetune"
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
                                  "tasks": ([GLUE_TASKS] if "glue" in job_prefix else [FUSION_TASKS]),
                                  "eval_tasks": ([GLUE_TASKS] if "glue" in job_prefix else [FUSION_TASKS]),
@@ -57,9 +59,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "evaluation_strategy": ["no"],
                                  "output_dir": ["outputs/paper_results/test/{0}/finetune/".format("glue" if "glue" in job_prefix else "fusion")]})
 #do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
-#get_results(sweep)
-
-
+get_results(sweep)
 
 
 # the goal of this experiment is to sweep over more parameters for our model and find the best.
@@ -219,7 +219,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  #"output_dir": ["outputs/paper_results/more_test/fusion/adapters/"]})
                                  "output_dir": ["outputs/paper_results/more_test_layer_norm/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
 #do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
-
+#get_results(sweep)
 
 
 # computes the single-task performances on GLUE.

@@ -146,9 +146,9 @@ names_to_short_names={
 "stsb_val_pearson_corrcoef": "stsb (pearson)",
 "stsb_val_spearman_corrcoef": "stsb (spearman)",
 "qqp_val_f1": "qqp (f1)",
-"qqp_val_acc": "qqp(acc)",
-"mnli_val_acc": "mnli(acc)",
-"qnli_val_acc": "qnli(acc)",
+"qqp_val_acc": "qqp (acc)",
+"mnli_val_acc": "mnli (acc)",
+"qnli_val_acc": "qnli (acc)",
 "wnli_val_acc": "wnli (acc)",
 "cola_val_mcc": "cola (mcc)",
 "snli_val_acc": "snli (acc)",
@@ -173,9 +173,9 @@ names_to_short_names={
 "stsb_test_pearson_corrcoef": "stsb (pearson)",
 "stsb_test_spearman_corrcoef": "stsb (spearman)",
 "qqp_test_f1": "qqp (f1)",
-"qqp_test_acc": "qqp(acc)",
-"mnli_test_acc": "mnli(acc)",
-"qnli_test_acc": "qnli(acc)",
+"qqp_test_acc": "qqp (acc)",
+"mnli_test_acc": "mnli (acc)",
+"qnli_test_acc": "qnli (acc)",
 "wnli_test_acc": "wnli (acc)",
 "cola_test_mcc": "cola (mcc)",
 "snli_test_acc": "snli (acc)",
@@ -206,18 +206,26 @@ names = ["snli_{0}_acc", "scitail_{0}_acc", "boolq_{0}_acc", "mrpc_{0}_f1",
          "winogrande_{0}_acc", "hellaswag_{0}_acc", "commonsense_qa_{0}_acc",
          'cola_{0}_mcc', "qnli_{0}_acc", "rte_{0}_acc", "sst2_{0}_acc",
          "stsb_{0}_pearson_corrcoef", "stsb_{0}_spearman_corrcoef",
-         "mnli_eval_acc", "wnli_{0}_acc"]
+         "mnli_{0}_acc", "wnli_{0}_acc"]
 
 def multiply_accs_by_100 (table):
     for k in names_to_short_names.keys():
         if k in table.columns and "acc" in k:
             table[k] = table[k].apply(lambda x: x*100)
 
-def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], ordered_name=False, filename="val_results.json"):
+def order_glue_columns(table):
+    if 'mrpc (acc)' in list(table.columns):
+        columns = ['average', 'mrpc (acc)', 'mrpc (f1)', 'stsb (pearson)', 'stsb (spearman)', 'rte (acc)',
+                   'cola (mcc)', 'qqp (acc)', 'qqp (f1)', 'sst2 (acc)', 'qnli (acc)', 'mnli (acc)']
+        table = table[columns]
+    return table
+
+def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], ordered_name=False, filename="val_results.json", task=None):
   acc_cols = []
   for acc_col in names:
         metrics = [acc_col.format(name) for name in ["val", "eval", "test"]]
         acc_cols = acc_cols + metrics
+  acc_cols = acc_cols #+ ["tasks", "eval_tasks"]
   print(job_prefix)
   df = pd.DataFrame()
   keys = flatten(list(sweep.keys()))
@@ -239,6 +247,8 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], order
       with open(eval_path, "r") as infile:
         results = json.loads(infile.read())
       results.update({key: value for key, value in zip(keys, option)})
+      if task is not None and results['tasks'] != task:
+          continue
       df = df.append(results, ignore_index=True)
     except FileNotFoundError:
       pass #print("File not found ", eval_path)
@@ -248,8 +258,7 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], order
   df = df[params+acc_cols_names]
   if len(params) != 0:
     df = df.sort_values(by=params)
-
-  multiply_accs_by_100(df)
+  #multiply_accs_by_100(df)
 
   if "wnli_val_acc" in df.columns:
     df = df.drop(columns="wnli_val_acc")
@@ -282,11 +291,15 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], order
     table = table[params_max+['average']+acc_cols_names]
   else:
     acc_cols_names.sort()
-    print(acc_cols_names)
     table = pd.DataFrame.from_dict(results_dict)
     table['average'] = table.mean(numeric_only=True, axis=1)
     #table = table[acc_cols_names+params_max]
     table = table[params_max+['average']+acc_cols_names]
     #table = table.sort_values(by=acc_cols_names)
   table = table.rename(columns=names_to_short_names)
-  print(tabulate(table, headers='keys', tablefmt='pipe', showindex=False))
+  table = table.round(decimals=2)
+  if task is None:
+    table = order_glue_columns(table)
+    print(tabulate(table, headers='keys', tablefmt='pipe', showindex=False))
+    print(tabulate(table, headers='keys', tablefmt='latex', showindex=False))
+  return table

@@ -671,7 +671,6 @@ class AutoTask:
     def get(self, task_name, seed=42):
         if task_name in TASK_MAPPING:
             return TASK_MAPPING[task_name](seed)
-
         raise ValueError(
             "Unrecognized task {} for AutoTask Model: {}.\n"
             "Task name should be one of {}.".format(

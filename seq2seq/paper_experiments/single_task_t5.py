@@ -13,12 +13,14 @@ FUSION_TASKS=["imdb", "snli", "scitail", "boolq", "mrpc", "trec", "yelp_polarity
 GLUE_TASKS=["rte", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "cola"] # T5 does not train on wnli
 
 
+def get_tuple_single_tasks(tasks):
+  return [([task], [task]) for task in tasks]
+
 basic_config_path = "configs/paper_experiments/config.json"
-job_prefix="glue-finetune-sigle"
+job_prefix="glue-finetune-single"
 #job_prefix = "fusion-finetune-single"
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
-                                 ("tasks", "eval_tasks"): zip(GLUE_TASKS if "glue" in job_prefix else FUSION_TASKS,
-                                                              GLUE_TASKS if "glue" in job_prefix else FUSION_TASKS),
+                                 ("tasks", "eval_tasks"): get_tuple_single_tasks(GLUE_TASKS if "glue" in job_prefix else FUSION_TASKS),
                                  "model_name_or_path": ["t5-small"],
                                  "tokenizer_name": ["t5-small"],
                                  "num_train_epochs": [5],

@@ -197,7 +197,7 @@ class DataTrainingArguments:
 @dataclass
 class AdapterTrainingArguments:
   adapter_config_name: Optional[str] = field(
-    default="parametric-meta-adapter", metadata={"help": "config name for the adapter layers, should be selected "
+    default="meta-adapter", metadata={"help": "config name for the adapter layers, should be selected "
                                     f"in {sorted(ADAPTER_CONFFIG_MAPPING.keys())}."}
   )
   task_embedding_dir: Optional[str]=field(default=None,

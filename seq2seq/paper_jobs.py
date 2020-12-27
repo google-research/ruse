@@ -159,7 +159,6 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
 do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 #get_results(sweep)
 
-
 # goal: test if adapters in decoder are needed.
 #job_prefix= "glue-adapters"
 job_prefix= "fusion-adapters-d"
@@ -221,9 +220,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "output_dir": ["outputs/paper_results/more_test_layer_norm/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
 do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 
-
 # testing the tpu speed 
-"""
 """
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
                                  "tasks": [GLUE_TASKS],
@@ -241,7 +238,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "evaluation_strategy": ["no"],
                                  "prediction_loss_only": [True],
                                  "output_dir": ["outputs/paper_results/test/tpu/glue/finetune/"]})
-do_sweep(basic_config_path, sweep, job_prefix="glue-finetune-tpu", num_gpus=0, ordered_name=True)
+#do_sweep(basic_config_path, sweep, job_prefix="glue-finetune-tpu", num_gpus=0, ordered_name=True)
 
 # testing adapters on tpu.
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
@@ -271,5 +268,5 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "evaluation_strategy": ["no"],
                                  "prediction_loss_only": [True],
                                  "output_dir": ["outputs/paper_results/test/tpu/glue/adapters/"]})
-do_sweep(basic_config_path, sweep, job_prefix="glue-adapters-tpu", num_gpus=0, ordered_name=True)
+#do_sweep(basic_config_path, sweep, job_prefix="glue-adapters-tpu", num_gpus=0, ordered_name=True)
 """

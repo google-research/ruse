@@ -25,8 +25,6 @@ def get_results(sweep, params=None, single_task=False, tasks=[]):
         test_table['average'] = test_table.mean(numeric_only=True, axis=1)
         val_table = order_glue_columns(val_table)
         test_table = order_glue_columns(test_table)
-        #val_table = val_table[['average']+val_cols]
-        #test_table = test_table[['average']+test_cols]
         print("val results")
         print(tabulate(val_table, headers='keys', tablefmt='pipe', showindex=False))
         print(tabulate(val_table, headers='keys', tablefmt='latex', showindex=False))

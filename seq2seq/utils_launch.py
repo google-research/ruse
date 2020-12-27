@@ -1,22 +1,16 @@
 import copy
 import itertools
-import os
 import json
 import pandas as pd
 from tabulate import tabulate
-import sys
 import subprocess
 import os
-import time
 
 def get_run_command(config_path, job_name, num_gpus):
   with open('google/launch_command', 'r') as f:
     launch_command = f.read()
   launch_command = launch_command.rstrip()
-  #os.system("{2} google/launch_xla_clean1.py  -- --config_path {0} --job_name {1} --num_gpus 1".format(config_path, job_name, launch_command))
   return "{0} google/launch_xla_clean1.py -- --config_path {1} --job_name {2} --num_gpus {3} --norun_copybara --noxc_monitor_on_launch".format(launch_command, config_path, job_name, num_gpus)
-  #opy_commands.append(["gsutil", "cp", f"{bucket}/{eval_path}", f"{experiment_output_dir}/eval_results.json"])
-  #return [command]
   
 
 def flatten(output):
@@ -69,7 +63,6 @@ def do_sweep(parent_config_path, sweep,  job_prefix, short_keys=None, output_dir
       parent_output_dir = parent_config[output_dir_name]
     output_dir = os.path.join(parent_output_dir, name)
     config.update({output_dir_name: output_dir})
-    #print(config)
     config_path = "{0}/{1}.json".format(temp_configs_dir, name)
     with open(config_path, 'w') as f:
       json.dump(config, f)
@@ -169,9 +162,9 @@ names_to_short_names={
 "qqp_val_acc": "qqp (acc)",
 "social_i_qa_val_acc": "social_iqa (acc)",
 "cosmos_qa_val_acc": "cosmosqa (acc)",
-"winogrande_val_acc": "winogrande (acc)",
-"hellaswag_val_acc": "hellaswag (acc)",
-"commonsense_qa_val_acc": "commonsenseqa (acc)",
+"winogrande_val_acc": "wino (acc)",
+"hellaswag_val_acc": "hswag (acc)",
+"commonsense_qa_val_acc": "csqa (acc)",
 
 "rte_test_acc": "rte (acc)",
 "sst2_test_acc": "sst2 (acc)",
@@ -196,13 +189,15 @@ names_to_short_names={
 "qqp_test_acc": "qqp (acc)",
 "social_i_qa_test_acc": "social_iqa (acc)",
 "cosmos_qa_test_acc": "cosmosqa (acc)",
-"winogrande_test_acc": "winogrande (acc)",
-"hellaswag_test_acc": "hellaswag (acc)",
-"commonsense_qa_test_acc": "commonsenseqa (acc)",
+"winogrande_test_acc": "wino (acc)",
+"hellaswag_test_acc": "hswag (acc)",
+"commonsense_qa_test_acc": "csqa (acc)",
 "unfreeze_lm_head": "lm" ,
 "unfreeze_layer_norms": "ln",
 "reduction_factor": "r",
-"conditional_layer_norm": "cln"
+"conditional_layer_norm": "cln",
+"add_layer_norm_before_adapter": "ln-b",
+"add_layer_norm_after_adapter": "ln-a"
 }
 
 names = ["snli_{0}_acc", "scitail_{0}_acc", "boolq_{0}_acc", "mrpc_{0}_f1",
@@ -213,6 +208,10 @@ names = ["snli_{0}_acc", "scitail_{0}_acc", "boolq_{0}_acc", "mrpc_{0}_f1",
          "stsb_{0}_pearson_corrcoef", "stsb_{0}_spearman_corrcoef",
          "mnli_eval_acc", "wnli_{0}_acc"]
 
+def multiply_accs_by_100 (table):
+    for k in names_to_short_names.keys():
+        if k in table.columns and "acc" in k:
+            table[k] = table[k].apply(lambda x: x*100)
 
 def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], ordered_name=False, filename="val_results.json"):
   acc_cols = []
@@ -242,15 +241,22 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], order
       results.update({key: value for key, value in zip(keys, option)})
       df = df.append(results, ignore_index=True)
     except FileNotFoundError:
-      print("File not found ", eval_path)
-  #print("##### df ", df)
+      pass #print("File not found ", eval_path)
+
   acc_cols_names = list(set.intersection(set(df.columns.tolist()), set(acc_cols)))
+  acc_cols_names = [a for a in acc_cols_names if a != "wnli_val_acc" and a != "wnli_test_acc"]
   df = df[params+acc_cols_names]
   if len(params) != 0:
     df = df.sort_values(by=params)
-  #df['task_embedding_dir'] = df.apply(lambda x: myfunc(x.task_embedding_dir), axis=1)
-  #df = df.rename(columns=names_to_short_names)
-  print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
+
+  multiply_accs_by_100(df)
+
+  if "wnli_val_acc" in df.columns:
+    df = df.drop(columns="wnli_val_acc")
+  if "wnli_test_acc" in df.columns:
+    df = df.drop(columns="wnli_test_acc")
+
+  #print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
   # computing the maximum.
   dfs = []
   results_dict = {}
@@ -267,19 +273,20 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], order
         dfs.append(df1)
 
   if len(params_max) != 0:
-    print("inside if")
     table = dfs[0]
     for i in range(1, len(dfs)):
         right = dfs[i]
         table = pd.merge(table, right, on=params_max)
     acc_cols_names.sort()
-    table = table[params_max+acc_cols_names]
+    table['average'] = table[acc_cols_names].mean(numeric_only=True, axis=1)
+    table = table[params_max+['average']+acc_cols_names]
   else:
-    print("inside else")
     acc_cols_names.sort()
     print(acc_cols_names)
     table = pd.DataFrame.from_dict(results_dict)
-    table = table[acc_cols_names+params_max]
+    table['average'] = table.mean(numeric_only=True, axis=1)
+    #table = table[acc_cols_names+params_max]
+    table = table[params_max+['average']+acc_cols_names]
     #table = table.sort_values(by=acc_cols_names)
   table = table.rename(columns=names_to_short_names)
   print(tabulate(table, headers='keys', tablefmt='pipe', showindex=False))

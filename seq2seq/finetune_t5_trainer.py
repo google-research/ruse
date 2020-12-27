@@ -21,7 +21,7 @@ from seq2seq.data import AutoTask, TaskCollator
 from seq2seq.metrics import build_compute_metrics_fn
 from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments, \
     AdapterTrainingArguments
-from seq2seq.utils import T5CheckpointCallback, freezing_params
+from seq2seq.utils import T5CheckpointCallback, freezing_params #, EvaluationCallback
 from seq2seq.utils import upload
 
 logger = logging.getLogger(__name__)
@@ -223,7 +223,7 @@ def main():
         multi_task_compute_metrics=compute_metrics_fn,
         data_args=data_args,
         dataset_sizes=dataset_sizes if training_args.do_train else None,
-        callbacks=[T5CheckpointCallback()]
+        callbacks=[T5CheckpointCallback()] #, EvaluationCallback()]
     )
     if trainer.is_world_process_zero():
         arguments = get_training_args([model_args, data_args, training_args, adapter_args])

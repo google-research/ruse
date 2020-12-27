@@ -9,7 +9,7 @@
 "test_max_target_length":128,
 "num_train_epochs": 10,
 "warmup_steps": 500,
-"eval_steps": 10,
+"eval_steps": 1,
 "overwrite_output_dir": true,
 "tasks": ["boolq", "rte", "cola", "mrpc", "qqp", "sst2", "stsb", "wnli", "mnli"],
 "eval_tasks": ["boolq", "stsb", "rte", "cola", "mrpc", "qqp", "sst2", "wnli", "mnli"],
@@ -42,7 +42,9 @@
 "train_task_embeddings": true,
 "conditional_layer_norm": true,
 "split_validation_test": true,
-"one_layer_adapter_hyper_net_with_linear": true
+"one_layer_adapter_hyper_net_with_linear": true,
+"max_steps": 10,
+"evaluation_strategy": "steps"
 }
 
 

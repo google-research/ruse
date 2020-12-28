@@ -1,6 +1,7 @@
 # coding=utf-8
 # Copyright 2018 Mesh TensorFlow authors, T5 Authors and HuggingFace Inc. team.
-#
+# Copyright 2020 Google LLC
+# Modified from the original HuggingFace version.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -17,11 +18,6 @@
 import copy
 import torch
 import warnings
-from seq2seq.adapters import AutoAdapterController
-from seq2seq.adapters import MetaAdapterConfig, ParametricMetaAdapterConfig
-from seq2seq.adapters import TaskEmbeddingController
-from seq2seq.models.poolings import AutoPooling
-from seq2seq.models.projections import AutoProjection
 from torch import nn
 from torch.nn import CrossEntropyLoss
 from transformers.modeling_outputs import BaseModelOutput
@@ -29,6 +25,11 @@ from transformers.modeling_t5 import (T5PreTrainedModel, T5LayerNorm, T5Block,
                                       T5DenseReluDense, T5Attention, T5LayerCrossAttention)
 from transformers.utils import logging
 
+from seq2seq.adapters import AutoAdapterController
+from seq2seq.adapters import MetaAdapterConfig
+from seq2seq.adapters import TaskEmbeddingController
+from seq2seq.models.poolings import AutoPooling
+from seq2seq.models.projections import AutoProjection
 from .modeling_outputs import RuseBaseModelOutputWithPastAndCrossAttentions, RuseSeq2SeqLMOutput
 
 logger = logging.get_logger(__name__)
@@ -43,17 +44,13 @@ class T5LayerFF(nn.Module):
         self.train_adapters = config.train_adapters and adapter_config.add_adapter_in_feed_forward
         if self.train_adapters:
             self.adapter_controller = AutoAdapterController.get(adapter_config)
-            self.is_meta_adapter = True if isinstance(adapter_config,
-                                                      (MetaAdapterConfig, ParametricMetaAdapterConfig)) else False
+            self.is_meta_adapter = True if isinstance(adapter_config, MetaAdapterConfig) else False
 
     def forward(self, hidden_states, task=None, task_embedding=None):
         norm_x = self.layer_norm(hidden_states)
         y = self.DenseReluDense(norm_x)
         if self.train_adapters:
-            if not self.is_meta_adapter:
-                y = self.adapter_controller(task, y)
-            else:
-                y = self.adapter_controller(task_embedding, y)
+            y = self.adapter_controller(task if not self.is_meta_adapter else task_embedding, y)
         layer_output = hidden_states + self.dropout(y)
         return layer_output
 
@@ -69,8 +66,7 @@ class T5LayerSelfAttention(nn.Module):
         self.train_adapters = config.train_adapters and adapter_config.add_adapter_in_self_attention
         if self.train_adapters:
             self.adapter_controller = AutoAdapterController.get(adapter_config)
-            self.is_meta_adapter = True if isinstance(adapter_config,
-                                                      (MetaAdapterConfig, ParametricMetaAdapterConfig)) else False
+            self.is_meta_adapter = True if isinstance(adapter_config, MetaAdapterConfig) else False
 
     def forward(
             self,
@@ -96,10 +92,7 @@ class T5LayerSelfAttention(nn.Module):
         )
         y = attention_output[0]
         if self.train_adapters:
-            if not self.is_meta_adapter:
-                y = self.adapter_controller(task, y)
-            else:
-                y = self.adapter_controller(task_embedding, y)
+            y = self.adapter_controller(task if not self.is_meta_adapter else task_embedding, y)
         layer_output = hidden_states + self.dropout(y)
         outputs = (layer_output,) + attention_output[1:]  # add attentions if we output them
         return outputs
@@ -551,7 +544,6 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
                 task_embedding=self.task_embedding_controller(task) if self.train_adapters else None
             )
         elif return_dict and not isinstance(encoder_outputs, BaseModelOutput):
-            # TODO(rabeeh): from what I see it does not go here.
             encoder_outputs = BaseModelOutput(
                 last_hidden_state=encoder_outputs[0],
                 hidden_states=encoder_outputs[1] if len(encoder_outputs) > 1 else None,

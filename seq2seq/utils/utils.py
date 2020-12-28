@@ -1,3 +1,16 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import os
 import torch.nn as nn
 from google.cloud import storage
@@ -125,21 +138,3 @@ class T5CheckpointCallback(TrainerCallback):
         """Event called after a checkpoint save."""
         if state.is_world_process_zero and args.gcs_bucket is not None:
             upload(args.output_dir, args.gcs_bucket)
-
-"""
-class EvaluationCallback(TrainerCallback):
-    def on_evaluate(self, args, state, control, **kwargs):
-        metrics = kwargs['metrics']
-        if state.is_world_process_zero:
-            results = metrics
-            results.update({"step": state.global_step})
-            print("### results inside call back: ", results)
-            #import csv
-            #with open(os.path.join(args.output_dir, 'all_val_results.csv'), 'w') as csvfile:
-            #    writer = csv.DictWriter(csvfile, fieldnames=results.keys())
-            #    writer.writeheader()
-            #    writer.writerows(results)
-
-            #    # saves the results to a csv file.
-            #upload(args.output_dir, args.gcs_bucket)
-"""

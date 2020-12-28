@@ -1,10 +1,10 @@
-# Copyright 2020 The T5 Authors.
+# Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#    https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,7 +24,6 @@ from typing import Callable, Dict, List, Tuple
 logger = getLogger(__name__)
 
 
-# TODO: nicer to define postprocessor for the tasks.
 
 def rouge(predictions, targets) -> dict:
     return calculate_rouge(predictions, targets)
@@ -54,7 +53,6 @@ def spearman_corrcoef(predictions, targets) -> dict:
                 100 * scipy.stats.spearmanr(targets, predictions)[0]}
 
 
-# TODO: conversion to int is necessary?
 # This is from T5 paper.
 def f1_score_with_invalid(predictions, targets) -> dict:
     """Compute F1 score, but any prediction != 0 or 1 is counted as incorrect.

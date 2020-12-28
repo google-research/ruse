@@ -1,5 +1,7 @@
 # coding=utf-8
 # Copyright 2010, The T5 Authors and HuggingFace Inc.
+# Copyright 2020 Google LLC
+# Modified from the original HuggingFace version.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +16,8 @@
 # limitations under the License.
 """ T5 model configuration """
 
-from .configuration_utils import PretrainedConfig
-from .utils import logging
+from transformers.configuration_utils import PretrainedConfig
+from transformers.utils import logging
 
 logger = logging.get_logger(__name__)
 
@@ -30,35 +32,40 @@ T5_PRETRAINED_CONFIG_ARCHIVE_MAP = {
 
 class T5Config(PretrainedConfig):
     r"""
-    This is the configuration class to store the configuration of a :class:`~transformers.T5Model` or a
-    :class:`~transformers.TFT5Model`. It is used to instantiate a T5 model according to the specified arguments,
-    defining the model architecture. Instantiating a configuration with the defaults will yield a similar configuration
-    to that of the T5 `t5-small <https://huggingface.co/t5-small>`__ architecture.
+    This is the configuration class to store the configuration of
+    a :class:`~transformers.T5Model` or a :class:`~transformers.TFT5Model`.
+    It is used to instantiate a T5 model according to the specified arguments,
+    defining the model architecture. Instantiating a configuration with the
+    defaults will yield a similar configuration to that of the T5 `t5-small
+    <https://huggingface.co/t5-small>`__ architecture.
 
-    Configuration objects inherit from :class:`~transformers.PretrainedConfig` and can be used to control the model
-    outputs. Read the documentation from :class:`~transformers.PretrainedConfig` for more information.
+    Configuration objects inherit from :class:`~transformers.PretrainedConfig`
+    and can be used to control the model outputs. Read the documentation from
+    :class:`~transformers.PretrainedConfig` for more information.
 
     Arguments:
         vocab_size (:obj:`int`, `optional`, defaults to 32128):
-            Vocabulary size of the T5 model. Defines the number of different tokens that can be represented by the
-            :obj:`inputs_ids` passed when calling :class:`~transformers.T5Model` or :class:`~transformers.TFT5Model`.
+            Vocabulary size of the T5 model. Defines the number of different
+            tokens that can be represented by the :obj:`inputs_ids` passed
+            when calling :class:`~transformers.T5Model` or :class:`~transformers.TFT5Model`.
         n_positions (:obj:`int`, `optional`, defaults to 512):
-            The maximum sequence length that this model might ever be used with. Typically set this to something large
-            just in case (e.g., 512 or 1024 or 2048).
+            The maximum sequence length that this model might ever be used with.
+            Typically set this to something large just in case (e.g., 512 or 1024 or 2048).
         d_model (:obj:`int`, `optional`, defaults to 512):
             Size of the encoder layers and the pooler layer.
         d_kv (:obj:`int`, `optional`, defaults to 64):
-            Size of the key, query, value projections per attention head. :obj:`d_kv` has to be equal to :obj:`d_model
-            // num_heads`.
+            Size of the key, query, value projections per attention head.
+             :obj:`d_kv` has to be equal to :obj:`d_model// num_heads`.
         d_ff (:obj:`int`, `optional`, defaults to 2048):
             Size of the intermediate feed forward layer in each :obj:`T5Block`.
         num_layers (:obj:`int`, `optional`, defaults to 6):
             Number of hidden layers in the Transformer encoder.
         num_decoder_layers (:obj:`int`, `optional`):
-            Number of hidden layers in the Transformer decoder. Will use the same value as :obj:`num_layers` if not
-            set.
+            Number of hidden layers in the Transformer decoder. Will use the
+            same value as :obj:`num_layers` if not set.
         num_heads (:obj:`int`, `optional`, defaults to 8):
-            Number of attention heads for each attention layer in the Transformer encoder.
+            Number of attention heads for each attention layer in the
+            Transformer encoder.
         relative_attention_num_buckets (:obj:`int`, `optional`, defaults to 32):
             The number of buckets to use for each attention layer.
         dropout_rate (:obj:`float`, `optional`, defaults to 0.1):
@@ -66,8 +73,23 @@ class T5Config(PretrainedConfig):
         layer_norm_eps (:obj:`float`, `optional`, defaults to 1e-6):
             The epsilon used by the layer normalization layers.
         initializer_factor (:obj:`float`, `optional`, defaults to 1):
-            A factor for initializing all weight matrices (should be kept to 1, used internally for initialization
-            testing).
+            A factor for initializing all weight matrices (should be kept to 1, used
+            internally for initialization testing).
+        fixed_length_emb: (:obj:`bool`, `optional`, defaults to False):
+            If specified computes the fixed length embeddings from the encoder before
+            feeding it to decoder.
+        encoder_projection: (:obj:`str`, `optional`, defaults to `mlp`):
+            Defines the type of projection layer.
+        encoder_pooling: (:obj:`str`, `optional`, defaults to `max`):
+           Defines the type of pooling layer.
+        projection_length: (:obj:`int`, `optional`, defaults to 128):
+           Defines the projection length, in case of using fixed_length_emb option.
+        only_projection_bottleneck: if specified, only passes the projection to the decoder.
+        concat_projection_token: (:obj:`bool`, `optional`, defaults to False):
+           If specified concatenate the encoder representation with pooled hidden states before
+           feeding it to the decoder.
+        train_adapters: (:obj:`bool`, `optional`, defaults to False):
+           If specified insert adapter layers within the transformer layers.
     """
     model_type = "t5"
 
@@ -88,6 +110,13 @@ class T5Config(PretrainedConfig):
             is_encoder_decoder=True,
             pad_token_id=0,
             eos_token_id=1,
+            fixed_length_emb=False,
+            encoder_projection="mlp",
+            encoder_pooling="max",
+            projection_length=16,
+            only_projection_bottleneck=False,
+            concat_projection_token=False,
+            train_adapters=False,
             **kwargs
     ):
         super().__init__(
@@ -110,6 +139,13 @@ class T5Config(PretrainedConfig):
         self.dropout_rate = dropout_rate
         self.layer_norm_epsilon = layer_norm_epsilon
         self.initializer_factor = initializer_factor
+        self.fixed_length_emb = fixed_length_emb
+        self.encoder_projection = encoder_projection
+        self.encoder_pooling = encoder_pooling
+        self.projection_length = projection_length
+        self.only_projection_bottleneck = only_projection_bottleneck
+        self.concat_projection_token = concat_projection_token
+        self.train_adapters = train_adapters
 
     @property
     def max_position_embeddings(self):

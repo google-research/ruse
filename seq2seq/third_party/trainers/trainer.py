@@ -1,5 +1,7 @@
 # coding=utf-8
 # Copyright 2020-present the HuggingFace Inc. team.
+# Copyright 2020 Google LLC
+# Modified from the original HuggingFace version.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,28 +19,20 @@ The Trainer class, to easily train a 🤗 Transformers from scratch or finetune 
 """
 
 import collections
-import math
-
 import inspect
-import numpy as np
+import math
 import os
 import re
 import shutil
-import torch
 import warnings
-from packaging import version
 from pathlib import Path
-from torch import nn
-from torch.utils.data.dataloader import DataLoader
-from torch.utils.data.dataset import Dataset
-from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data.sampler import RandomSampler, SequentialSampler
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from .data.data_collator import DataCollator, DataCollatorWithPadding, default_data_collator
-from .file_utils import WEIGHTS_NAME, is_datasets_available, is_in_notebook, is_torch_tpu_available
+from seq2seq.data import MultiTaskBatchSampler
+
+
 # Integrations must be imported before ML frameworks:
-from .integrations import (  # isort: split
+from transformers.integrations import (  # isort: split
     default_hp_search_backend,
     hp_params,
     is_azureml_available,
@@ -51,11 +45,23 @@ from .integrations import (  # isort: split
     run_hp_search_optuna,
     run_hp_search_ray,
 )
-from .modeling_auto import MODEL_FOR_QUESTION_ANSWERING_MAPPING
-from .modeling_utils import PreTrainedModel
-from .optimization import AdamW, get_linear_schedule_with_warmup
-from .tokenization_utils_base import PreTrainedTokenizerBase
-from .trainer_callback import (
+
+import numpy as np
+import torch
+from packaging import version
+from torch import nn
+from torch.utils.data.dataloader import DataLoader
+from torch.utils.data.dataset import Dataset
+from torch.utils.data.distributed import DistributedSampler
+from torch.utils.data.sampler import RandomSampler, SequentialSampler
+
+from transformers.data.data_collator import DataCollator, DataCollatorWithPadding, default_data_collator
+from transformers.file_utils import WEIGHTS_NAME, is_datasets_available, is_in_notebook, is_torch_tpu_available
+from transformers.modeling_auto import MODEL_FOR_QUESTION_ANSWERING_MAPPING
+from transformers.modeling_utils import PreTrainedModel
+from transformers.optimization import AdamW, get_linear_schedule_with_warmup
+from transformers.tokenization_utils_base import PreTrainedTokenizerBase
+from transformers.trainer_callback import (
     CallbackHandler,
     DefaultFlowCallback,
     PrinterCallback,
@@ -64,7 +70,7 @@ from .trainer_callback import (
     TrainerControl,
     TrainerState,
 )
-from .trainer_pt_utils import (
+from transformers.trainer_pt_utils import (
     DistributedTensorGatherer,
     SequentialDistributedSampler,
     distributed_broadcast_scalars,
@@ -76,7 +82,7 @@ from .trainer_pt_utils import (
     nested_xla_mesh_reduce,
     reissue_pt_warnings,
 )
-from .trainer_utils import (
+from transformers.trainer_utils import (
     PREFIX_CHECKPOINT_DIR,
     BestRun,
     EvalPrediction,
@@ -87,8 +93,9 @@ from .trainer_utils import (
     default_hp_space,
     set_seed,
 )
-from .training_args import TrainingArguments
-from .utils import logging
+from transformers.training_args import TrainingArguments
+from transformers.utils import logging
+
 
 _use_native_amp = False
 _use_apex = False
@@ -97,13 +104,13 @@ DEFAULT_CALLBACKS = [DefaultFlowCallback]
 DEFAULT_PROGRESS_CALLBACK = ProgressCallback
 
 if is_in_notebook():
-    from .utils.notebook import NotebookProgressCallback
+    from transformers.utils.notebook import NotebookProgressCallback
 
     DEFAULT_PROGRESS_CALLBACK = NotebookProgressCallback
 
 # Check if Pytorch version >= 1.6 to switch between Native AMP and Apex
 if version.parse(torch.__version__) < version.parse("1.6"):
-    from .file_utils import is_apex_available
+    from transformers.file_utils import is_apex_available
 
     if is_apex_available():
         from apex import amp
@@ -126,22 +133,23 @@ if is_torch_tpu_available():
     import torch_xla.distributed.parallel_loader as pl
 
 if is_tensorboard_available():
-    from .integrations import TensorBoardCallback
+    from transformers.integrations import TensorBoardCallback
 
     DEFAULT_CALLBACKS.append(TensorBoardCallback)
 
+
 if is_wandb_available():
-    from .integrations import WandbCallback
+    from transformers.integrations import WandbCallback
 
     DEFAULT_CALLBACKS.append(WandbCallback)
 
 if is_comet_available():
-    from .integrations import CometCallback
+    from transformers.integrations import CometCallback
 
     DEFAULT_CALLBACKS.append(CometCallback)
 
 if is_mlflow_available():
-    from .integrations import MLflowCallback
+    from transformers.integrations import MLflowCallback
 
     DEFAULT_CALLBACKS.append(MLflowCallback)
 
@@ -152,7 +160,7 @@ if is_ray_available():
     from ray import tune
 
 if is_azureml_available():
-    from .integrations import AzureMLCallback
+    from transformers.integrations import AzureMLCallback
 
     DEFAULT_CALLBACKS.append(AzureMLCallback)
 
@@ -214,18 +222,18 @@ class Trainer:
     """
 
     def __init__(
-            self,
-            model: Union[PreTrainedModel, torch.nn.Module] = None,
-            args: TrainingArguments = None,
-            data_collator: Optional[DataCollator] = None,
-            train_dataset: Optional[Dataset] = None,
-            eval_dataset: Optional[Dataset] = None,
-            tokenizer: Optional["PreTrainedTokenizerBase"] = None,
-            model_init: Callable[[], PreTrainedModel] = None,
-            compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
-            callbacks: Optional[List[TrainerCallback]] = None,
-            optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (None, None),
-            **kwargs,
+        self,
+        model: Union[PreTrainedModel, torch.nn.Module] = None,
+        args: TrainingArguments = None,
+        data_collator: Optional[DataCollator] = None,
+        train_dataset: Optional[Dataset] = None,
+        eval_dataset: Optional[Dataset] = None,
+        tokenizer: Optional["PreTrainedTokenizerBase"] = None,
+        model_init: Callable[[], PreTrainedModel] = None,
+        compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
+        callbacks: Optional[List[TrainerCallback]] = None,
+        optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (None, None),
+        **kwargs,
     ):
         if args is None:
             logger.info("No `TrainingArguments` passed, using the current path as `output_dir`.")
@@ -234,7 +242,7 @@ class Trainer:
         # Seed must be set before instantiating the model when using model
         set_seed(self.args.seed)
         assert (
-                model is not None or model_init is not None
+            model is not None or model_init is not None
         ), "You must provide a model to use `Trainer`, either by using the `model` argument or the `model_init` argument."
         self.model_init = model_init
         self.hp_name = None
@@ -293,8 +301,8 @@ class Trainer:
             self.data_collator = self.data_collator.collate_batch
             warnings.warn(
                 (
-                        "The `data_collator` should now be a simple callable (function, class with `__call__`), classes "
-                        + "with a `collate_batch` are deprecated and won't be supported in a future version."
+                    "The `data_collator` should now be a simple callable (function, class with `__call__`), classes "
+                    + "with a `collate_batch` are deprecated and won't be supported in a future version."
                 ),
                 FutureWarning,
             )
@@ -381,14 +389,13 @@ class Trainer:
         ignored_columns = list(set(dataset.column_names) - set(signature_columns))
         dset_description = "" if description is None else f"in the {description} set "
         logger.info(
-            f"The following columns {dset_description}don't have a corresponding argument in `{self.model.__class__.__name__}.forward` and have been ignored: {', '.join(
-                ignored_columns)}."
+            f"The following columns {dset_description}don't have a corresponding argument in `{self.model.__class__.__name__}.forward` and have been ignored: {', '.join(ignored_columns)}."
         )
         dataset.set_format(type=dataset.format["type"], columns=columns)
 
     def _get_train_sampler(self) -> Optional[torch.utils.data.sampler.Sampler]:
         if isinstance(self.train_dataset, torch.utils.data.IterableDataset) or not isinstance(
-                self.train_dataset, collections.abc.Sized
+            self.train_dataset, collections.abc.Sized
         ):
             return None
         elif is_torch_tpu_available():
@@ -545,7 +552,7 @@ class Trainer:
             logger.info("Trial:", trial.params)
 
     def _report_to_hp_search(
-            self, trial: Union["optuna.Trial", Dict[str, Any]], epoch: int, metrics: Dict[str, float]
+        self, trial: Union["optuna.Trial", Dict[str, Any]], epoch: int, metrics: Dict[str, float]
     ):
         if self.hp_search_backend is None or trial is None:
             return
@@ -676,9 +683,9 @@ class Trainer:
             total_train_batch_size = self.args.train_batch_size * xm.xrt_world_size()
         else:
             total_train_batch_size = (
-                    self.args.train_batch_size
-                    * self.args.gradient_accumulation_steps
-                    * (torch.distributed.get_world_size() if self.args.local_rank != -1 else 1)
+                self.args.train_batch_size
+                * self.args.gradient_accumulation_steps
+                * (torch.distributed.get_world_size() if self.args.local_rank != -1 else 1)
             )
 
         num_examples = (
@@ -733,8 +740,13 @@ class Trainer:
         self.control = self.callback_handler.on_train_begin(self.args, self.state, self.control)
 
         for epoch in range(epochs_trained, num_train_epochs):
-            if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
-                train_dataloader.sampler.set_epoch(epoch)
+            if isinstance(train_dataloader, DataLoader) and (
+                    isinstance(train_dataloader.sampler, DistributedSampler)
+                    or isinstance(train_dataloader.batch_sampler, MultiTaskBatchSampler)):
+                if isinstance(train_dataloader.sampler, DistributedSampler):
+                    train_dataloader.sampler.set_epoch(epoch)
+                else:
+                    train_dataloader.batch_sampler.set_epoch(epoch)
 
             if is_torch_tpu_available():
                 parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(
@@ -762,9 +774,9 @@ class Trainer:
                     self.control = self.callback_handler.on_step_begin(self.args, self.state, self.control)
 
                 if (
-                        ((step + 1) % self.args.gradient_accumulation_steps != 0)
-                        and self.args.local_rank != -1
-                        and _use_ddp_no_sync
+                    ((step + 1) % self.args.gradient_accumulation_steps != 0)
+                    and self.args.local_rank != -1
+                    and _use_ddp_no_sync
                 ):
                     with model.no_sync():
                         tr_loss += self.training_step(model, inputs)
@@ -773,9 +785,9 @@ class Trainer:
                 self._total_flos += self.floating_point_ops(inputs)
 
                 if (step + 1) % self.args.gradient_accumulation_steps == 0 or (
-                        # last step in epoch but step is always smaller than gradient_accumulation_steps
-                        steps_in_epoch <= self.args.gradient_accumulation_steps
-                        and (step + 1) == steps_in_epoch
+                    # last step in epoch but step is always smaller than gradient_accumulation_steps
+                    steps_in_epoch <= self.args.gradient_accumulation_steps
+                    and (step + 1) == steps_in_epoch
                 ):
                     if self.args.fp16 and _use_native_amp:
                         self.scaler.unscale_(self.optimizer)
@@ -824,16 +836,19 @@ class Trainer:
             delattr(self, "_past")
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
+
+
         if self.args.load_best_model_at_end and self.state.best_model_checkpoint is not None:
             logger.info(
                 f"Loading best model from {self.state.best_model_checkpoint} (score: {self.state.best_metric})."
             )
             if isinstance(model, PreTrainedModel):
-                self.model = model.from_pretrained(self.state.best_model_checkpoint)
+                self.model = model.from_pretrained(self.state.best_model_checkpoint, adapter_config=self.adapter_config)
                 self.model = self.model.to(self.args.device)
             else:
                 state_dict = torch.load(os.path.join(self.state.best_model_checkpoint, WEIGHTS_NAME))
                 self.model.load_state_dict(state_dict)
+
 
         if self._total_flos is not None:
             self.store_flos()
@@ -848,7 +863,7 @@ class Trainer:
             logs: Dict[str, float] = {}
             tr_loss_scalar = tr_loss.item()
             logs["loss"] = (tr_loss_scalar - self._logging_loss_scalar) / (
-                    self.state.global_step - self._globalstep_last_logged
+                self.state.global_step - self._globalstep_last_logged
             )
             # backward compatibility for pytorch schedulers
             logs["learning_rate"] = (
@@ -912,12 +927,13 @@ class Trainer:
 
             operator = np.greater if self.args.greater_is_better else np.less
             if (
-                    self.state.best_metric is None
-                    or self.state.best_model_checkpoint is None
-                    or operator(metric_value, self.state.best_metric)
+                self.state.best_metric is None
+                or self.state.best_model_checkpoint is None
+                or operator(metric_value, self.state.best_metric)
             ):
                 self.state.best_metric = metric_value
                 self.state.best_model_checkpoint = output_dir
+
 
         # Save the Trainer state
         if self.is_world_process_zero():
@@ -930,9 +946,9 @@ class Trainer:
     def _load_optimizer_and_scheduler(self, model_path):
         """If optimizer and scheduler states exist, load them."""
         if (
-                model_path is not None
-                and os.path.isfile(os.path.join(model_path, "optimizer.pt"))
-                and os.path.isfile(os.path.join(model_path, "scheduler.pt"))
+            model_path is not None
+            and os.path.isfile(os.path.join(model_path, "optimizer.pt"))
+            and os.path.isfile(os.path.join(model_path, "scheduler.pt"))
         ):
             # Load in optimizer and scheduler states
             if is_torch_tpu_available():
@@ -956,14 +972,14 @@ class Trainer:
                 reissue_pt_warnings(caught_warnings)
 
     def hyperparameter_search(
-            self,
-            hp_space: Optional[Callable[["optuna.Trial"], Dict[str, float]]] = None,
-            compute_objective: Optional[Callable[[Dict[str, float]], float]] = None,
-            n_trials: int = 20,
-            direction: str = "minimize",
-            backend: Optional[Union["str", HPSearchBackend]] = None,
-            hp_name: Optional[Callable[["optuna.Trial"], str]] = None,
-            **kwargs
+        self,
+        hp_space: Optional[Callable[["optuna.Trial"], Dict[str, float]]] = None,
+        compute_objective: Optional[Callable[[Dict[str, float]], float]] = None,
+        n_trials: int = 20,
+        direction: str = "minimize",
+        backend: Optional[Union["str", HPSearchBackend]] = None,
+        hp_name: Optional[Callable[["optuna.Trial"], str]] = None,
+        **kwargs
     ) -> BestRun:
         """
         Launch an hyperparameter search using ``optuna`` or ``Ray Tune``. The optimized quantity is determined by
@@ -1278,7 +1294,8 @@ class Trainer:
             logger.info("Deleting older checkpoint [{}] due to args.save_total_limit".format(checkpoint))
             shutil.rmtree(checkpoint)
 
-    def evaluate(self, eval_dataset: Optional[Dataset] = None) -> Dict[str, float]:
+    def evaluate(self, eval_dataset: Optional[Dataset] = None,
+                 metric_key_prefix: str = "eval") -> Dict[str, float]:
         """
         Run evaluation and returns metrics.
 
@@ -1292,6 +1309,9 @@ class Trainer:
                 Pass a dataset if you wish to override :obj:`self.eval_dataset`. If it is an :obj:`datasets.Dataset`,
                 columns not accepted by the ``model.forward()`` method are automatically removed. It must implement the
                 :obj:`__len__` method.
+            metric_key_prefix (:obj:`str`, `optional`, defaults to :obj:`"eval"`):
+                An optional prefix to be used as the metrics key prefix. For example the metrics "bleu" will be named
+                "eval_bleu" if the prefix is "eval" (default)
 
         Returns:
             A dictionary containing the evaluation loss and the potential metrics computed from the predictions. The
@@ -1308,6 +1328,7 @@ class Trainer:
             # No point gathering the predictions if there are no metrics, otherwise we defer to
             # self.args.prediction_loss_only
             prediction_loss_only=True if self.compute_metrics is None else None,
+            metric_key_prefix=metric_key_prefix,
         )
 
         self.log(output.metrics)
@@ -1319,7 +1340,7 @@ class Trainer:
         self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, output.metrics)
         return output.metrics
 
-    def predict(self, test_dataset: Dataset) -> PredictionOutput:
+    def predict(self, test_dataset: Dataset, metric_key_prefix: str = "eval") -> PredictionOutput:
         """
         Run prediction and returns predictions and potential metrics.
 
@@ -1330,6 +1351,9 @@ class Trainer:
             test_dataset (:obj:`Dataset`):
                 Dataset to run the predictions on. If it is an :obj:`datasets.Dataset`, columns not accepted by the
                 ``model.forward()`` method are automatically removed. Has to implement the method :obj:`__len__`
+            metric_key_prefix (:obj:`str`, `optional`, defaults to :obj:`"eval"`):
+                An optional prefix to be used as the metrics key prefix. For example the metrics "bleu" will be named
+                "eval_bleu" if the prefix is "eval" (default)
 
         .. note::
 
@@ -1349,10 +1373,10 @@ class Trainer:
 
         test_dataloader = self.get_test_dataloader(test_dataset)
 
-        return self.prediction_loop(test_dataloader, description="Prediction")
+        return self.prediction_loop(test_dataloader, description="Prediction", metric_key_prefix=metric_key_prefix)
 
     def prediction_loop(
-            self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None
+        self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None, metric_key_prefix: str = "eval",
     ) -> PredictionOutput:
         """
         Prediction/evaluation loop, shared by :obj:`Trainer.evaluate()` and :obj:`Trainer.predict()`.
@@ -1451,12 +1475,12 @@ class Trainer:
             metrics = {}
 
         if eval_loss is not None:
-            metrics["eval_loss"] = eval_loss.mean().item()
+            metrics[f"{metric_key_prefix}_loss"] = eval_loss.mean().item()
 
-        # Prefix all keys with eval_
+        # Prefix all keys with metric_key_prefix + '_'
         for key in list(metrics.keys()):
-            if not key.startswith("eval_"):
-                metrics[f"eval_{key}"] = metrics.pop(key)
+            if not key.startswith(f"{metric_key_prefix}_"):
+                metrics[f"{metric_key_prefix}_{key}"] = metrics.pop(key)
 
         return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics)
 
@@ -1475,7 +1499,7 @@ class Trainer:
         return nested_numpify(tensors)
 
     def prediction_step(
-            self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]], prediction_loss_only: bool
+        self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]], prediction_loss_only: bool
     ) -> Tuple[Optional[float], Optional[torch.Tensor], Optional[torch.Tensor]]:
         """
         Perform an evaluation step on :obj:`model` using obj:`inputs`.
@@ -1516,7 +1540,7 @@ class Trainer:
             if self.args.past_index >= 0:
                 self._past = outputs[self.args.past_index if has_labels else self.args.past_index - 1]
                 # Remove the past from the logits.
-                logits = logits[: self.args.past_index - 1] + logits[self.args.past_index:]
+                logits = logits[: self.args.past_index - 1] + logits[self.args.past_index :]
 
         if prediction_loss_only:
             return (loss, None, None)
@@ -1558,7 +1582,7 @@ class Trainer:
 
     @staticmethod
     def _actual_model(
-            model: Union[torch.nn.DataParallel, torch.nn.parallel.DistributedDataParallel, torch.nn.modules.Module]
+        model: Union[torch.nn.DataParallel, torch.nn.parallel.DistributedDataParallel, torch.nn.modules.Module]
     ) -> torch.nn.modules.Module:
         """
 

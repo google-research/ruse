@@ -1,26 +1,43 @@
+# Copyright 2020 The HuggingFace Team. All rights reserved.
+# Copyright 2020 Google LLC
+# Modified from the original HuggingFace version.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import itertools
-import math
-
-import git
 import json
 import linecache
-import numpy as np
+import math
 import os
 import pickle
 import socket
-import torch
-import torch.distributed as dist
 from logging import getLogger
 from pathlib import Path
+from typing import Callable, Dict, Iterable, List, Tuple, Union
+
+import git
+import numpy as np
+import torch
+import torch.distributed as dist
 from rouge_score import rouge_scorer, scoring
 from sacrebleu import corpus_bleu
-from sentence_splitter import add_newline_to_end_of_each_sentence
 from torch import nn
 from torch.utils.data import Dataset, Sampler
+
+from .sentence_splitter import add_newline_to_end_of_each_sentence
 from transformers import BartTokenizer, EvalPrediction, PreTrainedTokenizer, T5Tokenizer
 from transformers.file_utils import cached_property
 from transformers.modeling_bart import shift_tokens_right
-from typing import Callable, Dict, Iterable, List, Tuple, Union
+
 
 try:
     from fairseq.data.data_utils import batch_by_size
@@ -91,9 +108,9 @@ def build_compute_metrics_fn(task_name: str, tokenizer: PreTrainedTokenizer) -> 
 
 
 def trim_batch(
-        input_ids,
-        pad_token_id,
-        attention_mask=None,
+    input_ids,
+    pad_token_id,
+    attention_mask=None,
 ):
     """Remove columns that are populated exclusively by pad_token_id"""
     keep_column_mask = input_ids.ne(pad_token_id).any(dim=0)
@@ -105,15 +122,15 @@ def trim_batch(
 
 class AbstractSeq2SeqDataset(Dataset):
     def __init__(
-            self,
-            tokenizer,
-            data_dir,
-            max_source_length,
-            max_target_length,
-            type_path="train",
-            n_obs=None,
-            prefix="",
-            **dataset_kwargs
+        self,
+        tokenizer,
+        data_dir,
+        max_source_length,
+        max_target_length,
+        type_path="train",
+        n_obs=None,
+        prefix="",
+        **dataset_kwargs
     ):
         super().__init__()
         self.src_file = Path(data_dir).joinpath(type_path + ".source")
@@ -263,7 +280,7 @@ class Seq2SeqDataCollator:
         self.tokenizer = tokenizer
         self.pad_token_id = tokenizer.pad_token_id
         assert (
-                self.pad_token_id is not None
+            self.pad_token_id is not None
         ), f"pad_token_id is not defined for ({self.tokenizer.__class__.__name__}), it must be defined."
         self.data_args = data_args
         self.tpu_num_cores = tpu_num_cores
@@ -345,10 +362,10 @@ def sortish_sampler_indices(data: List, bs: int, shuffle=True) -> np.array:
 
     idxs = np.random.permutation(len(data))
     sz = bs * 50
-    ck_idx = [idxs[i: i + sz] for i in range(0, len(idxs), sz)]
+    ck_idx = [idxs[i : i + sz] for i in range(0, len(idxs), sz)]
     sort_idx = np.concatenate([sorted(s, key=key_fn, reverse=True) for s in ck_idx])
     sz = bs
-    ck_idx = [sort_idx[i: i + sz] for i in range(0, len(sort_idx), sz)]
+    ck_idx = [sort_idx[i : i + sz] for i in range(0, len(sort_idx), sz)]
     max_ck = np.argmax([key_fn(ck[0]) for ck in ck_idx])  # find the chunk with the largest key,
     ck_idx[0], ck_idx[max_ck] = ck_idx[max_ck], ck_idx[0]  # then make sure it goes first.
     sort_idx = np.concatenate(np.random.permutation(ck_idx[1:])) if len(ck_idx) > 1 else np.array([], dtype=np.int)
@@ -399,7 +416,7 @@ class DistributedSortishSampler(Sampler):
         indices += indices[: (self.total_size - len(indices))]
         assert len(indices) == self.total_size
         # subsample
-        available_indices = indices[self.rank: self.total_size: self.num_replicas]
+        available_indices = indices[self.rank : self.total_size : self.num_replicas]
         return available_indices
 
     def __len__(self):
@@ -485,13 +502,13 @@ def extract_rouge_mid_statistics(dct):
 
 
 def calculate_rouge(
-        pred_lns: List[str],
-        tgt_lns: List[str],
-        use_stemmer=True,
-        rouge_keys=ROUGE_KEYS,
-        return_precision_and_recall=False,
-        bootstrap_aggregation=True,
-        newline_sep=True,
+    pred_lns: List[str],
+    tgt_lns: List[str],
+    use_stemmer=True,
+    rouge_keys=ROUGE_KEYS,
+    return_precision_and_recall=False,
+    bootstrap_aggregation=True,
+    newline_sep=True,
 ) -> Dict:
     """Calculate rouge using rouge_scorer package.
 
@@ -572,7 +589,7 @@ def assert_all_frozen(model):
     model_grads: List[bool] = list(grad_status(model))
     n_require_grad = sum(lmap(int, model_grads))
     npars = len(model_grads)
-    assert not any(model_grads), f"{n_require_grad / npars:.1%} of {npars} weights require grad"
+    assert not any(model_grads), f"{n_require_grad/npars:.1%} of {npars} weights require grad"
 
 
 def assert_not_all_frozen(model):
@@ -616,7 +633,7 @@ def write_txt_file(ordered_tgt, path):
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
-        yield lst[i: i + n]
+        yield lst[i : i + n]
 
 
 def check_output_dir(args, expected_items=0):
@@ -631,10 +648,10 @@ def check_output_dir(args, expected_items=0):
     `expected_items`: normally 0 (default) - i.e. empty dir, but in some cases a few files are expected (e.g. recovery from OOM)
     """
     if (
-            os.path.exists(args.output_dir)
-            and len(os.listdir(args.output_dir)) > expected_items
-            and args.do_train
-            and not args.overwrite_output_dir
+        os.path.exists(args.output_dir)
+        and len(os.listdir(args.output_dir)) > expected_items
+        and args.do_train
+        and not args.overwrite_output_dir
     ):
         raise ValueError(
             f"Output directory ({args.output_dir}) already exists and "

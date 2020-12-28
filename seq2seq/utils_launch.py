@@ -214,7 +214,7 @@ def multiply_accs_by_100 (table):
             table[k] = table[k].apply(lambda x: x*100)
 
 def order_glue_columns(table):
-    if 'mrpc (acc)' in list(table.columns):
+    if 'mnli (acc)' in list(table.columns):
         columns = ['average', 'mrpc (acc)', 'mrpc (f1)', 'stsb (pearson)', 'stsb (spearman)', 'rte (acc)',
                    'cola (mcc)', 'qqp (acc)', 'qqp (f1)', 'sst2 (acc)', 'qnli (acc)', 'mnli (acc)']
         table = table[columns]
@@ -258,7 +258,7 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], order
   df = df[params+acc_cols_names]
   if len(params) != 0:
     df = df.sort_values(by=params)
-  #multiply_accs_by_100(df)
+  multiply_accs_by_100(df)
 
   if "wnli_val_acc" in df.columns:
     df = df.drop(columns="wnli_val_acc")

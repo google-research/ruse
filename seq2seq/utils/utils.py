@@ -102,10 +102,12 @@ def freezing_params(model, training_args, model_args):
         freeze_params(model.get_encoder())
         assert_all_frozen(model.get_encoder())
 
+    # I modified this to only unfreeze the task embeddings.
     if model_args.freeze_model_but_task_embeddings:
         freeze_params(model)
-        for param in model.task_embedding_controller.parameters():
-            param.requires_grad = True
+        if not isinstance(model.task_embedding_controller.task_to_embeddings, dict):
+            for param in model.task_embedding_controller.task_to_embeddings.parameters():
+                param.requires_grad = True
 
     if model_args.unfreeze_lm_head:
         for param in model.lm_head.parameters():

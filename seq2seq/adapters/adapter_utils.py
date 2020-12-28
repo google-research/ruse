@@ -130,7 +130,7 @@ class TaskEmbeddingController(nn.Module):
         self.device = config.device
         self.task_embedding_dim = config.task_embedding_dim
         self.task_embedding_dir = config.task_embedding_dir
-        self.set_task_embeddings(config.tasks)
+        self.set_task_embeddings(config.tasks, config.parametric_task_embedding)
         self.train_task_embeddings = config.train_task_embeddings
         if self.train_task_embeddings:
             self.task_hyper_net = TaskHyperNet(config)
@@ -146,13 +146,6 @@ class TaskEmbeddingController(nn.Module):
     def set_task_embeddings(self, tasks, parametric=False):
         self.task_to_embeddings = {} if not parametric else nn.ParameterDict(dict())
         for task in tasks:
-            task_embedding = self.load_or_init_task_embedding(task)
-            self.task_to_embeddings[task] = task_embedding if not parametric else nn.Parameter(task_embedding)
-
-    def update_task_embeddings(self, tasks, parametric=False):
-        self.task_to_embeddings = {} if not parametric else nn.ParameterDict(dict())
-        for task in tasks:
-            # if task not in self.task_to_embeddings:
             task_embedding = self.load_or_init_task_embedding(task)
             self.task_to_embeddings[task] = task_embedding if not parametric else nn.Parameter(task_embedding)
 

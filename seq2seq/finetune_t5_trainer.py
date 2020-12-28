@@ -119,7 +119,6 @@ def main():
             model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
     )
-    # TODO: we need a better way to handle meta_adapters, and train_adapters
     # and task_embeddings_dir.
     extra_model_params = ("encoder_layerdrop", "decoder_layerdrop", "dropout",
                           "attention_dropout", "fixed_length_emb",
@@ -151,7 +150,8 @@ def main():
                             "conditional_layer_norm",
                             "one_layer_adapter_hyper_net",
                             "adapter_hyper_net_with_bias",
-                            "one_layer_adapter_hyper_net_with_linear"
+                            "one_layer_adapter_hyper_net_with_linear",
+                            "parametric_task_embedding"
                             )
     for p in extra_adapter_params:
         if hasattr(adapter_args, p):
@@ -212,6 +212,7 @@ def main():
     compute_metrics_fn = (
         build_compute_metrics_fn(data_args.eval_tasks, tokenizer) if training_args.predict_with_generate else None
     )
+
     trainer = T5Trainer(
         model=model,
         config=config,
@@ -231,22 +232,10 @@ def main():
 
     # Training
     if training_args.do_train:
-        ######################
-        #torch.cuda.synchronize()  # wait for move to complete
-        #start = torch.cuda.Event(enable_timing=True)
-        #end = torch.cuda.Event(enable_timing=True)
-        #start.record()
-        ######################
         trainer.train(
             model_path=model_args.model_name_or_path if (os.path.isdir(model_args.model_name_or_path) and not
             training_args.optimize_from_scratch) else None
         )
-        ######################
-        #torch.cuda.synchronize()  # wait for all_reduce to complete
-        #end.record()
-        #total_time = {"total_time": start.elapsed_time(end)}
-        #print(total_time)
-        ######################
 
         trainer.save_model()
         # For convenience, we also re-save the tokenizer to the same directory,
@@ -278,8 +267,8 @@ def main():
                     if isinstance(sub_module, AdapterController):
                         sub_module.set_task_to_adapter_map(task_to_adapter)
             if adapter_args.adapter_config_name in ["meta-adapter"]:
-                model.task_embedding_controller.update_task_embeddings(eval_datasets.keys(),
-                    parametric=training_args.parametric_task_embedding)
+                model.task_embedding_controller.set_task_embeddings(eval_datasets.keys(),
+                                    parametric=adapter_args.parametric_task_embedding)
 
     if training_args.do_eval:
         metrics = trainer.evaluate(metric_key_prefix="val")

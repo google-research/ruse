@@ -356,7 +356,8 @@ class ScitailTaskDataset(AbstractTaskDataset):
 
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence1:", example['sentence1'], "sentence2:", example["sentence2"]]
-        tgt_texts = [str(example['gold_label'])]
+        # To increase the transfer performance, we modified the targets to be similar to other datasets.
+        tgt_texts = [str(example['gold_label'])] #['1' if str(example['gold_label']) == "entailment" else '0']
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 

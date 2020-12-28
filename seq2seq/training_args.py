@@ -92,8 +92,6 @@ class Seq2SeqTrainingArguments(TrainingArguments):
   train_adapters: Optional[bool] = field(default=False, metadata={"help":
                                                           "Train an adapter instead of the full model."})
   do_test: bool = field(default=False, metadata={"help": "Whether to comptue evaluation metrics on the test sets."})
-  parametric_task_embedding: bool = field(default=False,
-                                                    metadata={"help": "If set, transform the task-embedding to a parameter in case of meta-adapter."})
   eval_output_dir: Optional[str] = field(default=None,
         metadata={"help": "The output directory where the evaluation of the model and checkpoints during "
                           "evaluation will be written. Would use the original output_dir if not specified."}
@@ -235,3 +233,6 @@ class AdapterTrainingArguments:
   one_layer_adapter_hyper_net_with_linear: Optional[bool] = field(default=False, metadata={"help": "If specified "
                                                                                                    "uses one linear layer for "
                                                                                                    "obtaining the adapters weight."})
+  parametric_task_embedding: bool = field(default=False,
+                                          metadata={
+                                            "help": "If set, transform the task-embedding to a parameter in case of meta-adapter."})

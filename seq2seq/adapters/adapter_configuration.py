@@ -47,6 +47,7 @@ class MetaAdapterConfig(AdapterConfig):
   one_layer_adapter_hyper_net = False
   adapter_hyper_net_with_bias = False
   one_layer_adapter_hyper_net_with_linear = False
+  parametric_task_embedding = False
 
 
 ADAPTER_CONFFIG_MAPPING = OrderedDict(

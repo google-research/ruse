@@ -1,23 +1,44 @@
-# Lint as: python3
-"""TODO(rabeeh): DO NOT SUBMIT without one-line documentation for transfer.
+import collections
+from seq2seq.utils_launch import do_sweep, download_all_evals, retrieve_results
 
-TODO(rabeeh): DO NOT SUBMIT without a detailed description of transfer.
-"""
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import google_type_annotations
-from __future__ import print_function
-
-from absl import app
-from absl import flags
-
-FLAGS = flags.FLAGS
+def get_results(sweep, params=None):
+    if params is None:
+        params = [k for k, v in sweep.items() if len(v) >= 2]
+    download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
+    retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True,
+                         filename='val_results.json')
+    retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True,
+                         filename='test_results.json')
 
 
-def main(argv):
-  if len(argv) > 1:
-    raise app.UsageError('Too many command-line arguments.')
+FUSION_TASKS=["imdb", "snli", "scitail", "boolq", "mrpc", "trec", "yelp_polarity", "qqp", "social_i_qa", "cosmos_qa", "winogrande", "hellaswag", "commonsense_qa"]
+GLUE_TASKS=["rte", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "cola"] # T5 does not train on wnli
 
-if __name__ == '__main__':
-  app.run(main)
+basic_config_path = "configs/paper_experiments/config.json"
+## adapters
+job_prefix= "glue-adapters"
+#job_prefix= "fusion-adapters"
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "tasks": ([GLUE_TASKS] if "glue" in job_prefix else [FUSION_TASKS]),
+                                 "eval_tasks": ([GLUE_TASKS] if "glue" in job_prefix else [FUSION_TASKS]),
+                                 "model_name_or_path": ["t5-small"],
+                                 "tokenizer_name": ["t5-small"],
+                                 "num_train_epochs": [5],
+                                 "per_device_train_batch_size": [64],
+                                 "per_device_eval_batch_size": [64],
+                                 # for training adapters.
+                                 "train_adapters": [True],                                                         
+                                 "reduction_factor": [8, 16],
+                                 "evaluation_strategy": ["no"],
+                                 #"hidden_dim": [64, 128, 256],
+                                 "projected_task_embedding_dim": [64],
+                                 #"add_adapters_in_decoder": [True, False],
+                                 "conditional_layer_norm": [True, False],
+                                 "unfreeze_lm_head": [True, False],
+                                 "adapter_config_name": ["meta-adapter"],
+                                 "train_task_embeddings": [True], #, False],
+                                 "non_linearity": ["gelu_new"],
+                                 "output_dir": ["outputs/paper_results/test/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
+#do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+get_results(sweep)
+

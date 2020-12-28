@@ -1,6 +1,7 @@
 # coding=utf-8
 # Copyright 2018 Mesh TensorFlow authors, T5 Authors and HuggingFace Inc. team.
-#
+# Copyright 2020 Google LLC
+# Modified from the original HuggingFace version.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -543,7 +544,6 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
                 task_embedding=self.task_embedding_controller(task) if self.train_adapters else None
             )
         elif return_dict and not isinstance(encoder_outputs, BaseModelOutput):
-            # TODO(rabeeh): from what I see it does not go here.
             encoder_outputs = BaseModelOutput(
                 last_hidden_state=encoder_outputs[0],
                 hidden_states=encoder_outputs[1] if len(encoder_outputs) > 1 else None,

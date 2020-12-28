@@ -383,8 +383,7 @@ class Trainer:
         ignored_columns = list(set(dataset.column_names) - set(signature_columns))
         dset_description = "" if description is None else f"in the {description} set "
         logger.info(
-            f"The following columns {dset_description}don't have a corresponding argument in `{self.model.__class__.__name__}.forward` and have been ignored: {', '.join(
-        ignored_columns)}."
+            f"The following columns {dset_description}don't have a corresponding argument in `{self.model.__class__.__name__}.forward` and have been ignored: {', '.join(ignored_columns)}."
 
     )
     dataset.set_format(type=dataset.format["type"], columns=columns)

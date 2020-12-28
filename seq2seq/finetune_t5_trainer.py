@@ -267,7 +267,10 @@ def main():
                     if isinstance(sub_module, AdapterController):
                         sub_module.set_task_to_adapter_map(task_to_adapter)
             if adapter_args.adapter_config_name in ["meta-adapter"]:
-                model.task_embedding_controller.set_task_embeddings(eval_datasets.keys(),
+                # If this is parametric, then the evaluation task should be part of tasks
+                # and the embeddings needs to be trained.
+                if not adapter_args.parametric_task_embedding:
+                    model.task_embedding_controller.set_task_embeddings(eval_datasets.keys(),
                                     parametric=adapter_args.parametric_task_embedding)
 
     if training_args.do_eval:

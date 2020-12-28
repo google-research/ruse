@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2020, The T5 Authors and HuggingFace Inc.
+# Copyright 2010, The T5 Authors and HuggingFace Inc.
 # Copyright 2020 Google LLC
 # Modified from the original HuggingFace version.
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """ T5 model configuration """
 
 from transformers.configuration_utils import PretrainedConfig
@@ -76,8 +75,8 @@ class T5Config(PretrainedConfig):
             A factor for initializing all weight matrices (should be kept to 1, used
             internally for initialization testing).
         fixed_length_emb: (:obj:`bool`, `optional`, defaults to False):
-            If specified computes the fixed length embeddings from the encoder and
-            feeds it to the decoder.
+            If specified computes the fixed length embeddings from the encoder before
+            feeding it to decoder.
         encoder_projection: (:obj:`str`, `optional`, defaults to `mlp`):
             Defines the type of projection layer.
         encoder_pooling: (:obj:`str`, `optional`, defaults to `max`):

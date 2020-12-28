@@ -16,12 +16,10 @@
 """Implements a T5 trainer class doing training and evaluation."""
 
 import collections
-
-import numpy as np
 import torch
+import numpy as np
 from torch import nn
 from torch.utils.data.dataloader import DataLoader
-from torch.utils.data.dataset import Dataset
 from transformers import PreTrainedModel, logging
 from transformers.configuration_fsmt import FSMTConfig
 from transformers.file_utils import is_torch_tpu_available
@@ -36,9 +34,10 @@ from transformers.optimization import (
     get_polynomial_decay_schedule_with_warmup,
 )
 from typing import Any, Dict, Optional, Tuple, Union
+from torch.utils.data.dataset import Dataset
 
+from seq2seq.utils import upload, use_task_specific_params, reset_config
 from seq2seq.data import MultiTaskBatchSampler
-from seq2seq.utils import use_task_specific_params, reset_config
 from .trainer import Trainer
 
 logger = logging.get_logger(__name__)
@@ -58,21 +57,19 @@ if is_torch_tpu_available():
 
 
 class T5Trainer(Trainer):
-    def __init__(self, config=None, data_args=None, dataset_sizes=None, adapter_config=None,
-                 multi_task_compute_metrics=None, *args, **kwargs):
+    def __init__(self, config=None, data_args=None, dataset_sizes=None, adapter_config=None,  multi_task_compute_metrics=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if config is None:
             assert isinstance(
                 self.model, PreTrainedModel
-            ), f"If no `config` is passed the model to be trained has to be of type `PreTrainedModel`, " \
-                f"but is {self.model.__class__}"
+            ), f"If no `config` is passed the model to be trained has to be of type `PreTrainedModel`, but is {self.model.__class__}"
             self.config = self._actual_model(self.model).config
         else:
             self.config = config
 
         self.adapter_config = adapter_config
-        self.multi_task_compute_metrics = multi_task_compute_metrics
+        self. multi_task_compute_metrics = multi_task_compute_metrics
         self.dataset_sizes = dataset_sizes
         self.data_args = data_args
         self.vocab_size = self.config.tgt_vocab_size if isinstance(self.config, FSMTConfig) else self.config.vocab_size
@@ -80,13 +77,11 @@ class T5Trainer(Trainer):
         if self.args.label_smoothing != 0 or (self.data_args is not None and self.data_args.ignore_pad_token_for_loss):
             assert (
                     self.config.pad_token_id is not None
-            ), "Make sure that `config.pad_token_id` is correcly defined when ignoring `pad_token` for loss calculation" \
-               " or doing label smoothing."
+            ), "Make sure that `config.pad_token_id` is correcly defined when ignoring `pad_token` for loss calculation or doing label smoothing."
 
         if self.config.pad_token_id is None and self.config.eos_token_id is not None:
             logger.warn(
-                f"The `config.pad_token_id` is `None`. Using `config.eos_token_id` = {self.config.eos_token_id}"
-                f" for padding.."
+                f"The `config.pad_token_id` is `None`. Using `config.eos_token_id` = {self.config.eos_token_id} for padding.."
             )
 
         if self.args.label_smoothing == 0:
@@ -195,8 +190,8 @@ class T5Trainer(Trainer):
         loss, _ = self._compute_loss(model, inputs, labels)
         return loss
 
-    def evaluate(self, eval_datasets: Optional[Dict[str, Dataset]] = None, metric_key_prefix: str = "eval") -> Dict[
-        str, float]:
+
+    def evaluate(self, eval_datasets: Optional[Dict[str, Dataset]] = None, metric_key_prefix: str = "eval") -> Dict[str, float]:
         """
         Run evaluation and returns metrics.
 
@@ -252,12 +247,13 @@ class T5Trainer(Trainer):
                 results.update(tasks_metric)
                 reset_config(self.model, model_config)
 
-        # Computes the average metrics across all the tasks.
+        # Computes the average metrics across all the tasks without their corresponding losses.
         if self.is_world_process_zero():
             metrics = [results[key] for key in results.keys() if "loss" not in key]
-            results[metric_key_prefix + '_average_metrics'] = np.mean(metrics)
+            results[metric_key_prefix+'_average_metrics'] = np.mean(metrics)
         self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, results)
         return results
+
 
     def prediction_step(
             self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]],

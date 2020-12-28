@@ -43,6 +43,7 @@ def pearson_corrcoef(predictions, targets) -> dict:
     from seq2seq.data import string_to_float
     predictions = [string_to_float(prediction) for prediction in predictions]
     targets = [string_to_float(target) for target in targets]
+
     return {"pearson_corrcoef":
                 100 * scipy.stats.pearsonr(targets, predictions)[0]}
 

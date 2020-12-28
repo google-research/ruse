@@ -9,10 +9,10 @@
 "test_max_target_length":128,
 "num_train_epochs": 10,
 "warmup_steps": 500,
-"eval_steps": 100,
+"eval_steps": 10,
 "overwrite_output_dir": true,
-"tasks": ["scitail"],
-"eval_tasks": ["scitail"],
+"tasks": ["scitail", "mrpc"],
+"eval_tasks": ["scitail", "mrpc"],
 "label_smoothing": 0.1,
 "freeze_encoder":false,
 "freeze_embeds":false,
@@ -35,7 +35,9 @@
 "projected_task_embedding_dim": 64,
 "split_validation_test": true,
 "evaluation_strategy": "steps",
-"optimize_from_scratch": true
+"optimize_from_scratch": true,
+"load_best_model_at_end": true, 
+"metric_for_best_model": "average_metrics" 
 }
 
 

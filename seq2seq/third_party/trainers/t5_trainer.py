@@ -16,6 +16,7 @@
 
 import collections
 import torch
+import numpy as np
 from torch import nn
 from torch.utils.data.dataloader import DataLoader
 from transformers import PreTrainedModel, logging
@@ -245,6 +246,11 @@ class T5Trainer(Trainer):
                     logger.info(f"  {key} = {tasks_metric[key]}")
                 results.update(tasks_metric)
                 reset_config(self.model, model_config)
+
+        # Computes the average metrics across all the tasks without their corresponding losses.
+        if self.is_world_process_zero():
+            metrics = [results[key] for key in results.keys() if "loss" not in key]
+            results[metric_key_prefix+'_average_metrics'] = np.mean(metrics)
 
         self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, results)
         return results

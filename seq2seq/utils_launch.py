@@ -258,7 +258,7 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], order
   df = df[params+acc_cols_names]
   if len(params) != 0:
     df = df.sort_values(by=params)
-  multiply_accs_by_100(df)
+  #multiply_accs_by_100(df)
 
   if "wnli_val_acc" in df.columns:
     df = df.drop(columns="wnli_val_acc")

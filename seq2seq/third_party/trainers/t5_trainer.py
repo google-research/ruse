@@ -56,7 +56,7 @@ if is_torch_tpu_available():
 
 
 class T5Trainer(Trainer):
-    def __init__(self, config=None, data_args=None, dataset_sizes=None,  multi_task_compute_metrics=None, *args, **kwargs):
+    def __init__(self, config=None, data_args=None, dataset_sizes=None, adapter_config=None,  multi_task_compute_metrics=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if config is None:
@@ -67,6 +67,7 @@ class T5Trainer(Trainer):
         else:
             self.config = config
 
+        self.adapter_config = adapter_config
         self. multi_task_compute_metrics = multi_task_compute_metrics
         self.dataset_sizes = dataset_sizes
         self.data_args = data_args

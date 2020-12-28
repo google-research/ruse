@@ -131,10 +131,11 @@ def main():
             setattr(config, p, getattr(training_args, p))
 
     # Gets the adapter config and updates the specified parameters.
-    adapter_config = AutoAdapterConfig.get(adapter_args.adapter_config_name)
-    adapter_config.input_dim = config.d_model
-    adapter_config.tasks = data_args.tasks
-    extra_adapter_params = ("task_embedding_dir",
+    if training_args.train_adapters:
+        adapter_config = AutoAdapterConfig.get(adapter_args.adapter_config_name)
+        adapter_config.input_dim = config.d_model
+        adapter_config.tasks = data_args.tasks
+        extra_adapter_params = ("task_embedding_dir",
                             "task_embedding_dim",
                             "add_layer_norm_before_adapter",
                             "add_layer_norm_after_adapter",
@@ -153,11 +154,13 @@ def main():
                             "one_layer_adapter_hyper_net_with_linear",
                             "parametric_task_embedding"
                             )
-    for p in extra_adapter_params:
-        if hasattr(adapter_args, p):
-            assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"
-            setattr(adapter_config, p, getattr(adapter_args, p))
-    adapter_config.device = training_args.device
+        for p in extra_adapter_params:
+            if hasattr(adapter_args, p):
+                assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"
+                setattr(adapter_config, p, getattr(adapter_args, p))
+        adapter_config.device = training_args.device
+    else:
+        adapter_config = None
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else \
@@ -224,7 +227,8 @@ def main():
         multi_task_compute_metrics=compute_metrics_fn,
         data_args=data_args,
         dataset_sizes=dataset_sizes if training_args.do_train else None,
-        callbacks=[T5CheckpointCallback()] #, EvaluationCallback()]
+        callbacks=[T5CheckpointCallback()], #, EvaluationCallback()]
+        adapter_config = adapter_config
     )
     if trainer.is_world_process_zero():
         arguments = get_training_args([model_args, data_args, training_args, adapter_args])

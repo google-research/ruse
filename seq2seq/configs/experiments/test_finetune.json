@@ -2,12 +2,12 @@
 "model_name_or_path": "/idiap/user/rkarimi/dev/ruse/seq2seq/glue-finetune-3",
 "tokenizer_name": "/idiap/user/rkarimi/dev/ruse/seq2seq/glue-finetune-3",
 "learning_rate": 3e-4,
-"output_dir": "outputs/temp/test/",
+"output_dir": "outputs/temp/test-man/checkpoint-160/",
 "max_source_length": 128,
 "max_target_length": 128 ,
 "val_max_target_length":128,
 "test_max_target_length":128,
-"num_train_epochs": 10,
+"num_train_epochs": 1,
 "warmup_steps": 500,
 "eval_steps": 10,
 "overwrite_output_dir": true,
@@ -26,9 +26,9 @@
 "predict_with_generate": true,
 "task_embedding_dir":"test_data/task_embeddings/n-train-100",
 "task_embedding_dim": 512,
-"do_train": true,
 "do_eval": true,
 "do_test": true,
+"do_train": true,
 "n_train": 500,
 "n_val": 500,
 "reduction_factor": 8,
@@ -38,7 +38,8 @@
 "evaluation_strategy": "steps",
 "optimize_from_scratch": true,
 "load_best_model_at_end": true, 
-"metric_for_best_model": "average_metrics" 
+"metric_for_best_model": "average_metrics", 
+"greater_is_better": true
 }
 
 

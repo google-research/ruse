@@ -4,7 +4,7 @@ from seq2seq.utils_launch import do_sweep, download_all_evals, retrieve_results
 def get_results(sweep, params=None):
     if params is None:
         params = [k for k, v in sweep.items() if len(v) >= 2]
-    #download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
+    download_all_evals(sweep, job_prefix, [], sweep["output_dir"][0], ordered_name=True)
     retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True,
                          filename='val_results.json')
     retrieve_results(sweep["output_dir"][0], sweep, [], job_prefix, params, ordered_name=True,
@@ -43,7 +43,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "non_linearity": ["gelu_new"],
                                  "output_dir": ["outputs/paper_results/test/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
 #do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
-#get_results(sweep)
+get_results(sweep)
 
 
 ## adapters
@@ -70,7 +70,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "train_task_embeddings": [True], #, False],
                                  "non_linearity": ["gelu_new"],
                                  "output_dir": ["outputs/paper_results/full_training/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
-do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 #get_results(sweep)
 
 ## finetune

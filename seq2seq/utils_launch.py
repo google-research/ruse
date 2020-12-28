@@ -217,15 +217,19 @@ def order_glue_columns(table):
     if 'mnli (acc)' in list(table.columns):
         columns = ['average', 'mrpc (acc)', 'mrpc (f1)', 'stsb (pearson)', 'stsb (spearman)', 'rte (acc)',
                    'cola (mcc)', 'qqp (acc)', 'qqp (f1)', 'sst2 (acc)', 'qnli (acc)', 'mnli (acc)']
-        table = table[columns]
+        all_columns = list(table.columns)
+        diff_columns = list(set(all_columns)-set(columns))
+        sorted_columns = diff_columns + columns
+        table = table[sorted_columns]
     return table
 
 def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], ordered_name=False, filename="val_results.json", task=None):
+  params = params # + ['name']
   acc_cols = []
   for acc_col in names:
         metrics = [acc_col.format(name) for name in ["val", "eval", "test"]]
         acc_cols = acc_cols + metrics
-  acc_cols = acc_cols #+ ["tasks", "eval_tasks"]
+  acc_cols = acc_cols
   print(job_prefix)
   df = pd.DataFrame()
   keys = flatten(list(sweep.keys()))
@@ -249,6 +253,7 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], order
       results.update({key: value for key, value in zip(keys, option)})
       if task is not None and results['tasks'] != task:
           continue
+      results['name'] = name
       df = df.append(results, ignore_index=True)
     except FileNotFoundError:
       pass #print("File not found ", eval_path)
@@ -258,14 +263,14 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], order
   df = df[params+acc_cols_names]
   if len(params) != 0:
     df = df.sort_values(by=params)
-  #multiply_accs_by_100(df)
+  multiply_accs_by_100(df)
 
   if "wnli_val_acc" in df.columns:
     df = df.drop(columns="wnli_val_acc")
   if "wnli_test_acc" in df.columns:
     df = df.drop(columns="wnli_test_acc")
 
-  #print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
+  print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
   # computing the maximum.
   dfs = []
   results_dict = {}

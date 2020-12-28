@@ -26,6 +26,37 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "eval_tasks": ([GLUE_TASKS] if "glue" in job_prefix else [FUSION_TASKS]),
                                  "model_name_or_path": ["t5-small"],
                                  "tokenizer_name": ["t5-small"],
+                                 "per_device_train_batch_size": [64],
+                                 "per_device_eval_batch_size": [64],
+                                 "load_best_model_at_end": [True], 
+                                 "metric_for_best_model": ["average_metrics"], 
+                                 "greater_is_better": [True],
+                                 "evaluation_strategy": ["steps"],
+                                 # for training adapters.
+                                 "one_layer_adapter_hyper_net_with_linear": [True],
+                                 "train_adapters": [True],
+                                 "max_steps": [262144],
+                                 "reduction_factor": [32, 16, 8, 4],
+                                 "projected_task_embedding_dim": [64, 32, 128],
+                                 "conditional_layer_norm": [True], # False],
+                                 "unfreeze_lm_head": [True], # False],
+                                 "unfreeze_layer_norms": [True],
+                                 "adapter_config_name": ["meta-adapter"],
+                                 "train_task_embeddings": [True], #, False],
+                                 "non_linearity": ["gelu_new"],
+                                 "output_dir": ["outputs/paper_results/paper_results/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
+do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#get_results(sweep)
+
+'''
+## adapters
+job_prefix= "glue-adapters"
+#job_prefix= "fusion-adapters"
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 "tasks": ([GLUE_TASKS] if "glue" in job_prefix else [FUSION_TASKS]),
+                                 "eval_tasks": ([GLUE_TASKS] if "glue" in job_prefix else [FUSION_TASKS]),
+                                 "model_name_or_path": ["t5-small"],
+                                 "tokenizer_name": ["t5-small"],
                                  "num_train_epochs": [5],
                                  "per_device_train_batch_size": [64],
                                  "per_device_eval_batch_size": [64],
@@ -44,38 +75,9 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "output_dir": ["outputs/paper_results/test/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
 #do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 #get_results(sweep)
+'''
 
 
-## adapters
-job_prefix= "glue-adapters"
-#job_prefix= "fusion-adapters"
-sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
-                                 "tasks": ([GLUE_TASKS] if "glue" in job_prefix else [FUSION_TASKS]),
-                                 "eval_tasks": ([GLUE_TASKS] if "glue" in job_prefix else [FUSION_TASKS]),
-                                 "model_name_or_path": ["t5-small"],
-                                 "tokenizer_name": ["t5-small"],
-                                 "per_device_train_batch_size": [64],
-                                 "per_device_eval_batch_size": [64],
-                                 "load_best_model_at_end": [True], 
-                                 "metric_for_best_model": ["average_metrics"], 
-                                 "greater_is_better": [True],
-                                 # for training adapters.
-                                 "train_adapters": [True],
-                                 "max_steps": [262144],
-                                 "reduction_factor": [32, 16, 8, 4],
-                                 "evaluation_strategy": ["no"],
-                                 #"hidden_dim": [64, 128, 256],
-                                 "projected_task_embedding_dim": [64, 32, 128],
-                                 #"add_adapters_in_decoder": [True, False],
-                                 "conditional_layer_norm": [True], # False],
-                                 "unfreeze_lm_head": [True], # False],
-                                 "unfreeze_layer_norms": [True],
-                                 "adapter_config_name": ["meta-adapter"],
-                                 "train_task_embeddings": [True], #, False],
-                                 "non_linearity": ["gelu_new"],
-                                 "output_dir": ["outputs/paper_results/full_training/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
-do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
-#get_results(sweep)
 
 ## finetune
 job_prefix="glue-finetune"

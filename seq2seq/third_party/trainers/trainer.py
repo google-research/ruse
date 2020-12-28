@@ -834,6 +834,8 @@ class Trainer:
             delattr(self, "_past")
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
+
+
         if self.args.load_best_model_at_end and self.state.best_model_checkpoint is not None:
             logger.info(
                 f"Loading best model from {self.state.best_model_checkpoint} (score: {self.state.best_metric})."
@@ -844,6 +846,7 @@ class Trainer:
             else:
                 state_dict = torch.load(os.path.join(self.state.best_model_checkpoint, WEIGHTS_NAME))
                 self.model.load_state_dict(state_dict)
+
 
         if self._total_flos is not None:
             self.store_flos()
@@ -928,6 +931,7 @@ class Trainer:
             ):
                 self.state.best_metric = metric_value
                 self.state.best_model_checkpoint = output_dir
+
 
         # Save the Trainer state
         if self.is_world_process_zero():

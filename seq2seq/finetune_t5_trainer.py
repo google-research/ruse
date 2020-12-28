@@ -243,7 +243,7 @@ def main():
         data_args=data_args,
         dataset_sizes=dataset_sizes if training_args.do_train else None,
         callbacks=[T5CheckpointCallback()], #, EvaluationCallback()]
-        adapter_config = adapter_config
+        adapter_config=adapter_config
     )
     if trainer.is_world_process_zero():
         arguments = get_training_args([model_args, data_args, training_args, adapter_args])
@@ -282,7 +282,24 @@ def main():
                 cache_dir=model_args.cache_dir,
                 adapter_config=adapter_config
             )
-            trainer.model = model.to(training_args.device)
+            # NOTE: if trainer is not re-defined, there is a bug in the codes, that making
+            # huggingface codes does not using the best checkpoint.
+            # TODO: investigate this bug later on.
+            trainer = T5Trainer(
+                model=model,
+                config=config,
+                args=training_args,
+                train_dataset=train_dataset if training_args.do_train else None,
+                eval_dataset=eval_datasets,
+                data_collator=TaskCollator(tokenizer, data_args, tpu_num_cores=training_args.tpu_num_cores),
+                compute_metrics=None,
+                multi_task_compute_metrics=compute_metrics_fn,
+                data_args=data_args,
+                dataset_sizes=dataset_sizes if training_args.do_train else None,
+                callbacks=[T5CheckpointCallback()],  # , EvaluationCallback()]
+                adapter_config=adapter_config
+            )
+
         if training_args.train_adapters:
             if adapter_args.adapter_config_name == "adapter" and data_args.adapters is not None:
                 for name, sub_module in model.named_modules():

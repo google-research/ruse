@@ -239,8 +239,6 @@ class T5Trainer(Trainer):
                 # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
                 xm.master_print(met.metrics_report())
 
-            self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, output.metrics)
-
             tasks_metric = {eval_task + "_" + k: v for k, v in output.metrics.items()}
             if self.is_world_process_zero():
                 for key in sorted(tasks_metric.keys()):
@@ -252,7 +250,6 @@ class T5Trainer(Trainer):
         if self.is_world_process_zero():
             metrics = [results[key] for key in results.keys() if "loss" not in key]
             results[metric_key_prefix+'_average_metrics'] = np.mean(metrics)
-
         self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, results)
         return results
 

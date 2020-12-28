@@ -1,5 +1,6 @@
 import sys
-import torch 
+import torch
+import glob
 
 import datasets
 import json
@@ -65,6 +66,20 @@ def get_training_args(arguments_list):
     all_arguments.pop("evaluation_strategy")
     return all_arguments
 
+
+def get_last_checkpoint_path(output_dir):
+    """
+    Finds the path for the last checkpoint saved in the output_dir
+    :param output_dir:  output_dir
+    :return: path to the last checkpoint saved in the output dir.
+    """
+    paths = glob.glob(os.path.join(output_dir, "checkpoint-*"))
+    if len(paths) == 0:
+        return output_dir
+    else:
+        checkpoints = [int(checkpoint.split('-')[-1]) for checkpoint in paths]
+        max_checkpoint = max(checkpoints)
+        return os.path.join(output_dir, "checkpoint-"+str(max_checkpoint))
 
 def main():
     # See all possible arguments in src/transformers/training_args.py or by passing
@@ -252,11 +267,16 @@ def main():
     all_metrics = {}
     if training_args.do_eval or training_args.do_test:
         if trainer.is_world_process_zero():
+            # By default we load  the model from last checkpoint path,
+            # in case of saving the model with the best metrics, make sure to
+            # set save_total = 1 so the best model is loaded here.
+            # if not exists returns the path to the output_dir.
+            last_checkpoint_path = get_last_checkpoint_path(training_args.output_dir)
             config = T5Config.from_pretrained(
-                training_args.output_dir,  # "t5-base" for the baseline.
+                last_checkpoint_path, #training_args.output_dir,  # "t5-base" for the baseline.
                 cache_dir=model_args.cache_dir)
             model = T5ForConditionalGeneration.from_pretrained(
-                training_args.output_dir,  # "t5-base" for the baseline.
+                last_checkpoint_path, #training_args.output_dir,  # "t5-base" for the baseline.
                 from_tf=".ckpt" in training_args.output_dir,
                 config=config,
                 cache_dir=model_args.cache_dir,

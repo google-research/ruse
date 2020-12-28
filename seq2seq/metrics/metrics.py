@@ -66,7 +66,7 @@ def f1_score_with_invalid(predictions, targets) -> dict:
     predictions = [int(prediction) if prediction.isnumeric() else prediction for prediction in predictions]
     targets, predictions = np.asarray(targets), np.asarray(predictions)
     # Get indices of invalid predictions
-    invalid_idx_mask = np.logical_and(predictions != 0, predictions != 1)
+    invalid_idx_mask = [True if (prediction != 0 and prediction != 1) else False for prediction in predictions]
     # For any prediction != 0 or 1, set it to the opposite of what the target is.
     predictions[invalid_idx_mask] = 1 - targets[invalid_idx_mask]
     predictions = [int(prediction) for prediction in predictions]

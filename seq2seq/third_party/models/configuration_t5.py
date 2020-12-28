@@ -1,6 +1,7 @@
 # coding=utf-8
 # Copyright 2010, The T5 Authors and HuggingFace Inc.
-#
+# Copyright 2020 Google LLC
+# Modified from the original HuggingFace version.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -83,6 +84,11 @@ class T5Config(PretrainedConfig):
         projection_length: (:obj:`int`, `optional`, defaults to 128):
            Defines the projection length, in case of using fixed_length_emb option.
         only_projection_bottleneck: if specified, only passes the projection to the decoder.
+        concat_projection_token: (:obj:`bool`, `optional`, defaults to False):
+           If specified concatenate the encoder representation with pooled hidden states before
+           feeding it to the decoder.
+        train_adapters: (:obj:`bool`, `optional`, defaults to False):
+           If specified insert adapter layers within the transformer layers.
     """
     model_type = "t5"
 

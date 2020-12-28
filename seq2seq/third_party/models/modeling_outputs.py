@@ -1,5 +1,6 @@
 # Copyright 2020 The HuggingFace Team. All rights reserved.
-#
+# Copyright 2020 Google LLC
+# Modified from the original HuggingFace version.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -61,8 +62,8 @@ class RuseBaseModelOutputWithPastAndCrossAttentions(BaseModelOutput):
             Attentions weights of the decoder's cross-attention layer, after the
             attention softmax, used to compute the weighted average in the
             cross-attention heads.
-        pooled_hidden_state
-            Pooled hidden states.
+        pooled_enc_hidden_state (:obj:`torch.FloatTensor`, `optional`, returned when ``config.fixed_length_emb=True``
+            and shows the encoder pooled hidden state.
     """
 
     last_hidden_state: torch.FloatTensor
@@ -112,6 +113,8 @@ class RuseSeq2SeqLMOutput(ModelOutput):
             sequence_length, sequence_length)`.
             Attentions weights of the encoder, after the attention softmax, used to compute the weighted average in the
             self-attention heads.
+        pooled_enc_hidden_state (:obj:`torch.FloatTensor`, `optional`, returned when ``config.fixed_length_emb=True``
+        and shows the encoder pooled hidden state.
     """
 
     loss: Optional[torch.FloatTensor] = None

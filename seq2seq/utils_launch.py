@@ -257,6 +257,8 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], order
           continue
       results['name'] = name
       df = df.append(results, ignore_index=True)
+      #if results['reduction_factor'] == 16 and results['conditional_layer_norm'] == 1 and  results['unfreeze_lm_head'] == 1:
+      #  print("### name is ", name, results)
     except FileNotFoundError:
       pass #print("File not found ", eval_path)
 
@@ -272,7 +274,7 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], order
   if "wnli_test_acc" in df.columns:
     df = df.drop(columns="wnli_test_acc")
 
-  print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
+  #print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
   # computing the maximum.
   dfs = []
   results_dict = {}
@@ -307,6 +309,6 @@ def retrieve_results(output_dir, sweep, short_keys, job_prefix, params=[], order
   table = table.round(decimals=2)
   if task is None:
     table = order_glue_columns(table)
-    print(tabulate(table, headers='keys', tablefmt='pipe', showindex=False))
+    #print(tabulate(table, headers='keys', tablefmt='pipe', showindex=False))
     print(tabulate(table, headers='keys', tablefmt='latex', showindex=False))
   return table

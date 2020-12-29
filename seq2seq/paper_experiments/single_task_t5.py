@@ -3,6 +3,7 @@ import collections
 from seq2seq.utils_launch import do_sweep, download_all_evals, retrieve_results
 from tabulate import tabulate
 from seq2seq.utils_launch import order_glue_columns
+import math 
 
 def get_results(sweep, params=None, single_task=False, tasks=[]):
     if params is None:
@@ -42,14 +43,21 @@ FUSION_TASKS=["imdb", "snli", "scitail", "boolq", "mrpc", "trec", "yelp_polarity
 GLUE_TASKS=["rte", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "cola"] # T5 does not train on wnli
 
 
-def get_tuple_single_tasks(tasks):
-  return [([task], [task]) for task in tasks]
+def get_single_tasks(tasks):
+  #sizes = {"rte": 2489, "glue":949090, "cola":8550 , "sst2":67348, "mrpc":3667, "stsb":5748, "qqp":363845, "mnli":392701, "qnli":104742}
+  #max_steps=65536
+  #results= [([task], [task], math.ceil(max_steps*sizes[task]/sizes["glue"])) for task in tasks]
+  results= [([task], [task])) for task in tasks]
+  #print(results)
+  return results
+
+
 
 basic_config_path = "configs/paper_experiments/config.json"
 job_prefix="glue-finetune-single"
 #job_prefix = "fusion-finetune-single"
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
-                                 ("tasks", "eval_tasks"): get_tuple_single_tasks(GLUE_TASKS if "glue" in job_prefix else FUSION_TASKS),
+                                 ("tasks", "eval_tasks"): get_single_tasks(GLUE_TASKS if "glue" in job_prefix else FUSION_TASKS),
                                  "model_name_or_path": ["t5-small"],
                                  "tokenizer_name": ["t5-small"],
                                  "num_train_epochs": [5],
@@ -64,14 +72,14 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
 job_prefix="glue-finetune-single"
 #job_prefix = "fusion-finetune-single"
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
-                                 ("tasks", "eval_tasks"): get_tuple_single_tasks(GLUE_TASKS if "glue" in job_prefix else FUSION_TASKS),
+                                 ("tasks", "eval_tasks"): get_single_tasks(GLUE_TASKS if "glue" in job_prefix else FUSION_TASKS),
                                  "model_name_or_path": ["t5-small"],
                                  "tokenizer_name": ["t5-small"],
                                  "load_best_model_at_end": [True], 
                                  "metric_for_best_model": ["average_metrics"], 
                                  "greater_is_better": [True],
                                  "evaluation_strategy": ["steps"],
-                                 "max_steps": [65536]
+                                 "max_steps": [65536],
                                  "per_device_train_batch_size": [64],
                                  "per_device_eval_batch_size": [64],
                                  "output_dir": ["outputs/paper_results/paper_results/{0}/finetune_single_task/".format("glue" if "glue" in job_prefix else "fusion")]})

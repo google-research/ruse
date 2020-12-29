@@ -60,6 +60,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
 #do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 #get_results(sweep, single_task=True, tasks=GLUE_TASKS)
 
+
 job_prefix="glue-finetune-single"
 #job_prefix = "fusion-finetune-single"
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
@@ -70,7 +71,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "metric_for_best_model": ["average_metrics"], 
                                  "greater_is_better": [True],
                                  "evaluation_strategy": ["steps"],
-                                 "num_train_epochs": [18],
+                                 "max_steps": [65536]
                                  "per_device_train_batch_size": [64],
                                  "per_device_eval_batch_size": [64],
                                  "output_dir": ["outputs/paper_results/paper_results/{0}/finetune_single_task/".format("glue" if "glue" in job_prefix else "fusion")]})

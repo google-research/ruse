@@ -65,7 +65,6 @@ def do_sweep(parent_config_path, sweep,  job_prefix, short_keys=None, output_dir
     config_path = "{0}/{1}.json".format(temp_configs_dir, name)
     with open(config_path, 'w') as f:
       json.dump(config, f)
-    print(failed_jobs)
     if (len(failed_jobs) != 0 and name in failed_jobs) or len(failed_jobs) == 0:
         print("### name ", name)
         commands.append(get_run_command(config_path, name, num_gpus))

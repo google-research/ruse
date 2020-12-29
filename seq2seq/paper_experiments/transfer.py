@@ -31,7 +31,8 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "optimize_from_scratch": [True],
                                  "freeze_model_but_task_embeddings": [True],
                                  "parametric_task_embedding": [True],
-                                 "max_steps": [21845], # just to speed up 
+                                 "max_steps": [21845], # just to speed up
+                                 "n_train": [100, 500, 1000, 2000], 
                                  # normal parameters.
                                  "load_best_model_at_end": [True], 
                                  "metric_for_best_model": ["average_metrics"], 
@@ -68,6 +69,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "max_steps": [21845], # just to speed up 
                                  "per_device_train_batch_size": [64],
                                  "per_device_eval_batch_size": [64],
+                                 "n_train": [100, 500, 1000, 2000], 
                                  "optimize_from_scratch": [True],
                                  "max_steps": [21845], # just to speed up 
                                  # normal parameters.

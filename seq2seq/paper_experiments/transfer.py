@@ -17,7 +17,7 @@ TRANSFER_TASKS =["imdb", "snli", "scitail", "boolq",  "trec", "yelp_polarity",  
 
 ## adapters
 basic_config_path = "configs/paper_experiments/config.json"
-job_prefix= "transfer"
+job_prefix= "transfer-adapter"
 #job_prefix= "fusion-adapters"
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
                                  # transfer parameters.

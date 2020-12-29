@@ -19,7 +19,8 @@ GLUE_TASKS=["rte", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "cola"] # T5 d
 basic_config_path = "configs/paper_experiments/config.json"
 
 ## finetune
-job_prefix="glue-finetune-t4" #a100"
+#job_prefix="glue-finetune-t4" #a100"
+job_prefix="glue-finetune" #a100"
 #job_prefix = "fusion-finetune"
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
                                  "tasks": ([GLUE_TASKS] if "glue" in job_prefix else [FUSION_TASKS]),
@@ -33,8 +34,9 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "metric_for_best_model": ["average_metrics"], 
                                  "greater_is_better": [True],
                                  "evaluation_strategy": ["steps"],
-                                 "output_dir": ["outputs/paper_results/paper_results/t4/{0}/finetune/".format("glue" if "glue" in job_prefix else "fusion")]})
-do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+                                 #"output_dir": ["outputs/paper_results/paper_results/t4/{0}/finetune/".format("glue" if "glue" in job_prefix else "fusion")]})
+                                 "output_dir": ["outputs/paper_results/paper_results/{0}/finetune/".format("glue" if "glue" in job_prefix else "fusion")]})
+do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True, failed_jobs=['glue-finetune-1', 'glue-finetune-3', 'glue-finetune-5'])
 #get_results(sweep)
 
 ## adapters
@@ -64,7 +66,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "train_task_embeddings": [True], #, False],
                                  "non_linearity": ["gelu_new"],
                                  "output_dir": ["outputs/paper_results/paper_results/t4/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
-do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 #get_results(sweep)
 
 

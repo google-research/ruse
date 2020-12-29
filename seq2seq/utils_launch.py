@@ -56,7 +56,6 @@ def do_sweep(parent_config_path, sweep,  job_prefix, short_keys=None, output_dir
     else:
         name = make_name(job_prefix, short_keys, option)
 
-    print("### name ", name)
     if output_dir_name in sweep: #parent_config:
       parent_output_dir = sweep[output_dir_name][0]
     else:
@@ -66,8 +65,12 @@ def do_sweep(parent_config_path, sweep,  job_prefix, short_keys=None, output_dir
     config_path = "{0}/{1}.json".format(temp_configs_dir, name)
     with open(config_path, 'w') as f:
       json.dump(config, f)
+    print(failed_jobs)
     if (len(failed_jobs) != 0 and name in failed_jobs) or len(failed_jobs) == 0:
-      commands.append(get_run_command(config_path, name, num_gpus))
+        print("### name ", name)
+        commands.append(get_run_command(config_path, name, num_gpus))
+    else:
+        print("#### name ", name , "ignored")
   print(len(commands))
   run_in_parallel(commands)
 

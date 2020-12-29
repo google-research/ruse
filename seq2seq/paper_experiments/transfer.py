@@ -53,3 +53,30 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "output_dir": ["outputs/paper_results/test/{0}/transfers/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
 do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 #get_results(sweep)
+
+
+## finetune
+job_prefix="transfer-fintune"
+#job_prefix = "fusion-finetune"
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 # transfer parameters.
+                                 "tasks": [TRANSFER_TASKS],
+                                 "eval_tasks": [TRANSFER_TASKS],
+                                 "model_name_or_path": ["glue-finetune-3"],
+                                 "tokenizer_name": ["glue-finetune-3"],
+                                 "eval_steps": [100],
+                                 "max_steps": [21845], # just to speed up 
+                                 "per_device_train_batch_size": [64],
+                                 "per_device_eval_batch_size": [64],
+                                 "optimize_from_scratch": [True],
+                                 "max_steps": [21845], # just to speed up 
+                                 # normal parameters.
+                                 "load_best_model_at_end": [True], 
+                                 "metric_for_best_model": ["average_metrics"], 
+                                 "greater_is_better": [True],
+                                 "evaluation_strategy": ["steps"],
+                                 "output_dir": ["outputs/paper_results/test/{0}/transfer/finetune/".format("glue" if "glue" in job_prefix else "fusion")]})
+do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#get_results(sweep)
+
+

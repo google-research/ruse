@@ -13,6 +13,5 @@
 # limitations under the License.
 from .tasks import TASK_MAPPING, AutoTask
 from .multitask_sampler import MultiTaskBatchSampler
-#from .task_collator import TaskCollator
 from .utils import compute_task_max_decoding_length
 from .postprocessors import string_to_float

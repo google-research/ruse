@@ -18,6 +18,9 @@ basic_config_path = "configs/paper_experiments/config.json"
 #pow(2, 18)/4
 #65536.0
 
+# Huggingface has a bug that you need to set the number of steps
+# divided by number of gpus if you want to set max_steps 
+# for number of epochs, this works fine on 1 gpu or multiple gpus.
 job_prefix= "glue-adapters"
 #job_prefix= "fusion-adapters"
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],

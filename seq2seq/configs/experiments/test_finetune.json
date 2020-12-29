@@ -1,7 +1,7 @@
 {
 "model_name_or_path": "/idiap/user/rkarimi/dev/ruse/seq2seq/glue-finetune-3",
 "tokenizer_name": "/idiap/user/rkarimi/dev/ruse/seq2seq/glue-finetune-3",
-"learning_rate": 3e-4,
+"learning_rate": 3e-5,
 "output_dir": "outputs/temp/test-man/checkpoint-160/",
 "max_source_length": 128,
 "max_target_length": 128 ,
@@ -31,6 +31,7 @@
 "do_test": true,
 "do_train": true,
 "n_train": 500,
+"n_val": 500,
 "reduction_factor": 8,
 "non_linearity": "gelu_new",
 "projected_task_embedding_dim": 64,

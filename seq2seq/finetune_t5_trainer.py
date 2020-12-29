@@ -201,6 +201,11 @@ def main():
     if training_args.do_train:
         freezing_params(model, training_args, model_args)
 
+ 
+    #for name, param in model.named_parameters():
+    #   if param.requires_grad:
+    #     print(name)
+
     dataset_class = AutoTask
     if training_args.do_train:
         train_datasets = [dataset_class.get(task, seed=data_args.data_seed).get_dataset(

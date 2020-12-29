@@ -26,10 +26,12 @@ logger = getLogger(__name__)
 
 
 def rouge(predictions, targets) -> dict:
+    """Computes rouge score."""
     return calculate_rouge(predictions, targets)
 
 
 def bleu(predictions, targets) -> dict:
+    """Computes bleu score."""
     return calculate_bleu(predictions, targets)
 
 

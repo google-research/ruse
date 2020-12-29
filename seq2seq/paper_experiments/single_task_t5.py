@@ -66,10 +66,13 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  ("tasks", "eval_tasks"): get_tuple_single_tasks(GLUE_TASKS if "glue" in job_prefix else FUSION_TASKS),
                                  "model_name_or_path": ["t5-small"],
                                  "tokenizer_name": ["t5-small"],
-                                 "max_steps": [262144],
+                                 "load_best_model_at_end": [True], 
+                                 "metric_for_best_model": ["average_metrics"], 
+                                 "greater_is_better": [True],
+                                 "evaluation_strategy": ["steps"],
+                                 "num_train_epochs": [18],
                                  "per_device_train_batch_size": [64],
                                  "per_device_eval_batch_size": [64],
-                                 "evaluation_strategy": ["no"],
-                                 "output_dir": ["outputs/paper_results/full_training/{0}/finetune_single_task/".format("glue" if "glue" in job_prefix else "fusion")]})
+                                 "output_dir": ["outputs/paper_results/paper_results/{0}/finetune_single_task/".format("glue" if "glue" in job_prefix else "fusion")]})
 do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 #get_results(sweep, single_task=True, tasks=GLUE_TASKS)

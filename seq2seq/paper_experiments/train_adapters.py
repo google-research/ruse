@@ -15,6 +15,9 @@ FUSION_TASKS=["imdb", "snli", "scitail", "boolq", "mrpc", "trec", "yelp_polarity
 GLUE_TASKS=["rte", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "cola"] # T5 does not train on wnli
 basic_config_path = "configs/paper_experiments/config.json"
 
+#pow(2, 18)/4
+#65536.0
+
 job_prefix= "glue-adapters"
 #job_prefix= "fusion-adapters"
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
@@ -28,7 +31,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "metric_for_best_model": ["average_metrics"], 
                                  "greater_is_better": [True],
                                  "evaluation_strategy": ["steps"],
-                                 "num_train_epochs": [18],
+                                 "max_steps": [65536]
                                  # for training adapters.
                                  "one_layer_adapter_hyper_net_with_linear": [True],
                                  "train_adapters": [True],
@@ -41,5 +44,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "train_task_embeddings": [True], 
                                  "non_linearity": ["gelu_new"],
                                  "output_dir": ["outputs/paper_results/paper_results/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
-do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 #get_results(sweep)
+
+

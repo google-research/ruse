@@ -47,7 +47,7 @@ def get_single_tasks(tasks):
   #sizes = {"rte": 2489, "glue":949090, "cola":8550 , "sst2":67348, "mrpc":3667, "stsb":5748, "qqp":363845, "mnli":392701, "qnli":104742}
   #max_steps=65536
   #results= [([task], [task], math.ceil(max_steps*sizes[task]/sizes["glue"])) for task in tasks]
-  results= [([task], [task])) for task in tasks]
+  results= [([task], [task]) for task in tasks]
   #print(results)
   return results
 

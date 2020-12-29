@@ -40,6 +40,6 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "adapter_config_name": ["meta-adapter"],
                                  "train_task_embeddings": [True], 
                                  "non_linearity": ["gelu_new"],
-                                 "output_dir": ["outputs/paper_results/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
+                                 "output_dir": ["outputs/paper_results/paper_results/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
 do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 #get_results(sweep)

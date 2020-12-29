@@ -18,6 +18,7 @@ GLUE_TASKS=["rte", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "cola"] # T5 d
 ###########################
 basic_config_path = "configs/paper_experiments/config.json"
 
+"""
 ## finetune
 #job_prefix="glue-finetune-t4" #a100"
 job_prefix="glue-finetune" #a100"
@@ -71,7 +72,10 @@ do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_na
                                                                                                       'glue-adapters-13', 'glue-adapters-14', 'glue-adapters-19', 'glue-adapters-20',
                                                                                                       'glue-adapters-21'])
 #get_results(sweep)
+"""
 
+# GLUE finetune on TPU.
+#
 
 
 '''

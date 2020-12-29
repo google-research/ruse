@@ -1,5 +1,4 @@
 import sys
-import torch
 import glob
 
 import datasets
@@ -18,11 +17,12 @@ from transformers import AutoTokenizer, HfArgumentParser, set_seed
 from transformers.trainer_utils import EvaluationStrategy
 
 from seq2seq.adapters import AdapterController, AutoAdapterConfig
-from seq2seq.data import AutoTask, TaskCollator
+from seq2seq.data import AutoTask
+from seq2seq.third_party.utils import TaskCollator
 from seq2seq.metrics import build_compute_metrics_fn
 from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments, \
     AdapterTrainingArguments
-from seq2seq.utils import T5CheckpointCallback, freezing_params #, EvaluationCallback
+from seq2seq.utils import T5CheckpointCallback, freezing_params
 from seq2seq.utils import upload
 
 logger = logging.getLogger(__name__)

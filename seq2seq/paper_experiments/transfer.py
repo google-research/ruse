@@ -17,7 +17,7 @@ TRANSFER_TASKS =["imdb", "snli", "scitail", "boolq",  "trec", "yelp_polarity",  
 
 ## adapters
 basic_config_path = "configs/paper_experiments/config.json"
-job_prefix= "glue-adapters"
+job_prefix= "transfer"
 #job_prefix= "fusion-adapters"
 sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
                                  # transfer parameters.
@@ -28,7 +28,6 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "tokenizer_name": ["glue-adapters-36"],
                                  "unfreeze_layer_norms": [True],
                                  "train_task_embeddings": [True],
-                                 "evaluation_strategy": ["steps"],
                                  "optimize_from_scratch": [True],
                                  "freeze_model_but_task_embeddings": [True],
                                  "parametric_task_embedding": [True],
@@ -47,7 +46,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "projected_task_embedding_dim": [64],
                                  #"add_adapters_in_decoder": [True, False],
                                  "conditional_layer_norm": [True], #, False],
-                                 "unfreeze_lm_head": [True], #, False],
+                                 "unfreeze_lm_head": [True, False],
                                  "adapter_config_name": ["meta-adapter"],
                                  "train_task_embeddings": [True], #, False],
                                  "non_linearity": ["gelu_new"],

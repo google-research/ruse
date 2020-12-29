@@ -1,7 +1,4 @@
-# coding=utf-8
-# Copyright 2010, The T5 Authors and HuggingFace Inc.
 # Copyright 2020 Google LLC
-# Modified from the original HuggingFace version.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

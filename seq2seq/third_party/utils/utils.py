@@ -1,5 +1,4 @@
-# coding=utf-8
-# Copyright 2010, The T5 Authors and HuggingFace Inc.
+# Copyright 2020 The HuggingFace Team. All rights reserved
 # Copyright 2020 Google LLC
 # Modified from the original HuggingFace version.
 #

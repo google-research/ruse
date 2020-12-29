@@ -23,7 +23,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  # transfer parameters.
                                  "tasks": [TRANSFER_TASKS],
                                  "eval_tasks": [TRANSFER_TASKS],
-                                 "eval_steps": [100],
+                                 "eval_steps": [500],
                                  "model_name_or_path": ["glue-adapters-36"],
                                  "tokenizer_name": ["glue-adapters-36"],
                                  "unfreeze_layer_norms": [True],
@@ -52,7 +52,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "train_task_embeddings": [True], #, False],
                                  "non_linearity": ["gelu_new"],
                                  "output_dir": ["outputs/paper_results/test/{0}/transfers/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
-do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 #get_results(sweep)
 
 
@@ -65,7 +65,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "eval_tasks": [TRANSFER_TASKS],
                                  "model_name_or_path": ["glue-finetune-3"],
                                  "tokenizer_name": ["glue-finetune-3"],
-                                 "eval_steps": [100],
+                                 "eval_steps": [500],
                                  "max_steps": [21845], # just to speed up 
                                  "per_device_train_batch_size": [64],
                                  "per_device_eval_batch_size": [64],

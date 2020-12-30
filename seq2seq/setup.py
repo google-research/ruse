@@ -6,17 +6,8 @@
 
 import setuptools
 
-# This follows the style of Jaxlib installation here:
-# https://github.com/google/jax#pip-installation
-#PYTHON_VERSION = "cp37"
-#CUDA_VERSION = "cuda101"  # alternatives: cuda90, cuda92, cuda100, cuda101
-
-
-
 
 def setup_package():
-  #with open('README.md') as fp:
-  #  long_description = fp.read()
   long_description = "seq2seq"
 
   setuptools.setup(

@@ -11,18 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
-import torch.nn as nn
 import glob
+import os
+from dataclasses import asdict
 from logging import getLogger
 from third_party.utils import (
     assert_all_frozen,
     freeze_embeds,
     freeze_params)
+from third_party.utils import save_json
 from transformers import TrainerCallback
 from transformers.modeling_t5 import T5LayerNorm
-from dataclasses import asdict
-from third_party.utils import save_json
 
 from seq2seq.adapters import AdapterController, MetaAdapterController
 from seq2seq.data import TASK_MAPPING
@@ -97,8 +96,7 @@ def get_last_checkpoint_path(output_dir):
     else:
         checkpoints = [int(checkpoint.split('-')[-1]) for checkpoint in paths]
         max_checkpoint = max(checkpoints)
-        return os.path.join(output_dir, "checkpoint-"+str(max_checkpoint))
-
+        return os.path.join(output_dir, "checkpoint-" + str(max_checkpoint))
 
 
 def upload(upload_dir: str, gcs_bucket: str) -> None:
@@ -125,16 +123,14 @@ def reset_config(model, config):
     logger.info(f"config is reset to the initial values.")
 
 
-def partly_freeze_params(model: nn.Module, not_freezed_pattern):
-    """Freezes all the parameters of the model expect for the specified not_freezed_pattern."""
-    for name, p in model.named_parameters():
-        if not_freezed_pattern in name:
-            p.requires_grad = True
-        else:
-            p.requires_grad = False
-
-
 def freezing_params(model, training_args, model_args):
+    """
+    Freezes the model parameters based on the given setting in the arguments.
+    Args:
+      model: the given model.
+      training_args: defines the training arguments.
+      model_args: defines the model arguments.
+    """
     if training_args.train_adapters:
         freeze_params(model)
         for name, sub_module in model.named_modules():
@@ -178,6 +174,7 @@ def freezing_params(model, training_args, model_args):
 
 
 class T5CheckpointCallback(TrainerCallback):
+    """Uploads the output_dir to the gs_bucket."""
     def on_save(self, args, state, control, **kwargs):
         """Event called after a checkpoint save."""
         if state.is_world_process_zero and args.gcs_bucket is not None:

@@ -1,6 +1,6 @@
 {
-"model_name_or_path": "/idiap/user/rkarimi/dev/ruse/seq2seq/glue-adapters-36",
-"tokenizer_name": "/idiap/user/rkarimi/dev/ruse/seq2seq/glue-adapters-36",
+"model_name_or_path": "t5-small",
+"tokenizer_name": "t5-small",
 "learning_rate": 3e-4,
 "output_dir": "outputs/adapter_trained_model/",
 "max_source_length": 128,

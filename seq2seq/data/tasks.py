@@ -41,6 +41,12 @@ class AbstractTaskDataset(abc.ABC):
     split_to_data_split: since not all the time, different splits of the
         datasets are available, we define a mapping from the wanted split
         to the existing dataset splits.
+    small_datasets_without_all_splits: List of strings, defines the name
+        of all low-resource tasks in which not all train/test/validation
+        splits are available.
+    large_data_without_all_splits: List of strings, defines the name of
+        all high-resource tasks in which not all train/test/validation
+        splits are available.
     """
     name = NotImplemented
     task_specific_config: Dict = NotImplemented
@@ -132,7 +138,6 @@ class AbstractTaskDataset(abc.ABC):
             indices = self.get_train_split_indices(split)
             dataset = self.select_dataset_samples(indices, dataset, n_obs)
         else:
-            #split = self.split_to_data_split[split]
             split = self.get_sampled_split(split, n_obs)
             dataset = self.load_dataset(split=split)
         return dataset.map(functools.partial(self.preprocessor, add_prefix=add_prefix),

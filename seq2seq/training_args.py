@@ -109,6 +109,11 @@ class Seq2SeqTrainingArguments(TrainingArguments):
                                                                   "than 10K samples datasets), or by using 1K examples"
                                                                   "from training set as validation set (for larger"
                                                                   " datasets)."})
+  save_task_embeddings: Optional[bool] = field(default=False, metadata={"help":
+                                                                          "If specified, saves the task embeddings."})
+  save_task_embeddings_dir: Optional[str] = field(default=None, metadata={"help":
+                                                                         "Defines the directory to save task embeddings."})
+
 @dataclass
 class ModelArguments:
   """

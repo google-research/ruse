@@ -1,18 +1,17 @@
 import sys
-import glob
+
 
 import datasets
 import json
 import logging
 import os
+import numpy as np 
 from pathlib import Path
 from third_party.models import T5Config, T5ForConditionalGeneration
 from third_party.trainers import T5Trainer
 from third_party.utils import (
-    check_output_dir,
-    save_json,
+    check_output_dir
 )
-from dataclasses import asdict
 from transformers import AutoTokenizer, HfArgumentParser, set_seed
 from transformers.trainer_utils import EvaluationStrategy
 
@@ -22,64 +21,12 @@ from seq2seq.third_party.utils import TaskCollator
 from seq2seq.metrics import build_compute_metrics_fn
 from seq2seq.training_args import Seq2SeqTrainingArguments, ModelArguments, DataTrainingArguments, \
     AdapterTrainingArguments
-from seq2seq.utils import T5CheckpointCallback, freezing_params
-from seq2seq.utils import upload
+from seq2seq.utils import T5CheckpointCallback, freezing_params, get_last_checkpoint_path, create_dir, \
+    handle_metrics, get_training_args
 
 logger = logging.getLogger(__name__)
 
-def handle_metrics(split, metrics, output_dir, gcs_bucket=None):
-    """
-    Log and save metrics
 
-    Args:
-        split: one of train, val, test, or arguments.
-        metrics: metrics dict
-        output_dir: where to save the metrics
-    """
-    logger.info(f"***** {split} metrics *****")
-    for key in sorted(metrics.keys()):
-        logger.info(f"  {key} = {metrics[key]}")
-    save_json_file(metrics, f"{split}_results.json", output_dir, gcs_bucket)
-
-
-def save_json_file(json_dict, outfile_name, output_dir, gcs_bucket=None):
-    """
-    Saves a json file.
-    """
-    save_json(json_dict, os.path.join(output_dir, outfile_name))
-    if gcs_bucket is not None:
-        logger.info("***** Uploading results into gs-bucket *****")
-        upload(output_dir, gcs_bucket)
-
-
-def get_training_args(arguments_list):
-    """
-    Concatenate all training arguments.
-    Args:
-        arguments_list: list of dataclasses.
-    Return:
-        arguments: concatenated arguments.
-    """
-    all_arguments = {}
-    for arguments in arguments_list:
-        all_arguments.update(asdict(arguments))
-    all_arguments.pop("evaluation_strategy")
-    return all_arguments
-
-
-def get_last_checkpoint_path(output_dir):
-    """
-    Finds the path for the last checkpoint saved in the output_dir
-    :param output_dir:  output_dir
-    :return: path to the last checkpoint saved in the output dir.
-    """
-    paths = glob.glob(os.path.join(output_dir, "checkpoint-*"))
-    if len(paths) == 0:
-        return output_dir
-    else:
-        checkpoints = [int(checkpoint.split('-')[-1]) for checkpoint in paths]
-        max_checkpoint = max(checkpoints)
-        return os.path.join(output_dir, "checkpoint-"+str(max_checkpoint))
 
 def main():
     # See all possible arguments in src/transformers/training_args.py or by passing
@@ -201,10 +148,6 @@ def main():
     if training_args.do_train:
         freezing_params(model, training_args, model_args)
 
- 
-    #for name, param in model.named_parameters():
-    #   if param.requires_grad:
-    #     print(name)
 
     dataset_class = AutoTask
     if training_args.do_train:
@@ -254,19 +197,24 @@ def main():
         arguments = get_training_args([model_args, data_args, training_args, adapter_args])
         handle_metrics("arguments", arguments, training_args.output_dir, training_args.gcs_bucket)
 
+
     # Training
     if training_args.do_train:
         trainer.train(
             model_path=model_args.model_name_or_path if (os.path.isdir(model_args.model_name_or_path) and not
             training_args.optimize_from_scratch) else None
         )
-
         trainer.save_model()
         # For convenience, we also re-save the tokenizer to the same directory,
         # so that you can share your model easily on huggingface.co/models =)
         if trainer.is_world_process_zero():
             trainer.state.save_to_json(os.path.join(training_args.output_dir, "trainer_state.json"))
             tokenizer.save_pretrained(training_args.output_dir)
+            if training_args.save_task_embeddings:
+                for task, task_embedding in model.task_embedding_controller.task_to_embeddings.items():
+                    create_dir(training_args.save_task_embeddings_dir)
+                    np.save(os.path.join(training_args.save_task_embeddings_dir, 
+                         '{}.npy'.format(task)), task_embedding.data.detach().cpu().numpy())
 
     # Evaluation
     all_metrics = {}

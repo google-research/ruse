@@ -13,7 +13,7 @@
 # limitations under the License.
 import os
 import torch.nn as nn
-from google.cloud import storage
+import glob
 from logging import getLogger
 from third_party.utils import (
     assert_all_frozen,
@@ -21,11 +21,84 @@ from third_party.utils import (
     freeze_params)
 from transformers import TrainerCallback
 from transformers.modeling_t5 import T5LayerNorm
+from dataclasses import asdict
+from third_party.utils import save_json
 
 from seq2seq.adapters import AdapterController, MetaAdapterController
 from seq2seq.data import TASK_MAPPING
 
 logger = getLogger(__name__)
+
+
+def create_dir(output_dir):
+    """
+    Checks whether to the output_dir already exists and creates it if not.
+    Args:
+      output_dir: path to the output_dir
+    """
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+
+def handle_metrics(split, metrics, output_dir, gcs_bucket=None):
+    """
+    Prints and saves metrics or a general dictionary of results.
+
+    Args:
+        split: one of train, val, test, or training arguments.
+        metrics: metrics dict
+        output_dir: where to save the metrics, if gcs_bucket is given
+        we save the results also on the given bucket.
+    """
+    logger.info(f"***** {split} metrics *****")
+    for key in sorted(metrics.keys()):
+        logger.info(f"  {key} = {metrics[key]}")
+    save_json_file(metrics, f"{split}_results.json", output_dir, gcs_bucket)
+
+
+def save_json_file(json_dict, outfile_name, output_dir, gcs_bucket=None):
+    """
+    Saves the given dictionary as a json file to output_dir and also
+    the given bucket if given.
+    """
+    save_json(json_dict, os.path.join(output_dir, outfile_name))
+    if gcs_bucket is not None:
+        logger.info("***** Uploading results into gs-bucket *****")
+        upload(output_dir, gcs_bucket)
+
+
+def get_training_args(arguments_list):
+    """
+    Concatenate all training arguments except evaluation strategy which
+    is not Json serializable.
+    Args:
+        arguments_list: list of dataclasses.
+    Return:
+        arguments: concatenated arguments.
+    """
+    all_arguments = {}
+    for arguments in arguments_list:
+        all_arguments.update(asdict(arguments))
+    all_arguments.pop("evaluation_strategy")
+    return all_arguments
+
+
+def get_last_checkpoint_path(output_dir):
+    """
+    Finds the path for the last checkpoint saved in the output_dir
+    Args:
+        output_dir:  output_dir
+    Returns:
+        path to the last checkpoint saved in the output dir.
+    """
+    paths = glob.glob(os.path.join(output_dir, "checkpoint-*"))
+    if len(paths) == 0:
+        return output_dir
+    else:
+        checkpoints = [int(checkpoint.split('-')[-1]) for checkpoint in paths]
+        max_checkpoint = max(checkpoints)
+        return os.path.join(output_dir, "checkpoint-"+str(max_checkpoint))
+
 
 
 def upload(upload_dir: str, gcs_bucket: str) -> None:
@@ -37,20 +110,6 @@ def upload(upload_dir: str, gcs_bucket: str) -> None:
         os.path.join("gs://" + gcs_bucket, upload_dir)))
 
 
-def upload_with_storage(upload_dir: str, gcs_bucket: str) -> None:
-    """Uploads the upload_dir to the gs_bucket. Note that this method could
-    results in timeout issues and is better not to use storage library and
-    only rely on gsutil for copying files."""
-    storage_client = storage.Client()
-    bucket = storage_client.get_bucket(gcs_bucket)
-    for dirpath, _, filenames in os.walk(upload_dir):
-        for name in filenames:
-            filename = os.path.join(dirpath, name)
-            blob = storage.Blob(os.path.join(upload_dir, name), bucket)
-            with open(filename, 'rb') as f:
-                blob.upload_from_file(f, num_retries=10, timeout=10 * 60)
-
-
 def use_task_specific_params(model, task):
     """Update config with task specific params during evaluation."""
     task_dataset = TASK_MAPPING[task]
@@ -58,12 +117,6 @@ def use_task_specific_params(model, task):
     if task_specific_config is not None:
         logger.info(f"using task specific params for {task}: {task_specific_config}")
         model.config.update(task_specific_config)
-
-
-def reset_config(model, config):
-    """Resets the config file to the one provided."""
-    model.config = config
-    logger.info(f"config is reset to the initial values.")
 
 
 def reset_config(model, config):

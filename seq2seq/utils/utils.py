@@ -66,15 +66,6 @@ def reset_config(model, config):
     logger.info(f"config is reset to the initial values.")
 
 
-def use_task_specific_params(model, task):
-    """Update config with task specific params during evaluation."""
-    task_dataset = TASK_MAPPING[task]
-    task_specific_config = task_dataset.task_specific_config
-    if task_specific_config is not None:
-        logger.info(f"using task specific params for {task}: {task_specific_config}")
-        model.config.update(task_specific_config)
-
-
 def reset_config(model, config):
     """Resets the config file to the one provided."""
     model.config = config

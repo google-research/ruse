@@ -65,15 +65,15 @@ def f1_score_with_invalid(predictions, targets) -> dict:
     Returns:
       F1 score, where any prediction != 0 or 1 is counted as wrong.
     """
-    targets = [int(target) for target in targets]
-    predictions = [int(prediction) if prediction.isnumeric() else prediction for prediction in predictions]
-    targets, predictions = np.asarray(targets), np.asarray(predictions)
+    int_targets = [int(target) for target in targets]
+    int_predictions = [int(prediction) if prediction.isnumeric() else prediction for prediction in predictions]
+    int_targets, int_predictions = np.asarray(int_targets), np.asarray(int_predictions)
     # Get indices of invalid predictions
-    invalid_idx_mask = [True if (prediction != 0 and prediction != 1) else False for prediction in predictions]
+    invalid_idx_mask = [True if (prediction != 0 and prediction != 1) else False for prediction in int_predictions]
     # For any prediction != 0 or 1, set it to the opposite of what the target is.
-    predictions[invalid_idx_mask] = 1 - targets[invalid_idx_mask]
-    predictions = [int(prediction) for prediction in predictions]
-    return {"f1": 100 * sklearn.metrics.f1_score(targets, predictions)}
+    int_predictions[invalid_idx_mask] = 1 - int_targets[invalid_idx_mask]
+    int_predictions = [int(prediction) for prediction in int_predictions]
+    return {"f1": 100 * sklearn.metrics.f1_score(int_targets, int_predictions)}
 
 
 def matthews_corrcoef(predictions, targets) -> dict:

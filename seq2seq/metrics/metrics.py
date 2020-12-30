@@ -15,6 +15,7 @@
 import functools
 import numpy as np
 import scipy
+import math
 import sklearn
 from logging import getLogger
 from third_party.utils import calculate_rouge, calculate_bleu, lmap
@@ -42,18 +43,26 @@ def accuracy(predictions, targets) -> dict:
 
 def pearson_corrcoef(predictions, targets) -> dict:
     """Computes Pearson correlation coefficient."""
-    from seq2seq.data import string_to_float
-    predictions = [string_to_float(prediction) for prediction in predictions]
-    targets = [string_to_float(target) for target in targets]
+    pearson_corrcoef = 100 * scipy.stats.pearsonr(targets, predictions)[0]
 
-    return {"pearson_corrcoef":
-                100 * scipy.stats.pearsonr(targets, predictions)[0]}
+    # Note that if all the predictions will be the same, spearman
+    # correlation is nan, to gaurad against this, we check the output
+    # and return 0 in this case.
+    if math.isnan(pearson_corrcoef):
+        pearson_corrcoef = 0
+    return {"pearson_corrcoef": pearson_corrcoef}
 
 
 def spearman_corrcoef(predictions, targets) -> dict:
     """Computes Spearman correlation coefficient."""
-    return {"spearman_corrcoef":
-                100 * scipy.stats.spearmanr(targets, predictions)[0]}
+    spearman_corrcoef = 100 * scipy.stats.spearmanr(targets, predictions)[0]
+
+    # Note that if all the predictions will be the same, spearman
+    # correlation is nan, to gaurad against this, we check the output
+    # and return 0 in this case.
+    if math.isnan(spearman_corrcoef):
+        spearman_corrcoef = 0
+    return {"spearman_corrcoef": spearman_corrcoef}
 
 
 def f1_score_with_invalid(predictions, targets) -> dict:
@@ -72,6 +81,7 @@ def f1_score_with_invalid(predictions, targets) -> dict:
     return {"f1": 100 * sklearn.metrics.f1_score(targets, predictions)}
 
 
+# TODO: maybe gaurd against invalid values https://stackoverflow.com/questions/56865344/how-do-i-calculate-the-matthews-correlation-coefficient-in-tensorflow
 def matthews_corrcoef(predictions, targets) -> dict:
     """Computes the Matthews correlation coefficient."""
     return {"mcc": 100 * sklearn.metrics.matthews_corrcoef(targets, predictions)}

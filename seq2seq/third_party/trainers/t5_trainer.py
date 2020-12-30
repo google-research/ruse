@@ -37,7 +37,8 @@ from transformers.optimization import (
 from typing import Any, Dict, Optional, Tuple, Union
 from torch.utils.data.dataset import Dataset
 
-from seq2seq.utils import upload, use_task_specific_params, reset_config
+from seq2seq.adapters import MetaAdapterConfig
+from seq2seq.utils import use_task_specific_params, reset_config
 from seq2seq.data import MultiTaskBatchSampler
 from .trainer import Trainer
 
@@ -291,8 +292,8 @@ class T5Trainer(Trainer):
             "num_beams": self.config.num_beams
         }
         gen_kwargs["task"] = inputs["task"]
-        gen_kwargs["task_embedding"] = model.task_embedding_controller(
-            inputs["task"]) if self.config.train_adapters else None
+        gen_kwargs["task_embedding"] = model.task_embedding_controller(inputs["task"]) if \
+            (self.config.train_adapters and isinstance(self.adapter_config, MetaAdapterConfig)) else None
         if self.args.predict_with_generate and not self.args.prediction_loss_only:
             generated_tokens = self.model.generate(
                 inputs["input_ids"],

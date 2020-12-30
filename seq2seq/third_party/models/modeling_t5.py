@@ -412,9 +412,8 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
 
         # Computes the task-embeddings.
         self.train_adapters = config.train_adapters
-        if config.train_adapters:
+        if config.train_adapters and isinstance(adapter_config, MetaAdapterConfig):
             self.task_embedding_controller = TaskEmbeddingController(adapter_config)
-
         self.adapter_config = adapter_config
         self.model_dim = config.d_model
         self.shared = nn.Embedding(config.vocab_size, config.d_model)
@@ -542,7 +541,8 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
                 output_hidden_states=output_hidden_states,
                 return_dict=return_dict,
                 task=task,
-                task_embedding=self.task_embedding_controller(task) if self.train_adapters else None
+                task_embedding=self.task_embedding_controller(task) if self.train_adapters \
+                and isinstance(self.adapter_config, MetaAdapterConfig) else None
             )
         elif return_dict and not isinstance(encoder_outputs, BaseModelOutput):
             encoder_outputs = BaseModelOutput(
@@ -593,7 +593,8 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
             task=task,
-            task_embedding=self.task_embedding_controller(task) if self.train_adapters else None
+            task_embedding=self.task_embedding_controller(task)\
+            if (self.train_adapters and isinstance(self.adapter_config, MetaAdapterConfig)) else None
         )
 
         sequence_output = decoder_outputs[0]

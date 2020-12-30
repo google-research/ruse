@@ -93,7 +93,6 @@ def main():
             model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
     )
-    # and task_embeddings_dir.
     extra_model_params = ("encoder_layerdrop", "decoder_layerdrop", "dropout",
                           "attention_dropout", "fixed_length_emb",
                           "encoder_projection", "encoder_pooling",
@@ -129,9 +128,10 @@ def main():
                             "parametric_task_embedding"
                             )
         for p in extra_adapter_params:
-            if hasattr(adapter_args, p):
-                assert hasattr(adapter_config, p), f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute"
+            if hasattr(adapter_args, p) and hasattr(adapter_config, p):
                 setattr(adapter_config, p, getattr(adapter_args, p))
+            else:
+                logger.warning(f"({adapter_config.__class__.__name__}) doesn't have a `{p}` attribute")
         adapter_config.device = training_args.device
     else:
         adapter_config = None
@@ -158,9 +158,13 @@ def main():
 
     # freezing the parameters.
     if training_args.do_train:
-        freezing_params(model, training_args, model_args)
+        freezing_params(model, training_args, model_args, adapter_args)
 
+    #for name, param in model.named_parameters():
+    #   if param.requires_grad:
+    #       print(name)
 
+    # Gets the training/test/validation datasets.
     dataset_class = AutoTask
     if training_args.do_train:
         train_datasets = [dataset_class.get(task, seed=data_args.data_seed).get_dataset(
@@ -168,8 +172,6 @@ def main():
             for task in data_args.tasks]
         dataset_sizes = [len(train_dataset) for train_dataset in train_datasets]
         train_dataset = datasets.concatenate_datasets(train_datasets)
-    # TODO: you should not do this, introduces bug.
-    # train_dataset.set_format(type="torch", columns=['src_texts', 'tgt_texts'])
     training_args.remove_unused_columns = False
     eval_datasets = ({task: dataset_class.get(task, seed=data_args.data_seed).get_dataset(
         split="validation", n_obs=data_args.n_val,
@@ -186,11 +188,11 @@ def main():
             split_validation_test=training_args.split_validation_test)
             for task in data_args.eval_tasks} if training_args.do_test else None
     )
-    # Initialize our Trainer
+    # Defines the metrics for evaluation.
     compute_metrics_fn = (
         build_compute_metrics_fn(data_args.eval_tasks, tokenizer) if training_args.predict_with_generate else None
     )
-
+    # Defines the trainer.
     trainer = T5Trainer(
         model=model,
         config=config,
@@ -209,8 +211,7 @@ def main():
         arguments = get_training_args([model_args, data_args, training_args, adapter_args])
         handle_metrics("arguments", arguments, training_args.output_dir, training_args.gcs_bucket)
 
-
-    # Training
+    # Trains the model.
     if training_args.do_train:
         trainer.train(
             model_path=model_args.model_name_or_path if (os.path.isdir(model_args.model_name_or_path) and not
@@ -238,10 +239,10 @@ def main():
             # if not exists returns the path to the output_dir.
             last_checkpoint_path = get_last_checkpoint_path(training_args.output_dir)
             config = T5Config.from_pretrained(
-                last_checkpoint_path, #training_args.output_dir,  # "t5-base" for the baseline.
+                last_checkpoint_path,
                 cache_dir=model_args.cache_dir)
             model = T5ForConditionalGeneration.from_pretrained(
-                last_checkpoint_path, #training_args.output_dir,  # "t5-base" for the baseline.
+                last_checkpoint_path,
                 from_tf=".ckpt" in training_args.output_dir,
                 config=config,
                 cache_dir=model_args.cache_dir,

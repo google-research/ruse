@@ -34,25 +34,25 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "max_steps": [21845], # just to speed up
                                  "n_train": [100, 500, 1000, 2000], 
                                  # normal parameters.
-                                 "load_best_model_at_end": [True], 
+                                 "load_best_model_at_end": [True],
                                  "metric_for_best_model": ["average_metrics"], 
                                  "greater_is_better": [True],
                                  "evaluation_strategy": ["steps"],
                                  "per_device_train_batch_size": [64],
                                  "per_device_eval_batch_size": [64],
                                  # for training adapters.
-                                 "train_adapters": [True],                                                         
+                                 "train_adapters": [True],
                                  "reduction_factor": [16], #[8, 16],
                                  #"hidden_dim": [64, 128, 256],
                                  "projected_task_embedding_dim": [64],
-                                 #"add_adapters_in_decoder": [True, False],
-                                 "conditional_layer_norm": [True], #, False],
+                                 #"add_adapters_in_decoder": [true, false],
+                                 "conditional_layer_norm": [True], #, false],
                                  "unfreeze_lm_head": [True, False],
                                  "adapter_config_name": ["meta-adapter"],
-                                 "train_task_embeddings": [True], #, False],
+                                 "train_task_embeddings": [True], #, false],
                                  "non_linearity": ["gelu_new"],
                                  "output_dir": ["outputs/paper_results/test/{0}/transfers/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
-#do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=true)
 #get_results(sweep)
 
 
@@ -82,14 +82,120 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
 #get_results(sweep)
 
 
-
+################################################
 # trains the models on trained task embeddings.
+################################################
+## Train the models.
 job_prefix = "trained-task-adapter"
 basic_config_path = "configs/experiments/transfer/train_adapter.json"
-sweep = collections.OrderedDict({"learning_rate": [3e-4]})
-do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#sweep = collections.OrderedDict({"learning_rate": [3e-4]})
+#do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 
 job_prefix="trained-task-finetune"
 basic_config_path = "configs/experiments/transfer/train_finetune.json"
-sweep = collections.OrderedDict({"learning_rate": [3e-4]})
+#sweep = collections.OrderedDict({"learning_rate": [3e-4]})
+#do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+
+## Evaluates the trained models on the new tasks.
+job_prefix="transfer-fintune"
+basic_config_path = "configs/experiments/transfer/train_finetune.json"
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 # transfer parameters.
+                                 "tasks": [TRANSFER_TASKS],
+                                 "eval_tasks": [TRANSFER_TASKS],
+                                 "model_name_or_path": ["/idiap/temp/rkarimi/outputs/paper_results/trained_embeddings/finetuned_trained_model/"],
+                                 "tokenizer_name": ["/idiap/temp/rkarimi/outputs/paper_results/trained_embeddings/finetuned_trained_model/"],
+                                 # normal parameters.
+                                 "n_train": [100, 500, 1000, 2000], 
+                                 "eval_steps": [500],
+                                 "per_device_train_batch_size": [64],
+                                 "per_device_eval_batch_size": [64],
+                                 "optimize_from_scratch": [True],
+                                 "max_steps": [21845], # just to speed up 
+                                 "load_best_model_at_end": [True], 
+                                 "metric_for_best_model": ["average_metrics"], 
+                                 "greater_is_better": [True],
+                                 "evaluation_strategy": ["steps"],
+                                 "output_dir": ["/idiap/temp/rkarimi/outputs/paper_results/test/{0}/transfer/finetune/".format("glue" if "glue" in job_prefix else "fusion")]})
+#do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+
+## Here we unfreeze the layer norms only.
+## adapters
+basic_config_path = "configs/experiments/transfer/train_adapter.json"
+job_prefix= "transfer-adapter"
+#job_prefix= "fusion-adapters"
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 # transfer parameters.
+                                 "tasks": [TRANSFER_TASKS],
+                                 "eval_tasks": [TRANSFER_TASKS],
+                                 "eval_steps": [500],
+                                 "model_name_or_path": ["/idiap/temp/rkarimi/outputs/paper_results/trained_embeddings/adapter_trained_model/"],
+                                 "tokenizer_name": ["/idiap/temp/rkarimi/outputs/paper_results/trained_embeddings/adapter_trained_model/"],
+                                 "unfreeze_layer_norms": [True],
+                                 "optimize_from_scratch": [True],
+                                 "freeze_model": [True],
+                                 "freeze_model_but_task_embeddings": [False],
+                                 "parametric_task_embedding": [False],
+                                 "max_steps": [21845], # just to speed up
+                                 "n_train": [100, 500, 1000, 2000], 
+                                 # normal parameters.
+                                 "load_best_model_at_end": [True], 
+                                 "metric_for_best_model": ["average_metrics"], 
+                                 "greater_is_better": [True],
+                                 "evaluation_strategy": ["steps"],
+                                 "per_device_train_batch_size": [64],
+                                 "per_device_eval_batch_size": [64],
+                                 # for training adapters.
+                                 "train_adapters": [True],                                                         
+                                 "reduction_factor": [16], #[8, 16],
+                                 #"hidden_dim": [64, 128, 256],
+                                 "projected_task_embedding_dim": [64],
+                                 "conditional_layer_norm": [True], #, false],
+                                 "unfreeze_lm_head": [True], #, False],
+                                 "adapter_config_name": ["meta-adapter"],
+                                 "train_task_embeddings": [True], #, false],
+                                 "non_linearity": ["gelu_new"],
+                                 "output_dir": ["outputs/paper_results/test/{0}/transfers/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
+#do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#get_results(sweep)
+
+
+## Here we also finetune task-embeddings.
+job_prefix= "transfer-adapter-task"
+#job_prefix= "fusion-adapters"
+sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5],
+                                 # transfer parameters.
+                                 "tasks": [TRANSFER_TASKS],
+                                 "eval_tasks": [TRANSFER_TASKS],
+                                 "eval_steps": [500],
+                                 "model_name_or_path": ["/idiap/temp/rkarimi/outputs/paper_results/trained_embeddings/adapter_trained_model/"],
+                                 "tokenizer_name": ["/idiap/temp/rkarimi/outputs/paper_results/trained_embeddings/adapter_trained_model/"],
+                                 "unfreeze_layer_norms": [True],
+                                 "optimize_from_scratch": [True],
+                                 "freeze_model": [True],
+                                 "freeze_model_but_task_embeddings": [False],
+                                 "parametric_task_embedding": [False],
+                                 "max_steps": [21845], # just to speed up
+                                 "n_train": [100, 500, 1000, 2000], 
+                                 # normal parameters.
+                                 "load_best_model_at_end": [True], 
+                                 "freeze_model_but_task_embeddings": [True],
+                                 "parametric_task_embedding": [True],
+                                 "metric_for_best_model": ["average_metrics"], 
+                                 "greater_is_better": [True],
+                                 "evaluation_strategy": ["steps"],
+                                 "per_device_train_batch_size": [64],
+                                 "per_device_eval_batch_size": [64],
+                                 # for training adapters.
+                                 "train_adapters": [True],                                                         
+                                 "reduction_factor": [16], #[8, 16],
+                                 #"hidden_dim": [64, 128, 256],
+                                 "projected_task_embedding_dim": [64],
+                                 "conditional_layer_norm": [True], #, false],
+                                 "unfreeze_lm_head": [True], #, False],
+                                 "adapter_config_name": ["meta-adapter"],
+                                 "train_task_embeddings": [True], #, false],
+                                 "non_linearity": ["gelu_new"],
+                                 "output_dir": ["outputs/paper_results/test/{0}/transfers/adapters_task/".format("glue" if "glue" in job_prefix else "fusion")]})
 do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#get_results(sweep)

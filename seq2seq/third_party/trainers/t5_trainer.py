@@ -285,6 +285,7 @@ class T5Trainer(Trainer):
             A tuple with the loss, logits and labels (each being optional).
         """
         inputs = self._prepare_inputs(inputs)
+        # TODO: we can do this per-task and add the lengths to config in the main.
         gen_kwargs = {
             "max_length": self.config.max_length,
             "num_beams": self.config.num_beams

@@ -247,7 +247,7 @@ def main():
         multi_task_compute_metrics=compute_metrics_fn,
         data_args=data_args,
         dataset_sizes=dataset_sizes if training_args.do_train else None,
-        callbacks=[T5CheckpointCallback()], #, EvaluationCallback()]
+        callbacks=[T5CheckpointCallback()],
         adapter_config=adapter_config
     )
     if trainer.is_world_process_zero():

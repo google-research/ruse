@@ -221,8 +221,10 @@ class T5Trainer(Trainer):
         for eval_task, eval_dataset in eval_datasets.items():
             self.compute_metrics = self.multi_task_compute_metrics[eval_task]
             model_config = self.model.config
-            if self.is_world_process_zero():
-                use_task_specific_params(self.model, eval_task)
+
+            # TODO: this can introduce a bug in multiple gpus, but for now we will be safe since we do not touch beam size.
+            #if self.is_world_process_zero():
+            use_task_specific_params(self.model, eval_task)
 
             if eval_dataset is not None and not isinstance(eval_dataset, collections.abc.Sized):
                 raise ValueError("eval_dataset must implement __len__")
@@ -242,16 +244,17 @@ class T5Trainer(Trainer):
                 xm.master_print(met.metrics_report())
 
             tasks_metric = {eval_task + "_" + k: v for k, v in output.metrics.items()}
-            if self.is_world_process_zero():
-                for key in sorted(tasks_metric.keys()):
-                    logger.info(f"  {key} = {tasks_metric[key]}")
-                results.update(tasks_metric)
-                reset_config(self.model, model_config)
+            # TODO: should it be in rank1.
+            #if self.is_world_process_zero():
+            for key in sorted(tasks_metric.keys()):
+                logger.info(f"  {key} = {tasks_metric[key]}")
+            results.update(tasks_metric)
+            reset_config(self.model, model_config)
 
         # Computes the average metrics across all the tasks without their corresponding losses.
-        if self.is_world_process_zero():
-            metrics = [results[key] for key in results.keys() if "loss" not in key]
-            results[metric_key_prefix+'_average_metrics'] = np.mean(metrics)
+        #if self.is_world_process_zero():
+        metrics = [results[key] for key in results.keys() if "loss" not in key]
+        results[metric_key_prefix+'_average_metrics'] = np.mean(metrics)
         self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, results)
         return results
 

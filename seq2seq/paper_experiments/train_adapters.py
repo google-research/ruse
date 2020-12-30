@@ -34,7 +34,7 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "metric_for_best_model": ["average_metrics"], 
                                  "greater_is_better": [True],
                                  "evaluation_strategy": ["steps"],
-                                 "max_steps": [65536]
+                                 "max_steps": [65536],
                                  # for training adapters.
                                  "one_layer_adapter_hyper_net_with_linear": [True],
                                  "train_adapters": [True],

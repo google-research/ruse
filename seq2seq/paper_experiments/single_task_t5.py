@@ -79,6 +79,6 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "max_steps": [65536],
                                  "per_device_train_batch_size": [64],
                                  "per_device_eval_batch_size": [64],
-                                 "output_dir": ["outputs/paper_results/paper_results/{0}/finetune_single_task/".format("glue" if "glue" in job_prefix else "fusion")]})
+                                 "output_dir": ["outputs/rabeeh/paper_results/paper_results/{0}/finetune_single_task/".format("glue" if "glue" in job_prefix else "fusion")]})
 do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 #get_results(sweep, single_task=True, tasks=GLUE_TASKS)

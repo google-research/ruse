@@ -39,14 +39,14 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "one_layer_adapter_hyper_net_with_linear": [True],
                                  "train_adapters": [True],
                                  "reduction_factor": [32, 16, 8, 4],
-                                 "projected_task_embedding_dim": [64, 32, 128],
+                                 "projected_task_embedding_dim": [64], # Try later, 32, 128],
                                  "conditional_layer_norm": [True], 
                                  "unfreeze_lm_head": [True], 
                                  "unfreeze_layer_norms": [True],
                                  "adapter_config_name": ["meta-adapter"],
                                  "train_task_embeddings": [True], 
                                  "non_linearity": ["gelu_new"],
-                                 "output_dir": ["outputs/paper_results/paper_results/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
+                                 "output_dir": ["outputs/rabeeh/paper_results/paper_results/{0}/adapters/".format("glue" if "glue" in job_prefix else "fusion")]})
 do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 #get_results(sweep)
 

@@ -35,11 +35,11 @@ class AdapterController(nn.Module):
     self.tasks = config.tasks
     self.adapters = self.construct_adapters(self.tasks)
     self.task_to_adapter = {task: task for task in self.tasks}
-    self.add_layer_norm_before_adapter_inside_controller = config.add_layer_norm_before_adapter_inside_controller
-    self.add_layer_norm_after_adapter_inside_controller = config.add_layer_norm_after_adapter_inside_controller
-    if self.add_layer_norm_before_adapter_inside_controller:
+    self.add_layer_norm_before_adapter = config.add_layer_norm_before_adapter
+    self.add_layer_norm_after_adapter = config.add_layer_norm_after_adapter
+    if self.add_layer_norm_before_adapter:
       self.pre_layer_norm = nn.LayerNorm(config.input_dim)
-    if self.add_layer_norm_after_adapter_inside_controller:
+    if self.add_layer_norm_after_adapter:
       self.post_layer_norm = nn.LayerNorm(config.input_dim)
 
   def set_task_to_adapter_map(self, mapping):
@@ -52,7 +52,8 @@ class AdapterController(nn.Module):
     """
     Constructs adapter layers and adds them to a dictionary for the given
     tasks.
-    :param tasks: A list of string containing the task names.
+    Args:
+        tasks: A list of string containing the task names.
     """
     for task in tasks:
       self.adapters[task] = Adapter(self.config)
@@ -62,7 +63,8 @@ class AdapterController(nn.Module):
     """
     Given a list of tasks, it freezes their corresponding adapter layers'
     parameters.
-    :param tasks: Given list of tasks.
+    Args:
+       tasks: Given list of tasks.
     """
     tasks = self.convert_to_list(tasks)
     for task in tasks:
@@ -78,7 +80,8 @@ class AdapterController(nn.Module):
   def enable_adapters(self, tasks):
     """
     Given a list of tasks, it unfreezes their corresponding adapter layers.
-    :param tasks: Given list of tasks.
+    Args:
+        tasks: Given list of tasks.
     """
     tasks = self.convert_to_list(tasks)
     for task in tasks:
@@ -88,8 +91,10 @@ class AdapterController(nn.Module):
 
   def get_adapter(self, task):
     """Given a task returns its corresponding adapter layer.
-    :param task: Input task name.
-    :return: Adapter layer corresponding to the given task.
+    Args:
+        task: Input task name.
+    Returns:
+        Adapter layer corresponding to the given task.
     """
     return self.adapters[task]
 
@@ -97,9 +102,11 @@ class AdapterController(nn.Module):
     """Retrieves the adapter layer corresponding to the given
     task. It freezes the adapter layers for all the other tasks
     and call the selected adapter layer.
-    :param task: the name of the current task.
-    :param inputs: the inputs to feed in in the adapter layer.
-    :return: outputs of the adapter layer."""
+    Args:
+        task: the name of the current task.
+        inputs: the inputs to feed in in the adapter layer.
+    Returns:
+        outputs of the adapter layer."""
     task = self.get_task(task)
     # Enables the adapter layer for the given task.
     self.enable_adapters(task)
@@ -107,10 +114,10 @@ class AdapterController(nn.Module):
     other_tasks = [x for x in self.tasks if x != task]
     self.disable_adapters(other_tasks)
     adapter = self.get_adapter(task)
-    if self.add_layer_norm_before_adapter_inside_controller:
+    if self.add_layer_norm_before_adapter:
       inputs = self.pre_layer_norm(inputs)
     outputs = adapter(inputs)
-    if self.add_layer_norm_after_adapter_inside_controller:
+    if self.add_layer_norm_after_adapter:
       outputs = self.post_layer_norm(outputs)
     return outputs
 
@@ -174,9 +181,11 @@ class MetaAdapterController(nn.Module):
     """Retrieves the adapter layer corresponding to the given
     task. It freezes the adapter layers for all the other tasks
     and call the selected adapter layer.
-    :param task: the name of the current task.
-    :param inputs: the inputs to feed in in the adapter layer.
-    :return: outputs of the adapter layer."""
+    Args:
+        task: the name of the current task.
+        inputs: the inputs to feed in in the adapter layer.
+    Returns:
+        outputs of the adapter layer."""
     z = self.apply_pre_layer_norm(inputs, task_embedding) if self.add_layer_norm_before_adapter else inputs
     outputs = self.call_adapter(z, task_embedding)
     if self.add_layer_norm_after_adapter:

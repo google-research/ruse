@@ -29,6 +29,8 @@ def string_to_int(string, default=-1):
 
 
 def get_post_processor(task):
+  """Returns post processor required to apply on the predictions/targets
+  before computing metrics for each task."""
   if task == "stsb":
     return string_to_float
   elif task in ["qqp", "cola", "mrpc"]:

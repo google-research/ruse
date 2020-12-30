@@ -1,0 +1,1 @@
+python finetune_t5_trainer.py  configs/experiments/transfer/train_task_emb.json

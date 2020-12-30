@@ -74,9 +74,9 @@ def f1_score_with_invalid(predictions, targets) -> dict:
       F1 score, where any prediction != 0 or 1 is counted as wrong.
     """
     targets, predictions = np.asarray(targets), np.asarray(predictions)
-    # Get indices of invalid predictions
+    # Get indices of invalid predictions.
     invalid_idx_mask = np.logical_and(predictions != 0, predictions != 1)
-    # For any prediction != 0 or 1, set it to the opposite of what the target is
+    # For any prediction != 0 or 1, we set the prediction to the opposite of its corresponding target.
     predictions[invalid_idx_mask] = 1 - targets[invalid_idx_mask]
     return {"f1": 100 * sklearn.metrics.f1_score(targets, predictions)}
 

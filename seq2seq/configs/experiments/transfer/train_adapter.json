@@ -9,7 +9,7 @@
 "test_max_target_length":128,
 "warmup_steps": 500,
 "eval_steps": 500,
-"max_steps": 9000,
+"max_steps": 2250,
 "overwrite_output_dir": true,
 "tasks" : ["rte", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "cola"],
 "eval_tasks" : ["rte", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "cola"],

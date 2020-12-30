@@ -78,7 +78,18 @@ sweep = collections.OrderedDict({"learning_rate": [3e-2, 3e-3, 3e-4, 2e-5, 3e-5]
                                  "greater_is_better": [True],
                                  "evaluation_strategy": ["steps"],
                                  "output_dir": ["outputs/paper_results/test/{0}/transfer/finetune/".format("glue" if "glue" in job_prefix else "fusion")]})
-do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+#do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
 #get_results(sweep)
 
 
+
+# trains the models on trained task embeddings.
+job_prefix = "trained-task-adapter"
+basic_config_path = "configs/experiments/transfer/train_adapter.json"
+sweep = collections.OrderedDict({"learning_rate": [3e-4]})
+do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)
+
+job_prefix="trained-task-finetune"
+basic_config_path = "configs/experiments/transfer/train_finetune.json"
+sweep = collections.OrderedDict({"learning_rate": [3e-4]})
+do_sweep(basic_config_path, sweep, job_prefix=job_prefix, num_gpus=4, ordered_name=True)

@@ -56,24 +56,20 @@ def spearman_corrcoef(predictions, targets) -> dict:
                 100 * scipy.stats.spearmanr(targets, predictions)[0]}
 
 
-# This is from T5 paper.
 def f1_score_with_invalid(predictions, targets) -> dict:
-    """Compute F1 score, but any prediction != 0 or 1 is counted as incorrect.
+    """Computes F1 score,  with any prediction != 0 or 1 is counted as incorrect.
     Args:
-      targets: np.ndarray of targets, either 0 or 1
-      predictions: np.ndarray of predictions, any integer value
+      targets: list of targets, either 0 or 1
+      predictions: list of predictions, any integer value
     Returns:
       F1 score, where any prediction != 0 or 1 is counted as wrong.
     """
-    int_targets = [int(target) for target in targets]
-    int_predictions = [int(prediction) if prediction.isnumeric() else prediction for prediction in predictions]
-    int_targets, int_predictions = np.asarray(int_targets), np.asarray(int_predictions)
+    targets, predictions = np.asarray(targets), np.asarray(predictions)
     # Get indices of invalid predictions
-    invalid_idx_mask = [True if (prediction != 0 and prediction != 1) else False for prediction in int_predictions]
-    # For any prediction != 0 or 1, set it to the opposite of what the target is.
-    int_predictions[invalid_idx_mask] = 1 - int_targets[invalid_idx_mask]
-    int_predictions = [int(prediction) for prediction in int_predictions]
-    return {"f1": 100 * sklearn.metrics.f1_score(int_targets, int_predictions)}
+    invalid_idx_mask = np.logical_and(predictions != 0, predictions != 1)
+    # For any prediction != 0 or 1, set it to the opposite of what the target is
+    predictions[invalid_idx_mask] = 1 - targets[invalid_idx_mask]
+    return {"f1": 100 * sklearn.metrics.f1_score(targets, predictions)}
 
 
 def matthews_corrcoef(predictions, targets) -> dict:
@@ -95,8 +91,14 @@ def build_compute_metrics_fn(task_names: List[str],
         label_str = lmap(str.strip, label_str)
         return pred_str, label_str
 
-    def compute_metrics(pred: EvalPrediction, metrics) -> Dict:
+    def compute_metrics(pred: EvalPrediction, metrics, post_processor=None) -> Dict:
         pred_str, label_str = decode_pred(pred)
+
+        # Applies task post-processor.
+        if post_processor is not None:
+            pred_str = [post_processor(pred) for pred in pred_str]
+            label_str = [post_processor(label) for label in label_str]
+
         eval_results = {}
         for metric in metrics:
             eval_results.update(metric(pred_str, label_str))
@@ -107,6 +109,7 @@ def build_compute_metrics_fn(task_names: List[str],
 
     def tasks_metrics(task) -> Dict:
         from data.tasks import TASK_MAPPING
-        return functools.partial(compute_metrics, metrics=TASK_MAPPING[task].metrics)
+        from data.postprocessors import get_post_processor
+        return functools.partial(compute_metrics, metrics=TASK_MAPPING[task].metrics, post_processor=get_post_processor(task))
 
     return {task: tasks_metrics(task) for task in task_names}

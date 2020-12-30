@@ -37,4 +37,3 @@ def compute_task_max_decoding_length(word_list):
     ids = tokenizer.encode(word)
     max_len = max(max_len, len(ids))
   return max_len
-

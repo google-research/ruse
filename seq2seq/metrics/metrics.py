@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""Defines different metrics used for evaluation of tasks."""
 import functools
 import numpy as np
 import scipy
@@ -23,7 +23,6 @@ from transformers import EvalPrediction, PreTrainedTokenizer
 from typing import Callable, Dict, List, Tuple
 
 logger = getLogger(__name__)
-
 
 
 def rouge(predictions, targets) -> dict:
@@ -38,7 +37,7 @@ def bleu(predictions, targets) -> dict:
 
 def accuracy(predictions, targets) -> dict:
     """Computes the average accuracy."""
-    return {"acc": 100*((np.array(predictions) == np.array(targets)).mean())}
+    return {"acc": 100 * ((np.array(predictions) == np.array(targets)).mean())}
 
 
 def pearson_corrcoef(predictions, targets) -> dict:
@@ -120,6 +119,7 @@ def build_compute_metrics_fn(task_names: List[str],
     def tasks_metrics(task) -> Dict:
         from data.tasks import TASK_MAPPING
         from data.postprocessors import get_post_processor
-        return functools.partial(compute_metrics, metrics=TASK_MAPPING[task].metrics, post_processor=get_post_processor(task))
+        return functools.partial(compute_metrics, metrics=TASK_MAPPING[task].metrics,
+                                 post_processor=get_post_processor(task))
 
     return {task: tasks_metrics(task) for task in task_names}

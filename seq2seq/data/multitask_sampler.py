@@ -108,7 +108,7 @@ class MultiTaskBatchSampler(Sampler[T_co]):
         # With passing generator, we make sure this choice is consistent across
         # different processes.
         batch_task_assignments = torch.multinomial(tasks_distribution,
-            self.num_batches_per_epoch, replacement=True, generator=generator)
+                                                   self.num_batches_per_epoch, replacement=True, generator=generator)
 
         for batch_task in batch_task_assignments:
             # Gets the number of samples of the selected datasets available for the

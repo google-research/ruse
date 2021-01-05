@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Implements different tasks."""
+"""Implements different tasks and defines the processors to convert each dataset
+to a sequence to sequence format."""
 from collections import OrderedDict
 
 import abc
@@ -41,6 +42,12 @@ class AbstractTaskDataset(abc.ABC):
     split_to_data_split: since not all the time, different splits of the
         datasets are available, we define a mapping from the wanted split
         to the existing dataset splits.
+    small_datasets_without_all_splits: List of strings, defines the name
+        of all low-resource tasks in which not all train/test/validation
+        splits are available.
+    large_data_without_all_splits: List of strings, defines the name of
+        all high-resource tasks in which not all train/test/validation
+        splits are available.
     """
     name = NotImplemented
     task_specific_config: Dict = NotImplemented
@@ -132,7 +139,6 @@ class AbstractTaskDataset(abc.ABC):
             indices = self.get_train_split_indices(split)
             dataset = self.select_dataset_samples(indices, dataset, n_obs)
         else:
-            #split = self.split_to_data_split[split]
             split = self.get_sampled_split(split, n_obs)
             dataset = self.load_dataset(split=split)
         return dataset.map(functools.partial(self.preprocessor, add_prefix=add_prefix),
@@ -204,6 +210,7 @@ class IWSLT2017RONL(AbstractTaskDataset):
         tgt_texts = [example['translation']["nl"]]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix,
                                    prefix="Translate Romanian to Dutch")
+
 
 class IWSLT2017ENNL(AbstractTaskDataset):
     name = "iwslt2017-en-nl"
@@ -357,7 +364,7 @@ class ScitailTaskDataset(AbstractTaskDataset):
     def preprocessor(self, example, add_prefix=True):
         src_texts = ["sentence1:", example['sentence1'], "sentence2:", example["sentence2"]]
         # To increase the transfer performance, we modified the targets to be similar to other datasets.
-        tgt_texts = [str(example['gold_label'])] #['1' if str(example['gold_label']) == "entailment" else '0']
+        tgt_texts = [str(example['gold_label'])]
         return self.seq2seq_format(src_texts, tgt_texts, add_prefix)
 
 

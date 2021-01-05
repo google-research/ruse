@@ -13,6 +13,7 @@
 # limitations under the License.
 from .adapter_configuration import ADAPTER_CONFFIG_MAPPING, AutoAdapterConfig
 from .adapter_configuration import AdapterConfig, MetaAdapterConfig
-from .adapter_controller import AdapterController, MetaAdapterController, AutoAdapterController
-from .adapter_modeling import Adapter
-from .adapter_utils import AdapterHyperNet, TaskEmbeddingController, LayerNormHyperNet
+from .adapter_controller import (AdapterController, MetaAdapterController,
+                                 AutoAdapterController, MetaLayersAdapterController)
+from .adapter_modeling import Adapter, AdapterHyperNet, AdapterLayersHyperNetController
+from .adapter_utils import TaskEmbeddingController, LayerNormHyperNet

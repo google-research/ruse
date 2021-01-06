@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Implementation of different activation functions and hyper-network layers."""
-
+"""Implementation of different utility functions for adapter layers."""
 
 import numpy as np
 import os
@@ -44,56 +43,6 @@ def linear_layer(input_dim, output_dim, std=1e-2):
     return linear
 
 
-class AdapterHyperNet(nn.Module):
-    """This module generates the weights for the meta adapter layers."""
-
-    def __init__(self, config, input_dim, output_dim):
-        super(AdapterHyperNet, self).__init__()
-        self.hidden_dim = config.hidden_dim
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.train_task_embeddings = config.train_task_embeddings
-        self.task_embedding_dim = config.projected_task_embedding_dim if config.train_task_embeddings else config.task_embedding_dim
-        self.one_layer_adapter_hyper_net = config.one_layer_adapter_hyper_net
-        self.adapter_hyper_net_with_bias = config.adapter_hyper_net_with_bias
-        self.one_layer_adapter_hyper_net_with_linear = config.one_layer_adapter_hyper_net_with_linear
-        if self.one_layer_adapter_hyper_net:
-            self.weight_generator = nn.Parameter(torch.Tensor(self.task_embedding_dim,
-                                                              self.input_dim, self.output_dim))
-            if self.adapter_hyper_net_with_bias:
-                self.bias_generator = nn.Parameter(torch.Tensor(self.task_embedding_dim, self.input_dim))
-            else:
-                self.register_parameter('bias_generator', None)
-            nn.init.normal_(self.weight_generator, std=1e-2)
-            if self.bias_generator is not None:
-                nn.init.zeros_(self.bias_generator)
-        elif self.one_layer_adapter_hyper_net_with_linear:
-            self.weight_generator = nn.Sequential(
-                linear_layer(self.task_embedding_dim, self.input_dim * self.output_dim))
-            self.bias_generator = nn.Sequential(
-                linear_layer(self.task_embedding_dim, self.input_dim))
-        else:
-            self.weight_generator = nn.Sequential(
-                linear_layer(self.task_embedding_dim, self.hidden_dim),
-                linear_layer(self.hidden_dim, self.input_dim * self.output_dim))
-            self.bias_generator = nn.Sequential(
-                linear_layer(self.task_embedding_dim, self.hidden_dim),
-                linear_layer(self.hidden_dim, self.input_dim))
-
-    def forward(self, task_embedding):
-        task_embedding = task_embedding.view(-1)
-        if self.one_layer_adapter_hyper_net:
-            bias = None
-            weight = torch.matmul(task_embedding, self.weight_generator.view(self.task_embedding_dim, -1)
-                                  ).view(self.input_dim, self.output_dim)
-            if self.adapter_hyper_net_with_bias:
-                bias = torch.matmul(task_embedding, self.bias_generator)
-        else:
-            weight = self.weight_generator(task_embedding).view(self.input_dim, self.output_dim)
-            bias = self.bias_generator(task_embedding).view(-1)
-        return weight, bias
-
-
 class TaskHyperNet(nn.Module):
     """This module generates the task-embeddings from the initial feeded task embeddings."""
 
@@ -116,7 +65,8 @@ class LayerNormHyperNet(nn.Module):
 
     def __init__(self, config):
         super(LayerNormHyperNet, self).__init__()
-        self.task_embedding_dim = config.projected_task_embedding_dim if config.train_task_embeddings else config.task_embedding_dim
+        self.task_embedding_dim = config.projected_task_embedding_dim \
+            if config.train_task_embeddings else config.task_embedding_dim
         self.weight_generator = linear_layer(self.task_embedding_dim, config.input_dim)
         self.bias_generator = linear_layer(self.task_embedding_dim, config.input_dim)
 
@@ -125,6 +75,8 @@ class LayerNormHyperNet(nn.Module):
 
 
 class TaskEmbeddingController(nn.Module):
+    """Main module controlling task embeddings."""
+
     def __init__(self, config):
         super(TaskEmbeddingController, self).__init__()
         self.device = config.device
@@ -135,8 +87,9 @@ class TaskEmbeddingController(nn.Module):
         if self.train_task_embeddings:
             self.task_hyper_net = TaskHyperNet(config)
 
-    # Defines utilities for task-embeddings.
     def load_or_init_task_embedding(self, task):
+        """Loads task embeddings if task_embedding_dir is given or
+        initializes them to random."""
         if self.task_embedding_dir is not None:
             task_embedding_path = os.path.join(self.task_embedding_dir, task + ".npy")
             return torch.Tensor(np.load(task_embedding_path)).to(self.device)

@@ -1,0 +1,42 @@
+{
+"model_name_or_path": "t5-small",
+"tokenizer_name": "t5-small",
+"output_dir": "test_data/task_embeddings/n-train-100",
+"tasks": ["imdb", "snli", "scitail", "boolq", "mrpc", "trec", "yelp_polarity", "qqp", "social_i_qa", "cosmos_qa", "winogrande", "hellaswag", "commonsense_qa"],
+"per_device_train_batch_size":32,
+"per_device_eval_batch_size":32,
+"save_steps": 200,
+"task_embedding_dir":"outputs/task_embeddings",
+"adapter_config_name":"meta-adapter",
+"model_name_or_path": "t5-small",
+"tokenizer_name": "t5-small",
+"max_source_length": 128,
+"max_target_length": 128 ,
+"val_max_target_length":128,
+"test_max_target_length":128,
+"num_train_epochs": 1000,
+"warmup_steps": 500,
+"eval_steps": 100,
+"overwrite_output_dir": true,
+"label_smoothing": 0.1,
+"freeze_encoder":false,
+"freeze_embeds":false,
+"per_device_train_batch_size":32,
+"per_device_eval_batch_size":32,
+"save_steps": 200,
+"logging_first_step":true,
+"logging_steps": 200,
+"save_total_limit": 1,
+"train_adapters": true,
+"adapter_config_name":"parametric-meta-adapter",
+"temperature": 10,
+"do_train": true,
+"do_eval": true,
+"predict_with_generate": true,
+"evaluation_strategy": "steps",
+"n_train": 100
+}
+
+
+
+

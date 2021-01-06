@@ -26,9 +26,10 @@ from transformers.modeling_t5 import (T5PreTrainedModel, T5LayerNorm, T5Block,
                                       T5DenseReluDense, T5Attention, T5LayerCrossAttention)
 from transformers.utils import logging
 
-from seq2seq.adapters import AutoAdapterController
-from seq2seq.adapters import MetaAdapterConfig
-from seq2seq.adapters import TaskEmbeddingController
+from seq2seq.adapters import (AutoAdapterController, MetaAdapterConfig,
+                              TaskEmbeddingController, LayerNormHyperNet,
+                              AdapterLayersHyperNetController,
+                              MetaLayersAdapterController)
 from seq2seq.models.poolings import AutoPooling
 from seq2seq.models.projections import AutoProjection
 from .modeling_outputs import RuseBaseModelOutputWithPastAndCrossAttentions, RuseSeq2SeqLMOutput
@@ -40,18 +41,39 @@ class T5LayerFF(nn.Module):
     def __init__(self, config, adapter_config=None):
         super().__init__()
         self.DenseReluDense = T5DenseReluDense(config)
-        self.layer_norm = T5LayerNorm(config.d_model, eps=config.layer_norm_epsilon)
+        self.train_adapters = config.train_adapters
+        if self.train_adapters:
+            self.unique_hyper_net = True if isinstance(adapter_config, MetaAdapterConfig) and \
+                                            adapter_config.unique_hyper_net else False
+            self.train_adapters_blocks = adapter_config.add_adapter_in_feed_forward and \
+                                         adapter_config.train_adapters_blocks and not self.unique_hyper_net
+            self.remove_original_layer_norms = adapter_config.remove_original_layer_norms
+            if self.train_adapters_blocks:
+                self.adapter_controller = AutoAdapterController.get(adapter_config)
+                self.is_meta_adapter = True if isinstance(adapter_config, MetaAdapterConfig) else False
+            elif self.unique_hyper_net:
+                self.layer_hyper_net = MetaLayersAdapterController(adapter_config)
+            self.conditional_layer_norm_for_T5 = adapter_config.conditional_layer_norm_for_T5
+            if self.conditional_layer_norm_for_T5:
+                self.meta_layer_norm = LayerNormHyperNet(adapter_config)
+                self.input_dim = adapter_config.input_dim
+        if not (self.train_adapters and self.remove_original_layer_norms):
+            self.layer_norm = T5LayerNorm(config.d_model, eps=config.layer_norm_epsilon)
         self.dropout = nn.Dropout(config.dropout_rate)
-        self.train_adapters = config.train_adapters and adapter_config.add_adapter_in_feed_forward
-        if self.train_adapters:
-            self.adapter_controller = AutoAdapterController.get(adapter_config)
-            self.is_meta_adapter = True if isinstance(adapter_config, MetaAdapterConfig) else False
 
-    def forward(self, hidden_states, task=None, task_embedding=None):
-        norm_x = self.layer_norm(hidden_states)
+    def forward(self, hidden_states, task=None, task_embedding=None, t5_block_adapters=None):
+        if self.train_adapters and self.remove_original_layer_norms:
+            norm_x = hidden_states
+        else:
+            norm_x = self.layer_norm(hidden_states)
+        if self.train_adapters and self.conditional_layer_norm_for_T5:
+            weight, bias = self.meta_layer_norm(task_embedding)
+            norm_x = torch.nn.functional.layer_norm(norm_x, (self.input_dim,), weight=weight, bias=bias)
         y = self.DenseReluDense(norm_x)
-        if self.train_adapters:
+        if self.train_adapters and self.train_adapters_blocks:
             y = self.adapter_controller(task if not self.is_meta_adapter else task_embedding, y)
+        elif self.train_adapters and self.unique_hyper_net:
+            y = self.layer_hyper_net(y, t5_block_adapters.feed_forward)
         layer_output = hidden_states + self.dropout(y)
         return layer_output
 
@@ -60,14 +82,28 @@ class T5LayerSelfAttention(nn.Module):
     def __init__(self, config, has_relative_attention_bias=False, adapter_config=None):
         super().__init__()
         self.SelfAttention = T5Attention(
-            config, has_relative_attention_bias=has_relative_attention_bias, is_bidirectional=not config.is_decoder
+            config, has_relative_attention_bias=has_relative_attention_bias,
+            is_bidirectional=not config.is_decoder
         )
-        self.layer_norm = T5LayerNorm(config.d_model, eps=config.layer_norm_epsilon)
-        self.dropout = nn.Dropout(config.dropout_rate)
-        self.train_adapters = config.train_adapters and adapter_config.add_adapter_in_self_attention
+        self.train_adapters = config.train_adapters
         if self.train_adapters:
-            self.adapter_controller = AutoAdapterController.get(adapter_config)
-            self.is_meta_adapter = True if isinstance(adapter_config, MetaAdapterConfig) else False
+            self.unique_hyper_net = True if isinstance(adapter_config, MetaAdapterConfig) and \
+                                            adapter_config.unique_hyper_net else False
+            self.train_adapter_blocks = adapter_config.add_adapter_in_self_attention and \
+                                        adapter_config.train_adapters_blocks and not self.unique_hyper_net
+            if self.train_adapter_blocks:
+                self.adapter_controller = AutoAdapterController.get(adapter_config)
+                self.is_meta_adapter = True if isinstance(adapter_config, MetaAdapterConfig) else False
+            elif self.unique_hyper_net:
+                self.layer_hyper_net = MetaLayersAdapterController(adapter_config)
+            self.conditional_layer_norm_for_T5 = adapter_config.conditional_layer_norm_for_T5
+            if self.conditional_layer_norm_for_T5:
+                self.meta_layer_norm = LayerNormHyperNet(adapter_config)
+                self.input_dim = adapter_config.input_dim
+            self.remove_original_layer_norms = adapter_config.remove_original_layer_norms
+        if not (self.train_adapters and self.remove_original_layer_norms):
+            self.layer_norm = T5LayerNorm(config.d_model, eps=config.layer_norm_epsilon)
+        self.dropout = nn.Dropout(config.dropout_rate)
 
     def forward(
             self,
@@ -79,9 +115,16 @@ class T5LayerSelfAttention(nn.Module):
             use_cache=False,
             output_attentions=False,
             task=None,
-            task_embedding=None
+            task_embedding=None,
+            t5_block_adapters=None
     ):
-        norm_x = self.layer_norm(hidden_states)
+        if self.train_adapters and self.remove_original_layer_norms:
+            norm_x = hidden_states
+        else:
+            norm_x = self.layer_norm(hidden_states)
+        if self.train_adapters and self.conditional_layer_norm_for_T5:
+            weight, bias = self.meta_layer_norm(task_embedding)
+            norm_x = torch.nn.functional.layer_norm(norm_x, (self.input_dim,), weight=weight, bias=bias)
         attention_output = self.SelfAttention(
             norm_x,
             mask=attention_mask,
@@ -92,8 +135,10 @@ class T5LayerSelfAttention(nn.Module):
             output_attentions=output_attentions,
         )
         y = attention_output[0]
-        if self.train_adapters:
+        if self.train_adapters and self.train_adapter_blocks:
             y = self.adapter_controller(task if not self.is_meta_adapter else task_embedding, y)
+        elif self.train_adapters and self.unique_hyper_net:
+            y = self.layer_hyper_net(y, t5_block_adapters.self_attention)
         layer_output = hidden_states + self.dropout(y)
         outputs = (layer_output,) + attention_output[1:]  # add attentions if we output them
         return outputs
@@ -127,7 +172,8 @@ class T5Block(nn.Module):
             output_attentions=False,
             return_dict=False,
             task=None,
-            task_embedding=None
+            task_embedding=None,
+            t5_block_adapters=None
     ):
         if past_key_value is not None:
             assert self.is_decoder, "Only decoder can use `past_key_values`"
@@ -156,7 +202,8 @@ class T5Block(nn.Module):
             use_cache=use_cache,
             output_attentions=output_attentions,
             task=task,
-            task_embedding=task_embedding
+            task_embedding=task_embedding,
+            t5_block_adapters=t5_block_adapters
         )
         hidden_states, present_key_value_state = self_attention_outputs[:2]
         # Keep self-attention outputs and relative position weights
@@ -171,8 +218,6 @@ class T5Block(nn.Module):
             else:
                 query_length = None
 
-            # TODO(rabeeh): We do not for now add adapters to cross-attention
-            #   layers, might to at some point.
             cross_attention_outputs = self.layer[1](
                 hidden_states,
                 kv=encoder_hidden_states,
@@ -182,7 +227,7 @@ class T5Block(nn.Module):
                 past_key_value=cross_attn_past_key_value,
                 query_length=query_length,
                 use_cache=use_cache,
-                output_attentions=output_attentions,
+                output_attentions=output_attentions
             )
             hidden_states = cross_attention_outputs[0]
             # Combine self attn and cross attn key value states
@@ -194,7 +239,9 @@ class T5Block(nn.Module):
             attention_outputs = attention_outputs + cross_attention_outputs[2:]
 
         # Apply Feed Forward layer
-        hidden_states = self.layer[-1](hidden_states, task=task, task_embedding=task_embedding)
+        hidden_states = self.layer[-1](hidden_states, task=task,
+                                       task_embedding=task_embedding,
+                                       t5_block_adapters=t5_block_adapters)
         outputs = (hidden_states,)
 
         outputs = outputs + (present_key_value_state,) + attention_outputs
@@ -209,15 +256,27 @@ class T5Stack(T5PreTrainedModel):
         self.adapter_config = adapter_config
         self.embed_tokens = embed_tokens
         self.is_decoder = config.is_decoder
-
         self.block = nn.ModuleList(
             [T5Block(config, has_relative_attention_bias=bool(i == 0), adapter_config=self.adapter_config)
              for i in range(config.num_layers)]
         )
-        self.final_layer_norm = T5LayerNorm(config.d_model,
-                                            eps=config.layer_norm_epsilon)
-        self.dropout = nn.Dropout(config.dropout_rate)
+        self.train_adapters = config.train_adapters
+        if self.train_adapters:
+            self.unique_hyper_net = isinstance(adapter_config, MetaAdapterConfig) \
+                                    and adapter_config.unique_hyper_net
+            if self.unique_hyper_net:
+                self.adapter_layers_hyper_net = AdapterLayersHyperNetController(adapter_config)
 
+        if self.train_adapters:
+            self.remove_original_layer_norms = adapter_config.remove_original_layer_norms
+            self.conditional_layer_norm_for_T5 = adapter_config.conditional_layer_norm_for_T5
+            if self.conditional_layer_norm_for_T5:
+                self.meta_layer_norm = LayerNormHyperNet(adapter_config)
+                self.input_dim = adapter_config.input_dim
+        if not (self.train_adapters and self.remove_original_layer_norms):
+            self.final_layer_norm = T5LayerNorm(config.d_model,
+                                                eps=config.layer_norm_epsilon)
+        self.dropout = nn.Dropout(config.dropout_rate)
         self.fixed_length_emb = config.fixed_length_emb
         self.concat_projection_token = config.concat_projection_token
         if self.fixed_length_emb and not self.is_decoder:
@@ -225,7 +284,6 @@ class T5Stack(T5PreTrainedModel):
             self.encoder_pooler = AutoPooling.get(config.encoder_pooling, config)
             if not self.concat_projection_token:
                 self.encoder_projection = AutoProjection.get(config.encoder_projection, config)
-
         self.init_weights()
 
     def get_input_embeddings(self):
@@ -319,6 +377,11 @@ class T5Stack(T5PreTrainedModel):
         hidden_states = self.dropout(inputs_embeds)
 
         for i, (layer_module, past_key_value) in enumerate(zip(self.block, past_key_values)):
+            # Computes the adapter weights for the T5 Block.
+            t5_block_adapters = None
+            if self.train_adapters and self.unique_hyper_net:
+                t5_block_adapters = self.adapter_layers_hyper_net(task_embedding, i)
+
             if output_hidden_states:
                 all_hidden_states = all_hidden_states + (hidden_states,)
 
@@ -334,7 +397,8 @@ class T5Stack(T5PreTrainedModel):
                 use_cache=use_cache,
                 output_attentions=output_attentions,
                 task=task,
-                task_embedding=task_embedding
+                task_embedding=task_embedding,
+                t5_block_adapters=t5_block_adapters
             )
             # layer_outputs is a tuple with:
             # hidden-states, key-value-states, (self-attention weights),
@@ -357,8 +421,12 @@ class T5Stack(T5PreTrainedModel):
                 all_attentions = all_attentions + (layer_outputs[2],)
                 if self.is_decoder:
                     all_cross_attentions = all_cross_attentions + (layer_outputs[4 if i == 0 else 3],)
-
-        hidden_states = self.final_layer_norm(hidden_states)
+        if not (self.train_adapters and self.remove_original_layer_norms):
+            hidden_states = self.final_layer_norm(hidden_states)
+        if self.train_adapters and self.conditional_layer_norm_for_T5:
+            weight, bias = self.meta_layer_norm(task_embedding)
+            hidden_states = torch.nn.functional.layer_norm(hidden_states,
+                                                           (self.input_dim,), weight=weight, bias=bias)
         hidden_states = self.dropout(hidden_states)
 
         # Learns fixed length embeddings and project them back to the
@@ -412,9 +480,8 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
 
         # Computes the task-embeddings.
         self.train_adapters = config.train_adapters
-        if config.train_adapters:
+        if config.train_adapters and isinstance(adapter_config, MetaAdapterConfig):
             self.task_embedding_controller = TaskEmbeddingController(adapter_config)
-
         self.adapter_config = adapter_config
         self.model_dim = config.d_model
         self.shared = nn.Embedding(config.vocab_size, config.d_model)
@@ -542,7 +609,9 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
                 output_hidden_states=output_hidden_states,
                 return_dict=return_dict,
                 task=task,
-                task_embedding=self.task_embedding_controller(task) if self.train_adapters else None
+                task_embedding=self.task_embedding_controller(task) if self.train_adapters \
+                                                                       and isinstance(self.adapter_config,
+                                                                                      MetaAdapterConfig) else None
             )
         elif return_dict and not isinstance(encoder_outputs, BaseModelOutput):
             encoder_outputs = BaseModelOutput(
@@ -593,7 +662,8 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
             task=task,
-            task_embedding=self.task_embedding_controller(task) if self.train_adapters else None
+            task_embedding=self.task_embedding_controller(task) \
+                if (self.train_adapters and isinstance(self.adapter_config, MetaAdapterConfig)) else None
         )
 
         sequence_output = decoder_outputs[0]

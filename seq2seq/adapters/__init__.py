@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from .adapter_configuration import ADAPTER_CONFFIG_MAPPING, AutoAdapterConfig
+from .adapter_configuration import ADAPTER_CONFIG_MAPPING, AutoAdapterConfig
 from .adapter_configuration import AdapterConfig, MetaAdapterConfig
 from .adapter_controller import (AdapterController, MetaAdapterController,
                                  AutoAdapterController, MetaLayersAdapterController)

@@ -62,7 +62,7 @@ class MetaAdapterConfig(AdapterConfig):
     unique_hyper_net_layer_norm = True
 
 
-ADAPTER_CONFFIG_MAPPING = OrderedDict(
+ADAPTER_CONFIG_MAPPING = OrderedDict(
     [("adapter", AdapterConfig),
      ("meta-adapter", MetaAdapterConfig)])
 
@@ -72,8 +72,8 @@ class AutoAdapterConfig(nn.Module):
 
     @classmethod
     def get(cls, config_name: str):
-        if config_name in ADAPTER_CONFFIG_MAPPING:
-            return ADAPTER_CONFFIG_MAPPING[config_name]()
+        if config_name in ADAPTER_CONFIG_MAPPING:
+            return ADAPTER_CONFIG_MAPPING[config_name]()
         raise ValueError(
             "Unrecognized adapter config type identifier: {}. Should contain one of {}"
-                .format(config_name, ", ".join(ADAPTER_CONFFIG_MAPPING.keys())))
+                .format(config_name, ", ".join(ADAPTER_CONFIG_MAPPING.keys())))

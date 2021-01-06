@@ -14,12 +14,11 @@
 """Implements a distributed sampler to sample different tasks with
 temperature sampling in a way to make sure that the same task is
 selected in each core."""
-from typing import TypeVar, Optional, List
-
 import numpy as np
 import torch
-from torch.utils.data import Sampler
 import torch.distributed as dist
+from torch.utils.data import Sampler
+from typing import TypeVar, Optional, List
 
 T_co = TypeVar('T_co', covariant=True)
 

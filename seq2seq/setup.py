@@ -41,7 +41,6 @@ def setup_package():
         'psutil',
         'sacrebleu',
         'rouge-score',
-        'tensorflow_datasets',
         'pytorch-lightning==1.0.4',
         'matplotlib',
         'git-python==1.0.3',
@@ -54,7 +53,6 @@ def setup_package():
         'fire',
         'pytest',
         'conllu',
-        'tf-nightly',
         'google-cloud-storage',
       ],
       classifiers=[

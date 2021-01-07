@@ -14,7 +14,7 @@
 """Computes the task embeddings from pretrained T5 encoder,
 by computing the average of encoder's representation over the
 whole dataset."""
-# usage: python compute_task_embbeddings.py configs/task-embedding.json
+# usage: python compute_task_embeddings.py configs/task-embedding.json
 
 import sys
 

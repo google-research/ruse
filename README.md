@@ -49,4 +49,23 @@ to automatically shard the dataset on the TPUs or multiple GPUs.
 - **`training_args.py`**: Different traninig arguments to specify training and
   models parameters.
 
+
+### Libraries:
+- **`adapters`**: Implements different adapters modules.
+- **`data`**: Implements different utilities and processors to convert datasets to sequence to
+  sequence format, and a multi-task sampler which ensures the same dataset is
+  sampled across TPU cores, this is because the model is adapted per dataset and
+  since we train on multiple datasets simultaneously, during backward path, the reduced updates 
+  across the TPU cores needs to belong to the same model to allow proper model
+  updates in a distributed setting. 
+- **`metrics`**: Implements different evaluation metrics to evaluate the
+  performance on various datasets' types.
+- **`models`**: Implements difference strategies to learn fixed length sentence
+  representations from the T5 encoder.
+- **`third_party`**: Includes our modifications to HuggingFace T5 model and
+  trainer class which allows incorporating adapters in T5 model and expand the
+  model to handle training of multiple datasets.
+- **`utils`**: Implements different utilities used in the code. 
+
+
 **This is not an officially supported Google product.**

@@ -65,7 +65,7 @@ to automatically shard the dataset on the TPUs or multiple GPUs.
 - **`third_party`**: Includes our modifications to HuggingFace T5 model and
   trainer class which allows incorporating adapters in T5 model and expand the
   model to handle training of multiple datasets.
-- **`utils`**: Implements different utilities used in the code. 
+- **`utils`**: Implements different utilities used in this code. 
 
 
 **This is not an officially supported Google product.**
